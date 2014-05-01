@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: 0f925e8539f77d449b538255b3a3aad6
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences:
+  - Player: {instanceID: 0}
+  - EquipmentRack: {instanceID: 0}
+  - SelectedEquip: {instanceID: 0}
+  - IconDropItem: {instanceID: 0}
+  - Filler: {fileID: 2800000, guid: 3edaa191f6e1e2b4481d95e741cce494, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 

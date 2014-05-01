@@ -1,0 +1,86 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &100000
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 4
+  m_Component:
+  - 4: {fileID: 400000}
+  - 114: {fileID: 11400000}
+  - 148: {fileID: 14800000}
+  m_Layer: 0
+  m_Name: EffectManager
+  m_TagString: Untagged
+  m_Icon: {fileID: -1203168336, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &400000
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 100000}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -13.4407806, y: .568422318, z: -.037109375}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 531899c062b20b74682fcb7ff62e0d4a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  EffectsOriginal:
+  - {fileID: 100000, guid: 0232009edfd045b4db3c5d2b23d7b5cb, type: 2}
+  - {fileID: 100000, guid: e2f82f9154ae1ad44b1e7955748abd98, type: 2}
+  - {fileID: 100000, guid: 02bb4829c09b53f4f8d31071d3187ca0, type: 2}
+  - {fileID: 100000, guid: 83effd18cda31184895d24c598de3fd9, type: 2}
+  - {fileID: 100000, guid: 37c5436ae166e97449eca0c4c26e7f14, type: 2}
+  - {fileID: 100000, guid: afb2eca754d63b942b90625c54e794c4, type: 2}
+  - {fileID: 100000, guid: 34685b975e2d1f5408b5487e19cd87f5, type: 2}
+  - {fileID: 100000, guid: fbc4a36ddf0b7bf498fb180af077f778, type: 2}
+  - {fileID: 100000, guid: 932937457b79ea4479b9c694c745afe1, type: 2}
+  - {fileID: 100000, guid: ecfd816de157f834cb04ae1e1cfe3434, type: 2}
+  - {fileID: 100000, guid: 5de64e2e016e2c048858f2fac7450ecc, type: 2}
+  - {fileID: 100000, guid: 9c7e352e78be9c647ae2f925862c86a0, type: 2}
+  - {fileID: 100000, guid: b5f412c1d8e1ac94a94128325a9d7846, type: 2}
+  - {fileID: 100000, guid: 20aa3f4040dcb25498d44242193d79f4, type: 2}
+  - {fileID: 100000, guid: dcf520d2ee80e5c4ea546bfa36f2638d, type: 2}
+  - {fileID: 100000, guid: 3a18f21101ca2ee48833771407afe8cc, type: 2}
+  - {fileID: 100000, guid: 00fd1437ca723a44ea64e974fc526478, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+--- !u!148 &14800000
+NetworkView:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 1
+  m_StateSynchronization: 0
+  m_Observed: {fileID: 400000}
+  m_ViewID:
+    m_ID: 0
+    m_Type: 0
+--- !u!1001 &100100000
+Prefab:
+  m_ObjectHideFlags: 1
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications: []
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 0}
+  m_RootGameObject: {fileID: 100000}
+  m_IsPrefabParent: 1
+  m_IsExploded: 1

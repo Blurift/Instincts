@@ -1,0 +1,107 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &100000
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 4
+  m_Component:
+  - 4: {fileID: 400000}
+  - 114: {fileID: 11400000}
+  - 148: {fileID: 14800000}
+  m_Layer: 0
+  m_Name: ItemManager
+  m_TagString: Untagged
+  m_Icon: {fileID: -1203168336, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &400000
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 100000}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -25.1479702, y: 11.0677757, z: 5.10620117}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ae3666c38f7c8b479e92e4405ef54c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ItemNames:
+  - Torch
+  - Knife
+  - 9mm Pistol
+  - 9mm Ammo
+  - Wood
+  - Cloth
+  - Apple
+  - Bandage
+  - WoodClub
+  - WrappedWoodClub
+  - SpikedWoodClub
+  - MetalScraps
+  - ShrapnelGun
+  - ShrapnelPellets
+  - AcidSample
+  - WoodenBow
+  - WoodenArrows
+  - WoodStick
+  - 
+  - 
+  ItemObjects:
+  - {fileID: 100000, guid: 0963e0487f47e3a4f98f57cf37180145, type: 2}
+  - {fileID: 100000, guid: 64816cecaf745fe43bdcd20d2747d3e7, type: 2}
+  - {fileID: 100000, guid: 9750b13965568fe4e8f766f8574df797, type: 2}
+  - {fileID: 100000, guid: 1203808048e4ec140bac8bec594294d4, type: 2}
+  - {fileID: 100000, guid: da30d4e639d8c3646905318879fdd788, type: 2}
+  - {fileID: 100000, guid: 13cd975136f07084cb8e2125818075a5, type: 2}
+  - {fileID: 100000, guid: c088f50a9eebd73428aec814e512334e, type: 2}
+  - {fileID: 100000, guid: 3389ba54b26ee9e48adaa6d00e57e6ae, type: 2}
+  - {fileID: 100000, guid: 64816cecaf745fe43bdcd20d2747d3e7, type: 2}
+  - {fileID: 100000, guid: 476e34b6f81fe6642a06637f58f181bb, type: 2}
+  - {fileID: 100000, guid: 0b74143ca2f9bea4792aa6fff17a560d, type: 2}
+  - {fileID: 100000, guid: a1fffdab1425d8a4cac882db4f16a9a1, type: 2}
+  - {fileID: 100000, guid: 942bb81a22b23444790e7e073da1180b, type: 2}
+  - {fileID: 100000, guid: 409dcd0f8e642d3409070c5db2354a8e, type: 2}
+  - {fileID: 100002, guid: efff562f6ad02394a86abd333a5b40b7, type: 2}
+  - {fileID: 100000, guid: b9572c9a27b6e81419bf0e2c447b6ca2, type: 2}
+  - {fileID: 100000, guid: 0fde70c00e5a61d47958b2b208fc1f0a, type: 2}
+  - {fileID: 100000, guid: fd84b4e164b08f04da317e6d1ab31339, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
+--- !u!148 &14800000
+NetworkView:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 1
+  m_StateSynchronization: 0
+  m_Observed: {fileID: 400000}
+  m_ViewID:
+    m_ID: 0
+    m_Type: 0
+--- !u!1001 &100100000
+Prefab:
+  m_ObjectHideFlags: 1
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications: []
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 0}
+  m_RootGameObject: {fileID: 100000}
+  m_IsPrefabParent: 1
+  m_IsExploded: 1
