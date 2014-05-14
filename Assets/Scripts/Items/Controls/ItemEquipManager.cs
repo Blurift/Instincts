@@ -7,10 +7,9 @@ public class ItemEquipManager : MonoBehaviour {
 
 	void Start()
 	{
-		GameManager.WriteMessage("Finding player to attach to");
 		if(!networkView.isMine)
 		{
-			GameManager.WriteMessage("Finding player to attach to");
+
 			GameObject[] go = GameObject.FindGameObjectsWithTag("Player");
 
 			for (int i = 0; i < go.Length; i++)

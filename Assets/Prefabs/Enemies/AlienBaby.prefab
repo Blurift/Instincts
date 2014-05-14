@@ -152,7 +152,7 @@ MonoBehaviour:
   StaminaEnabled: 0
   HealthRegenerates: 0
   HitEffects:
-  - {fileID: 0}
+  - {fileID: 100000, guid: 3a18f21101ca2ee48833771407afe8cc, type: 2}
   HitDropEffects: []
   RegenDelay: 10
 --- !u!114 &11400004

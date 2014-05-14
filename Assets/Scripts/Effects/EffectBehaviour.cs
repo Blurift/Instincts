@@ -13,7 +13,8 @@ using System.Collections;
 public class EffectBehaviour : MonoBehaviour {
 
 	public float FadeTime;
-	
+	public float LightPosition = 1;
+
 	private float startTime;
 	private float startIntensity;
 
@@ -24,7 +25,10 @@ public class EffectBehaviour : MonoBehaviour {
 		startTime = Time.time;
 
 		if(light != null)
+		{
 			startIntensity = light.intensity;
+			transform.position = new Vector3(transform.position.x, transform.position.y, LightPosition*-1);
+		}
 
 		if(renderer != null)
 			renderer.sortingLayerName = SortLayer;

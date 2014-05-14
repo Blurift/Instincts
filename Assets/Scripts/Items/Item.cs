@@ -17,6 +17,7 @@ public class Item : MonoBehaviour {
 
 	public float ItemCoolDown;
 	private float canUseTime = 0;
+	public bool RequiresPress = true;
 
 	public ItemBehaviour[] ControlList;
 
@@ -60,9 +61,9 @@ public class Item : MonoBehaviour {
 			renderer.enabled = false;
 	}
 
-	public void UseItem(PlayerController character)
+	public void UseItem(PlayerController character, bool pressed)
 	{
-		if(Time.time > canUseTime)
+		if(Time.time > canUseTime && !(RequiresPress && !pressed))
 		{
 			canUseTime = Time.time + ItemCoolDown;
 			for (int i = 0; i < ControlList.Length; i++)

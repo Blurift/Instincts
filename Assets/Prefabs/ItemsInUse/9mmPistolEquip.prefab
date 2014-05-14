@@ -64,7 +64,7 @@ MonoBehaviour:
   EffectAnimation: {fileID: 100000, guid: 5de64e2e016e2c048858f2fac7450ecc, type: 2}
   EffectSound: {fileID: 100000, guid: 9c7e352e78be9c647ae2f925862c86a0, type: 2}
   EffectProjectile: {fileID: 100000, guid: b5f412c1d8e1ac94a94128325a9d7846, type: 2}
-  RaycastProjectile: 0
+  RaycastProjectile: 1
 --- !u!148 &14800000
 NetworkView:
   m_ObjectHideFlags: 1

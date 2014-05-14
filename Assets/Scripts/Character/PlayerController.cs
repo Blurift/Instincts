@@ -84,7 +84,12 @@ public class PlayerController : EntityController {
 				{
 					if(Input.GetButtonDown("UseItem"))
 					{
-						item.UseItem(this);
+						//item.UseItem(this);
+					}
+
+					if(Input.GetButton("UseItem"))
+					{
+						item.UseItem(this,Input.GetButtonDown("UseItem"));
 					}
 					
 					if(Input.GetButtonDown("UseItemAlt"))

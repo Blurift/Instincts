@@ -58,7 +58,7 @@ MonoBehaviour:
   - WoodenBow
   - WoodenArrows
   - WoodStick
-  - 
+  - Submachine Gun
   - 
   ItemObjects:
   - {fileID: 100000, guid: 0963e0487f47e3a4f98f57cf37180145, type: 2}
@@ -79,7 +79,7 @@ MonoBehaviour:
   - {fileID: 100000, guid: b9572c9a27b6e81419bf0e2c447b6ca2, type: 2}
   - {fileID: 100000, guid: 0fde70c00e5a61d47958b2b208fc1f0a, type: 2}
   - {fileID: 100000, guid: fd84b4e164b08f04da317e6d1ab31339, type: 2}
-  - {fileID: 0}
+  - {fileID: 100000, guid: a470a33807f5db642a3abf3676bff2a7, type: 2}
   - {fileID: 0}
 --- !u!148 &14800000
 NetworkView:

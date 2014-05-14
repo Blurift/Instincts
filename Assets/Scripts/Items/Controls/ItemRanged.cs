@@ -39,7 +39,7 @@ public class ItemRanged : ItemBehaviour {
 			{
 				if(Projectile != null && Projectile != "")
 				{
-					EffectManager.CreateProjectile(controller.EquipPosition.position, Projectile, controller.transform.rotation, Vector3.Distance(aim3,transform.position));
+					//EffectManager.CreateProjectile(controller.EquipPosition.position, Projectile, controller.transform.rotation, Vector3.Distance(aim3,transform.position));
 				}
 
 				ItemRangedEquip ranged = (ItemRangedEquip)currentEquip.GetComponent(typeof(ItemRangedEquip));

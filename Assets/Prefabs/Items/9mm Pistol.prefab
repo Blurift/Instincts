@@ -50,7 +50,8 @@ MonoBehaviour:
   Stackable: 0
   StackAmount: 1
   StackMax: 1
-  ItemCoolDown: .100000001
+  ItemCoolDown: .25
+  RequiresPress: 1
   ControlList:
   - {fileID: 11400002}
   IsOwned: 0

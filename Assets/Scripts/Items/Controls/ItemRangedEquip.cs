@@ -38,13 +38,25 @@ public class ItemRangedEquip : MonoBehaviour {
 
 			if(RaycastProjectile)
 			{
-				RaycastHit2D hit = Physics2D.Raycast (origin, direction, 100, Layers);
-				if(hit != false)
+				RaycastHit2D[] hit = Physics2D.RaycastAll (origin, direction, 100, Layers);
+				if(hit.Length > 0)
 				{
-					HealthSystem health = GetComponent<HealthSystem>();
+					int i = 0;
 
-					if(health != null && Source != hit.collider && gameObject != hit.collider)
-						health.TakeDamage(Damage, Source);
+					while(i < hit.Length)
+					{
+						if(hit[i].collider != Source && hit[i].collider != gameObject)
+						{
+							HealthSystem health = hit[i].collider.GetComponent<HealthSystem>();
+
+							if(health != null)
+								health.TakeDamage(Damage, Source);
+
+							i = hit.Length;
+						}
+						i++;
+					}
+
 				}
 			}
 			else
