@@ -118,7 +118,8 @@ public class HealthSystem : MonoBehaviour {
 
 	public delegate void EventActionInt (int val);
 	public delegate void EventAction ();
-	public delegate void HitAction (NetworkPlayer player, int damage);
+	//public delegate void HitAction (NetworkPlayer player, int damage);
+	public delegate void HitAction (GameObject source, int damage);
 
 	public event EventActionInt StaminaChange;
 	public event EventAction Death;
@@ -137,7 +138,12 @@ public class HealthSystem : MonoBehaviour {
 
 	public void TakeDamage(DamageType damage, GameObject source)
 	{
+
 		int convertedDamage = damage.Damage;
+
+		//If the even is not null raise the hit event with the converted Damage received
+		if (Hit != null)
+			Hit (source, convertedDamage);
 
 		if(convertedDamage > 0)
 		{

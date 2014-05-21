@@ -14,6 +14,7 @@ public class EffectProjectile : MonoBehaviour {
 
 	//Properties
 	public float Speed = 50;
+	public DamageType Damage;
 
 	//
 	public GameObject Source;
@@ -42,7 +43,14 @@ public class EffectProjectile : MonoBehaviour {
 
 	void OnCollisionEnter2D(Collision2D collision)
 	{
-		//if(collision.gameObject != Source)
-		//	Destroy (gameObject);
+		if(collision.gameObject != Source)
+			Destroy (gameObject);
+
+		HealthSystem h = collision.gameObject.GetComponent<HealthSystem> ();
+
+		if(h != null)
+		{
+			h.TakeDamage(Damage, Source);
+		}
 	}
 }

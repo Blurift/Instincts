@@ -67,6 +67,18 @@ public class EffectManager : MonoBehaviour {
 		Instance.CreateProjectileRPC (pos, effect, rotation, distance);
 	}
 
+	private GameObject CreateLocalP(Vector3 pos, string effect, Quaternion rotation)
+	{
+		if (!Effects.ContainsKey (effect))
+			return null;
+		return (GameObject)Instantiate (Effects [effect], pos, rotation);
+	}
+
+	public static GameObject CreateLocal(Vector3 pos, string effect, Quaternion rotation)
+	{
+		return Instance.CreateLocalP(pos,effect, rotation);
+	}
+
 	private int GetEffectIndex(GameObject prefab)
 	{
 		List<GameObject> effects = new List<GameObject> (EffectsOriginal);

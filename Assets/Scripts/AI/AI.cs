@@ -27,8 +27,10 @@ public class AI : MonoBehaviour {
 
 	//AI
 	public AIBehaviourType AIType = AIBehaviourType.Melee;
+
 	public GameObject Target;
 	public List<AIAction> Actions = new List<AIAction>();
+	public AIAbility[] Abilities;
 
 	private float pauseUntil = 0;
 
@@ -49,7 +51,7 @@ public class AI : MonoBehaviour {
 	public int PatrolPathIndex = 0;
 
 	//Target profiling
-	private Dictionary<NetworkPlayer, int> targetDamages = new Dictionary<NetworkPlayer, int> ();
+	private Dictionary<GameObject, int> targetDamages = new Dictionary<GameObject, int> ();
 	private float hitLast = 0;
 	private float hitReset = 10;
 
@@ -96,6 +98,8 @@ public class AI : MonoBehaviour {
 	{
 		if(Network.isServer)
 		{
+			AIManager.Enemies --;
+
 			if(ItemDrops != null)
 			{
 				if(ItemDrops.Length > 0)
@@ -112,36 +116,39 @@ public class AI : MonoBehaviour {
 
 	//Event for when the AI gets hit allows it to calculate how much damage has been done by each
 	//player and decide who to target
-	private void AIHit(NetworkPlayer player, int damage)
+	private void AIHit(GameObject source, int damage)
 	{
 		//Check if player has hit before
-		if(targetDamages.ContainsKey(player))
+		if(targetDamages.ContainsKey(source))
 		{
-			targetDamages[player] += damage;
+			targetDamages[source] += damage;
 		}
 		else
-			targetDamages.Add(player,damage);
+			targetDamages.Add(source,damage);
 
 		hitLast = Time.time;
 
 
 		//Decide on new target;
-		NetworkPlayer newTarget = player;
+		GameObject newTarget = source;
 		int highestDamage = 0;
 
-		foreach (KeyValuePair<NetworkPlayer, int> hit in targetDamages)
+		foreach (KeyValuePair<GameObject, int> hit in targetDamages)
 		{
 			if(hit.Value > highestDamage)
 				newTarget = hit.Key;
 		}
 
-		GameObject[] players = GameObject.FindGameObjectsWithTag ("Player");
+		/*GameObject[] players = GameObject.FindGameObjectsWithTag ("Player");
 
 		for (int i = 0; i < players.Length; i++)
 		{
 			if(players[i].networkView.owner == newTarget)
 				Target = players[i];
 		}
+		*/
+
+		Target = newTarget;
 	}
 	
 	// Update is called once per frame
@@ -163,7 +170,7 @@ public class AI : MonoBehaviour {
 			}
 
 			if(Time.time - hitLast > hitReset)
-				targetDamages = new Dictionary<NetworkPlayer, int>();
+				targetDamages = new Dictionary<GameObject, int>();
 		}
 		else
 		{
@@ -313,6 +320,66 @@ public class AI : MonoBehaviour {
 		AIManager.Enemies --;
 		seeker.pathCallback -= OnPathComplete;
 	}
+
+	public void FireProjecitle(Vector3 src, string eff)
+	{
+		FireProjectile (src, eff, null);
+	}
+
+	public void FireProjectile(Vector3 src, string eff, DamageType damage)
+	{
+		FireProjectile (src, eff, transform.rotation, damage);
+	}
+
+	public void FireProjectile(Vector3 src, string eff, Quaternion rotation, DamageType damage)
+	{
+		if (Network.isServer)
+			networkView.RPC ("FireProjectile", RPCMode.Others, src, eff, rotation);
+		
+		GameObject proj = EffectManager.CreateLocal (src, eff, rotation);
+		if(proj != null)
+		{
+			Projectile p = proj.GetComponent<Projectile>();
+			p.Source = gameObject;
+			p.Damage = damage;
+		}
+	}
+
+	[RPC]
+	public void FireProjectileRPC(Vector3 src, string eff, Quaternion rotation)
+	{
+		GameObject proj = EffectManager.CreateLocal (src, eff, rotation);
+		if(proj != null)
+		{
+			Projectile p = proj.GetComponent<Projectile>();
+			p.Source = gameObject;
+		}
+	}
+
+
+
+	/* Sync effects to other AI
+	 */
+
+	public void SyncEffect(Vector3 src, string eff)
+	{
+		SyncEffect (src, eff, Quaternion.identity);
+	}
+
+	public void SyncEffect(Vector3 src, string eff, Quaternion rotation)
+	{
+		if (Network.isServer)
+			networkView.RPC ("FireProjectile", RPCMode.Others, src, eff);
+
+		SyncEffectRPC (src, eff, rotation);
+	}
+
+	[RPC]
+	public void SyncEffectRPC(Vector3 src, string eff, Quaternion rotation)
+	{
+		GameObject proj = EffectManager.CreateLocal (src, eff, rotation);
+	}
+
 
 	public void OnPathComplete(Path p)
 	{
