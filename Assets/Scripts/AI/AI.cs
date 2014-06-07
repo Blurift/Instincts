@@ -11,19 +11,20 @@ public enum AIBehaviourType
 }
 
 [AddComponentMenu("AI/AI")]
+[RequireComponent(typeof(CircleCollider2D))]
 public class AI : MonoBehaviour {
 
 	private HealthSystem HealthSystem;
 
 	public float VisionRange = 15f;
-	public float Radius = 1;
 	public LayerMask Avoid;
 
 	public SpriteRenderer SpriteRender;
 
 	//Misc
-	public AIAttackType Attack;
 	public string[] ItemDrops = new string[0];
+	public float GlobalAttackCooldownUntil = 0;
+	public float StunnedUntil = 0;
 
 	//AI
 	public AIBehaviourType AIType = AIBehaviourType.Melee;
@@ -31,8 +32,6 @@ public class AI : MonoBehaviour {
 	public GameObject Target;
 	public List<AIAction> Actions = new List<AIAction>();
 	public AIAbility[] Abilities;
-
-	private float pauseUntil = 0;
 
 	public float ActionCoolDown = 1;
 	private float lastActionCooldown = 0;
@@ -49,6 +48,7 @@ public class AI : MonoBehaviour {
 	public float Speed = 1f;
 	public float BaseSpeed = 1f;
 	public float MaxRotation = 90f;
+	public float ChaseModifier = 1.5f;
 
 	public AIPatrolPath PatrolPath;
 	public int PatrolPathIndex = 0;
@@ -159,18 +159,15 @@ public class AI : MonoBehaviour {
 	{
 		if(Network.isServer)
 		{
-			if(Time.time > pauseUntil)
+			AIAction[] actionList = Actions.ToArray();
+			for (int i = 0; i < actionList.Length; i++)
 			{
-				AIAction[] actionList = Actions.ToArray();
-				for (int i = 0; i < actionList.Length; i++)
-				{
-					actionList[i].Update();
-					if(!actionList[i].transparent)
-						break;
-				}
-
-				calculateMovement();
+				actionList[i].Update();
+				if(!actionList[i].transparent)
+					break;
 			}
+
+			calculateMovement();
 
 			if(Time.time - hitLast > hitReset)
 				targetDamages = new Dictionary<GameObject, int>();
@@ -181,112 +178,6 @@ public class AI : MonoBehaviour {
 		}
 	}
 
-	private void calculateMovement()
-	{
-		if(CurrentPath != null)
-		{
-			if(currentWaypoint >= CurrentPath.vectorPath.Count)
-			{
-				CurrentPath = null;
-				return;
-			}
-		}
-
-		bool move = true;
-
-		if (Vector3.Distance (currentWaypointPos, transform.position) < 1.5f)
-		{
-
-			if(CurrentPath != null)
-			{
-				currentWaypoint++;
-				if(currentWaypoint < CurrentPath.vectorPath.Count)
-				{
-					currentWaypointPos = CurrentPath.vectorPath[currentWaypoint];
-				}
-			}
-			else
-				move = false;
-
-
-		}
-
-		if(Target != null)
-		{
-			float distance = Vector3.Distance(Target.transform.position, transform.position);
-
-			Vector3 targetDir = (Target.transform.position - transform.position).normalized;
-
-			RaycastHit2D hit = Physics2D.Raycast(transform.position, targetDir, distance, Avoid);
-
-			if(hit.collider == null)
-			{
-				//Debug.Log("No obstructions chase player");
-				currentWaypointPos = Target.transform.position;
-
-				if(Attack.Range*0.8f < distance)
-					move = true;
-				else
-					move = false;
-			}
-		}
-
-		Vector3 dir = (currentWaypointPos - transform.position).normalized;
-		Rotate (dir);
-
-		if(move)
-		{
-			float currentAngle = transform.rotation.eulerAngles.z;
-			float destAngle = calculateAngle (dir) * Mathf.Rad2Deg;
-
-			float difference = destAngle - currentAngle;
-
-			if(difference > 180)
-				difference -= 360;
-			if(difference < -180)
-				difference += 360;
-
-			if(difference<0)
-				difference *= -1;
-
-			if(difference<45)
-				rigidbody2D.transform.position = transform.position += transform.up*Speed*Time.deltaTime;
-		}
-
-	}
-
-	private float calculateAngle(Vector2 dir)
-	{
-		return Mathf.Atan2 (-dir.x, dir.y);
-	}
-
-	public void Rotate(Vector2 dir)
-	{
-		Rotate (calculateAngle (dir));
-	}
-
-	public void Rotate(float a)
-	{
-		float angle = a * Mathf.Rad2Deg;
-		transform.Rotate (new Vector3 (0, 0, AngleToRotate (angle)));
-	}
-
-	public float AngleToRotate(float a)
-	{
-		float ca = transform.rotation.eulerAngles.z;
-		if(a < 0) a+=360;
-		float da = a - ca;
-
-		if(da > 180 || da < -180)
-			da*=-1;
-
-		float n = MaxRotation;
-		if(da<0)
-			n*=-1;
-
-		return n * Time.deltaTime;
-	}
-
 	private float GetDistance(GameObject player)
 	{
 		Vector3 distanceVector = player.transform.position - transform.position;
@@ -295,11 +186,16 @@ public class AI : MonoBehaviour {
 	}
 
 
+
 	/* UseAbility
 	 * Works out most appropriate ability to use based on value of abilty and if ability can be used.
 	 * Vector2 target: the target the ability is aiming at.
+	 */
 	public void UseAbility(Vector2 target)
 	{
+		if (Time.time < GlobalAttackCooldownUntil)
+			return;
+
 		AIAbility use = null;
 
 		for(int i = 0; i < Abilities.Length; i++)
@@ -308,11 +204,17 @@ public class AI : MonoBehaviour {
 				use = Abilities[i];
 
 			if(Abilities[i].Weight > use.Weight && Abilities[i].Usable(target))
+			{
+				Debug.Log("Setting Ability");
 				use = Abilities[i];
+			}
 		}
 
-		if (use.Use (target))
-			lastActionCooldown = Time.time + use.GlobalCooldown;
+		if (use != null && use.Use (target))
+		{
+			Debug.Log("Using Ability");
+			GlobalAttackCooldownUntil = Time.time + use.GlobalCooldown;
+		}
 
 	}
 
@@ -383,8 +285,9 @@ public class AI : MonoBehaviour {
 
 
 
-	/* Sync effects to other AI
-	 */
+	/*****************************
+	 * Sync effects to other AI
+	 ****************************/
 
 	public void SyncEffect(Vector3 src, string eff)
 	{
@@ -406,6 +309,123 @@ public class AI : MonoBehaviour {
 	}
 
 
+	/*****************************
+	 * Methods to move and control movement
+	 ****************************/
+
+	private void calculateMovement()
+	{
+		if(Time.time < StunnedUntil)
+			return;
+
+
+
+		if(CurrentPath != null)
+		{
+			if(currentWaypoint >= CurrentPath.vectorPath.Count)
+			{
+				CurrentPath = null;
+				return;
+			}
+		}
+		
+		bool move = true;
+		
+		if (Vector3.Distance (currentWaypointPos, transform.position) < 1.5f)
+		{
+			
+			if(CurrentPath != null)
+			{
+				currentWaypoint++;
+				if(currentWaypoint < CurrentPath.vectorPath.Count)
+				{
+					currentWaypointPos = CurrentPath.vectorPath[currentWaypoint];
+				}
+			}
+			else
+				move = false;
+			
+			
+		}
+		
+		if(Target != null)
+		{
+			float distance = Vector3.Distance(Target.transform.position, transform.position);
+			
+			Vector3 targetDir = (Target.transform.position - transform.position).normalized;
+			
+			RaycastHit2D hit = Physics2D.Raycast(transform.position, targetDir, distance, Avoid);
+			
+			if(hit.collider == null)
+			{
+				//Debug.Log("No obstructions chase player");
+				currentWaypointPos = Target.transform.position;
+
+
+				move = true;
+			}
+		}
+
+		Vector3 dir = (currentWaypointPos - transform.position).normalized;
+		Rotate (dir);
+		
+		if(move)
+		{
+			float currentAngle = transform.rotation.eulerAngles.z;
+			float destAngle = calculateAngle (dir) * Mathf.Rad2Deg;
+			
+			float difference = destAngle - currentAngle;
+			
+			if(difference > 180)
+				difference -= 360;
+			if(difference < -180)
+				difference += 360;
+			
+			if(difference<0)
+				difference *= -1;
+			
+			if(difference<45)
+			{
+				rigidbody2D.transform.position = transform.position += transform.up*Speed*Time.deltaTime;
+
+				//TODO: Set Animation To Moving.
+			}
+		}
+		
+	}
+	
+	private float calculateAngle(Vector2 dir)
+	{
+		return Mathf.Atan2 (-dir.x, dir.y);
+	}
+	
+	public void Rotate(Vector2 dir)
+	{
+		Rotate (calculateAngle (dir));
+	}
+	
+	public void Rotate(float a)
+	{
+		float angle = a * Mathf.Rad2Deg;
+		transform.Rotate (new Vector3 (0, 0, AngleToRotate (angle)));
+	}
+	
+	public float AngleToRotate(float a)
+	{
+		float ca = transform.rotation.eulerAngles.z;
+		if(a < 0) a+=360;
+		float da = a - ca;
+		
+		if(da > 180 || da < -180)
+			da*=-1;
+		
+		float n = MaxRotation;
+		if(da<0)
+			n*=-1;
+		
+		return n * Time.deltaTime;
+	}
+
 	public void OnPathComplete(Path p)
 	{
 		if(!p.error)
@@ -425,10 +445,15 @@ public class AI : MonoBehaviour {
 		CalculatingPath = true;
 	}
 
-	public void Stop(float time)
+	public void Stun(float time)
 	{
-		pauseUntil = Time.time + time;
+
+		StunnedUntil = Time.time + time;
 	}
+
+	/*****************************
+	 * Network control Methods
+	 ****************************/
 
 	private void SyncedMovement()
 	{
@@ -436,8 +461,6 @@ public class AI : MonoBehaviour {
 		transform.position = Vector3.Lerp (syncStartPosition, syncEndPosition, syncTime / syncDelay);
 	}
 
-	//Network Events
-	
 	void OnSerializeNetworkView(BitStream stream, NetworkMessageInfo info)
 	{
 		Vector3 syncPosition = rigidbody2D.transform.position;

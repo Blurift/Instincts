@@ -114,21 +114,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   VisionRange: 10
-  Radius: 1
   Avoid:
     serializedVersion: 2
     m_Bits: 524288
   SpriteRender: {fileID: 21200000}
-  Attack: {fileID: 11400006}
   ItemDrops: []
+  GlobalAttackCooldownUntil: 0
+  StunnedUntil: 0
   AIType: 0
   Target: {fileID: 0}
   Actions: []
+  Abilities: []
+  ActionCoolDown: 1
   CalculatingPath: 0
   seeker: {fileID: 0}
   Speed: 1.10000002
   BaseSpeed: 1.10000002
   MaxRotation: 180
+  ChaseModifier: 1.5
   PatrolPath: {fileID: 0}
   PatrolPathIndex: 0
 --- !u!114 &11400002

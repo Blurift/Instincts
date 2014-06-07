@@ -21,7 +21,7 @@ public class AIAttack : AIAction {
 		}
 		else
 		{
-			ParentAI.Stop (ParentAI.Attack.Attack(ParentAI.Target));
+			//ParentAI.Stop (ParentAI.Attack.Attack(ParentAI.Target));
 
 			End ();
 		}

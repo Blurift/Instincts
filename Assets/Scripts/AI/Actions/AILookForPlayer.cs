@@ -32,10 +32,10 @@ public class AILookForPlayer : AIAction {
 				{
 					RaycastHit2D hit = Physics2D.Raycast(ParentAI.transform.position, players[i].transform.position, currentPDistance, ParentAI.Avoid);
 
-					Debug.Log("Trying to find player");
+					//Debug.Log("Trying to find player");
 					if(hit.collider == null)
 					{
-							Debug.Log("Player found");
+							//Debug.Log("Player found");
 							playerDistance = currentPDistance;
 							playerTarget = players[i];
 					}

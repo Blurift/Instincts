@@ -22,17 +22,14 @@ public class AIChaseTarget : AIAction {
 			return;
 		}
 
-		if(Time.time - lastSync > 2)
+		if(Time.time - lastSync > 0.5)
 		{
 			float distance = Helper.DistanceFloatFromTarget (ParentAI.Target.transform.position, ParentAI.transform.position);
-			if(distance < ParentAI.Attack.Range)
-			{
-				ParentAI.AddAction(new AIAttack());
-			}
 
-			else if(distance < ParentAI.VisionRange)
+			if(distance < ParentAI.VisionRange)
 			{
-				ParentAI.Speed = ParentAI.BaseSpeed * 3.3f;
+				ParentAI.UseAbility(ParentAI.Target.transform.position);
+				ParentAI.Speed = ParentAI.BaseSpeed * ParentAI.ChaseModifier;
 				ParentAI.Move(ParentAI.Target.transform.position);
 			}
 			else
@@ -52,6 +49,7 @@ public class AIChaseTarget : AIAction {
 
 	private Vector2 ConvertDirection(Vector2 o, Vector2 d)
 	{
+		//Origin to Destination
 		float dRadians = Mathf.Atan2 (d.y, d.x);
 		float oRadians = Mathf.Atan2 (o.y, o.x);
 
