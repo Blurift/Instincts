@@ -34,6 +34,9 @@ public class AI : MonoBehaviour {
 
 	private float pauseUntil = 0;
 
+	public float ActionCoolDown = 1;
+	private float lastActionCooldown = 0;
+
 
 	//Pathfinding
 	public Path CurrentPath;
@@ -289,6 +292,28 @@ public class AI : MonoBehaviour {
 		Vector3 distanceVector = player.transform.position - transform.position;
 		float distance = Mathf.Sqrt ((distanceVector.x * distanceVector.x) + (distanceVector.y * distanceVector.y));
 		return distance;
+	}
+
+
+	/* UseAbility
+	 * Works out most appropriate ability to use based on value of abilty and if ability can be used.
+	 * Vector2 target: the target the ability is aiming at.
+	public void UseAbility(Vector2 target)
+	{
+		AIAbility use = null;
+
+		for(int i = 0; i < Abilities.Length; i++)
+		{
+			if(use == null)
+				use = Abilities[i];
+
+			if(Abilities[i].Weight > use.Weight && Abilities[i].Usable(target))
+				use = Abilities[i];
+		}
+
+		if (use.Use (target))
+			lastActionCooldown = Time.time + use.GlobalCooldown;
+
 	}
 
 	public void AddAction(AIAction action)

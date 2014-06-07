@@ -8,11 +8,13 @@ public abstract class AIAbility : MonoBehaviour {
 	public Transform SourceAbility;
 
 	public float Cooldown = 3;
+	public float GlobalCooldown = 0.6f;
 	private float lastUsed = 0;
 	public float MinimumRange = 1;
 	public float MaximumRange = 3;
 
 	public DamageType Damage;
+	public int Weight = 1;
 
 	public LayerMask Layers;
 
