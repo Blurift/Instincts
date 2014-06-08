@@ -13,6 +13,7 @@ public class AIWander : AIAction {
 
 	public override void Update ()
 	{
+
 		if(ParentAI.PatrolPath != null && ParentAI.CurrentPath == null)
 		{
 			ParentAI.Speed = ParentAI.BaseSpeed;
@@ -22,12 +23,13 @@ public class AIWander : AIAction {
 			if(ParentAI.PatrolPathIndex >= ParentAI.PatrolPath.Points.Count)
 				ParentAI.PatrolPathIndex = 0;
 			ParentAI.Move(ParentAI.PatrolPath.Points[ParentAI.PatrolPathIndex]);
-
+			ParentAI.Stun(1);
 		}
 		else if(ParentAI.CurrentPath == null)
 		{
 			ParentAI.Speed = ParentAI.BaseSpeed;
 			ParentAI.Move(ParentAI.transform.position + GetRandomDirection());
+			ParentAI.Stun(1);
 		}
 	}
 

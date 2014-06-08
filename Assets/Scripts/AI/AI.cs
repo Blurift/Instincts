@@ -20,6 +20,7 @@ public class AI : MonoBehaviour {
 	public LayerMask Avoid;
 
 	public SpriteRenderer SpriteRender;
+	public Animator Animator;
 
 	//Misc
 	public string[] ItemDrops = new string[0];
@@ -391,6 +392,8 @@ public class AI : MonoBehaviour {
 				//TODO: Set Animation To Moving.
 			}
 		}
+
+		SetMove (move);
 		
 	}
 	
@@ -447,8 +450,23 @@ public class AI : MonoBehaviour {
 
 	public void Stun(float time)
 	{
-
+		SetMove (false);
 		StunnedUntil = Time.time + time;
+	}
+
+	/*****************************
+	 * Animation
+	 ****************************/
+
+	public void SetMove(bool move)
+	{
+		networkView.RPC ("SetMoveRPC", RPCMode.Others, move);
+	}
+
+	[RPC]
+	private void SetMoveRPC(bool move)
+	{
+		Animator.SetBool ("Move", move);
 	}
 
 	/*****************************

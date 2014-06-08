@@ -16,7 +16,6 @@ GameObject:
   - 114: {fileID: 11400002}
   - 95: {fileID: 9500000}
   - 114: {fileID: 11400004}
-  - 114: {fileID: 11400006}
   - 114: {fileID: 11400008}
   m_Layer: 13
   m_Name: Alien
@@ -63,7 +62,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 100000}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 131.520905, y: 145.087616, z: 0}
+  m_LocalPosition: {x: 135.024963, y: 147.303238, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 400002}
@@ -124,7 +123,7 @@ Animator:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 100000}
-  m_Enabled: 1
+  m_Enabled: 0
   m_Avatar: {fileID: 0}
   m_Controller: {fileID: 9100000, guid: cce2eb9d0fed0c84a872f8ce248b1c6c, type: 2}
   m_CullingMode: 0
@@ -252,28 +251,6 @@ MonoBehaviour:
     tagsChange: -1
     tagsSet: -1
   tagPenalties: 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
---- !u!114 &11400006
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 100000}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b9dab9d042c581347ab860977038853f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Source: {fileID: 400002}
-  Damage:
-    Effect: 1
-    Damage: 11
-    AltDamage: 0
-  Range: 1.20000005
-  UseTime: 1
-  Type: 1
-  useRaycast: 1
-  ProjectilePrefab: {fileID: 0}
-  AttackEffect: 
 --- !u!114 &11400008
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -333,7 +310,7 @@ SpriteRenderer:
   m_SortingLayer: 1
   m_SortingOrder: 0
   m_SortingLayerID: 1074530123
-  m_Sprite: {fileID: 21300000, guid: b409226e3e3ab7c49beb394eeaf3de30, type: 3}
+  m_Sprite: {fileID: 21300000, guid: b8bb5f234e7631241b6677ec5824eb39, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1001 &100100000
 Prefab:
