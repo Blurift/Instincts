@@ -123,7 +123,7 @@ Animator:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 100000}
-  m_Enabled: 0
+  m_Enabled: 1
   m_Avatar: {fileID: 0}
   m_Controller: {fileID: 9100000, guid: cce2eb9d0fed0c84a872f8ce248b1c6c, type: 2}
   m_CullingMode: 0
@@ -181,6 +181,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1572864
   SpriteRender: {fileID: 21200000}
+  Animator: {fileID: 9500000}
   ItemDrops:
   - AcidSample
   GlobalAttackCooldownUntil: 0

@@ -118,6 +118,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 524288
   SpriteRender: {fileID: 21200000}
+  Animator: {fileID: 9500000}
   ItemDrops: []
   GlobalAttackCooldownUntil: 0
   StunnedUntil: 0

@@ -415,6 +415,8 @@ public class AI : MonoBehaviour {
 	
 	public float AngleToRotate(float a)
 	{
+
+
 		float ca = transform.rotation.eulerAngles.z;
 		if(a < 0) a+=360;
 		float da = a - ca;
@@ -457,16 +459,25 @@ public class AI : MonoBehaviour {
 	/*****************************
 	 * Animation
 	 ****************************/
+	bool isMoving = false;
 
 	public void SetMove(bool move)
 	{
-		networkView.RPC ("SetMoveRPC", RPCMode.Others, move);
+		if (move != isMoving)
+		{
+			isMoving = move;;
+			Animator.SetBool ("Moving", move);
+			networkView.RPC ("SetMoveRPC", RPCMode.Others, move);
+		}
+			
+
 	}
 
 	[RPC]
 	private void SetMoveRPC(bool move)
 	{
-		Animator.SetBool ("Move", move);
+		GameManager.WriteMessage("Animator: " + move.ToString());
+		Animator.SetBool ("Moving", move);
 	}
 
 	/*****************************
