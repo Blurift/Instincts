@@ -294,7 +294,7 @@ public class NetworkManager : MonoBehaviour {
 		Menu.CurrentScreen = ScreenType.Error;
 		Menu.ScreenMessage = "You have been disconnected from the server.";
 
-		Application.LoadLevel (0);
+		Application.LoadLevel (LevelLoader.LEVEL_MENU);
 	}
 
 	void OnPlayerDisconnected(NetworkPlayer player)
@@ -312,7 +312,7 @@ public class NetworkManager : MonoBehaviour {
 		if(Network.isClient)
 		{
 			Network.Disconnect(200);
-			Application.LoadLevel(0);
+			Application.LoadLevel(LevelLoader.LEVEL_MENU);
 		}
 	}
 	

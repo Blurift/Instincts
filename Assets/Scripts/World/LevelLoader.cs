@@ -3,6 +3,10 @@ using System.Collections;
 
 public class LevelLoader : MonoBehaviour {
 
+	public const int LEVEL_INTRO = 0;
+	public const int LEVEL_MENU = 1;
+	public const int LEVEL_GAME = 2;
+
 	public static LevelLoader Instance
 	{
 		get { return instance; }

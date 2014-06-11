@@ -10,7 +10,7 @@ public class Menu : MonoBehaviour {
 
 	//Static info
 	private const string typeName = "BluriftInstinctsPreview";
-	public static string VERSION = "0.2.0.2";
+	public const string VERSION = "0.31";
 
 	//Gameinfo
 	private HostData[] hostList = new HostData[0];
@@ -42,6 +42,7 @@ public class Menu : MonoBehaviour {
 	public static bool log = false;
 	public static string ScreenMessage = "";
 	public static ScreenType CurrentScreen = ScreenType.MainMenu;
+	public static OptionsScreenType OptionsScreen = OptionsScreenType.Graphics;
 
 	//Styleinfo
 	public GUISkin MenuSkin;
@@ -74,11 +75,11 @@ public class Menu : MonoBehaviour {
 	private Rect patchNotesRect;
 
 	private string creditsText = "<b>Lead Designer/Programmer</b>\nKeirron Stach\n\n" +
-		"<b>Sound Assetes</b>\nFreesound.org Creative Commons\n\n" +
-		"<b>Music</b>\nChristopher Morrish\n\n" +
+		"<b>Sound Assets</b>\nFreesound.org Creative Commons\n\n" +
+		"<b>Music</b>\nThis could be YOU\n\n" +
 		"<b>A* Pathfinding</b>\nhttp://www.arongranberg.com/\n\n" +
-		"<b>QA Testing</b>\nSam Dalby\nDamien Raines\nJordan Green\nEmily Rich" +
-		"\n\n<b>Special Thanks</b>\nKarleigh Brown\nLuke Cross\nJessica Muller";
+		"<b>QA Testing</b>\nSam Dalby\nJoey Testo\n\n" +
+		"<b>Special Thanks</b>\nKarleigh Brown\nLuke Cross\nJessica Muller";
 
 	float buttonWidth = 1;
 	float buttonHeight = 1;
@@ -461,8 +462,8 @@ public class Menu : MonoBehaviour {
 				if(GUI.Button(new Rect(x,y + (buttonI*(buttonHeight+buttonDivider)),buttonWidth,buttonHeight), "Start Server"))
 				{
 					NetworkManager.Server = true;
-					Network.SetLevelPrefix(1);
-					Application.LoadLevel(1);
+					Network.SetLevelPrefix(LevelLoader.LEVEL_GAME);
+					Application.LoadLevel(LevelLoader.LEVEL_GAME);
 					//NetworkManager.StartServer();
 				}
 				buttonI+=1;
@@ -518,11 +519,12 @@ public class Menu : MonoBehaviour {
 			buttonWidth = Screen.width*0.15f;
 			buttonHeight = buttonWidth*0.3f;
 			float buttonDivider = buttonHeight *0.2f;
-
-
+			float subScreen = buttonWidth + buttonDivider*2;
+			float subScreenWidth = Screen.width - subScreen;
 
 			buttonI = 0;
 
+			/* NETWORK TESTING
 			if(GUI.Button(new Rect(buttonDivider,buttonI*(buttonHeight+buttonDivider)+buttonDivider, buttonWidth,buttonHeight), "Test Network"))
 			{
 				Network.InitializeServer(0,serverPort,UseNat);
@@ -544,12 +546,51 @@ public class Menu : MonoBehaviour {
 
 			GUI.Label(new Rect(buttonWidth + buttonDivider*2, buttonDivider, Screen.width/2,messageHeight), message);
 			buttonI++;
+			*/
+
+
+
+			switch (OptionsScreen) {
+			case OptionsScreenType.Graphics:
+				GUI.Label(new Rect(subScreen,buttonDivider, subScreenWidth,Screen.height * 0.2f), "Graphics", GUI.skin.customStyles[2]);
+				break;
+			case OptionsScreenType.Sound:
+				GUI.Label(new Rect(subScreen,buttonDivider, subScreenWidth,Screen.height * 0.2f), "Sound", GUI.skin.customStyles[2]);
+				break;
+			case OptionsScreenType.Controls:
+				GUI.Label(new Rect(subScreen,buttonDivider, subScreenWidth,Screen.height * 0.2f), "Controls", GUI.skin.customStyles[2]);
+				break;
+			}
+
+			if(GUI.Button(new Rect(buttonDivider,buttonI*(buttonHeight+buttonDivider)+buttonDivider, buttonWidth,buttonHeight), "Graphics"))
+			{
+				OptionsScreen = OptionsScreenType.Graphics;
+			}
+
+			buttonI++;
+
+			if(GUI.Button(new Rect(buttonDivider,buttonI*(buttonHeight+buttonDivider)+buttonDivider, buttonWidth,buttonHeight), "Sound"))
+			{
+				OptionsScreen = OptionsScreenType.Sound;
+			}
+			
+			buttonI++;
+
+			if(GUI.Button(new Rect(buttonDivider,buttonI*(buttonHeight+buttonDivider)+buttonDivider, buttonWidth,buttonHeight), "Controls"))
+			{
+				OptionsScreen = OptionsScreenType.Controls;
+			}
+			
+			buttonI++;
 
 			if(GUI.Button(new Rect(buttonDivider,buttonI*(buttonHeight+buttonDivider)+buttonDivider, buttonWidth,buttonHeight), "Main Menu"))
 			{
 				CurrentScreen = ScreenType.MainMenu;
+				OptionsScreen = OptionsScreenType.Graphics;
 			}
 			buttonI++;
+
+
 		}
 	}
 
@@ -577,7 +618,7 @@ public class Menu : MonoBehaviour {
 		NetworkManager.playerName = Username;
 		NetworkManager.Server = false;
 
-		LevelLoader.Instance.LoadLevel (1);
+		LevelLoader.Instance.LoadLevel (LevelLoader.LEVEL_GAME);
 
 	}
 
@@ -760,6 +801,14 @@ public class Menu : MonoBehaviour {
 		string ret = "";
 		for (int i = 0; i < data.Length; i++) ret += data[i].ToString("x2").ToLower();
 		return ret;
+	}
+
+	public enum OptionsScreenType
+	{
+		Sound,
+		Graphics,
+		Controls,
+		Other,
 	}
 }
 

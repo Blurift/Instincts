@@ -111,9 +111,9 @@ public class DestructableManager : MonoBehaviour {
 
 	public static void SyncPropsNewPlayer(NetworkPlayer player)
 	{
-		foreach(DestructableProp prop in instance.props)
+		foreach(KeyValuePair<int,DestructableProp> prop in instance.props)
 		{
-			instance.networkView.RPC ("CreatePropRPC", player, prop.Id, GetPropPrefId(prop.name), prop.transform.position, prop.transform.rotation);
+			instance.networkView.RPC ("CreatePropRPC", player, prop.Value.Id, instance.GetPropPrefId(prop.Value.gameObject), prop.Value.transform.position, prop.Value.transform.rotation);
 		}
 	}
 }
