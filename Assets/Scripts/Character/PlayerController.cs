@@ -169,13 +169,16 @@ public class PlayerController : EntityController {
 
 		//Handle Movement Input
 		{
-			SetAnimIdle (Input.GetAxis ("Vertical") == 0);
+			float vert = Input.GetAxis ("Vertical");
+			float hori = Input.GetAxis ("Horizontal");
+
+			SetAnimIdle (vert == 0 && hori == 0);
 			
 			Vector3 move = Vector3.zero;
 			if (absolute)
-				move = (Input.GetAxis ("Vertical") * Vector3.up) + (Input.GetAxis ("Horizontal") * Vector3.right);
+				move = (vert * Vector3.up) + (hori * Vector3.right);
 			else
-				move = (Input.GetAxis ("Vertical") * transform.up) + (Input.GetAxis ("Horizontal") * transform.right);
+				move = (vert * transform.up) + (hori * transform.right);
 			if (move != Vector3.zero)
 				move.Normalize ();
 
