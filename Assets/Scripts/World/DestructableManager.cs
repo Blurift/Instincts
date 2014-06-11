@@ -100,11 +100,20 @@ public class DestructableManager : MonoBehaviour {
 
 	private int GetPropPrefId(GameObject prop)
 	{
+		string name = prop.name.Replace ("(Clone)", "");
 		for (int i = 0; i < PropPrefabs.Length; i++)
 		{
-			if(prop.name.Equals(PropPrefabs[i].name))
+			if(name.Equals(PropPrefabs[i].name))
 				return i;
 		}
 		return -1;
+	}
+
+	public static void SyncPropsNewPlayer(NetworkPlayer player)
+	{
+		foreach(DestructableProp prop in instance.props)
+		{
+			instance.networkView.RPC ("CreatePropRPC", player, prop.Id, GetPropPrefId(prop.name), prop.transform.position, prop.transform.rotation);
+		}
 	}
 }

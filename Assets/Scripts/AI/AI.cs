@@ -399,6 +399,7 @@ public class AI : MonoBehaviour {
 	
 	private float calculateAngle(Vector2 dir)
 	{
+		//Convert Vector2 Direction to a Radian Angle
 		return Mathf.Atan2 (-dir.x, dir.y);
 	}
 	
@@ -416,19 +417,40 @@ public class AI : MonoBehaviour {
 	public float AngleToRotate(float a)
 	{
 
-
+		//Current Angle
 		float ca = transform.rotation.eulerAngles.z;
-		if(a < 0) a+=360;
-		float da = a - ca;
-		
-		if(da > 180 || da < -180)
-			da*=-1;
-		
-		float n = MaxRotation;
-		if(da<0)
+
+		float diff = AngleDifference (ca, a);
+
+
+		float n = MaxRotation * Time.deltaTime;
+
+		if(diff<0)
+		{
 			n*=-1;
+			if(diff > n)
+				n = diff;
+		}
+		else
+		{
+			if(diff < n)
+				n = diff;
+		}
+
+
+		return n;
+	}
+
+	public float AngleDifference (float from, float to)
+	{
+		float difference = to - from;
 		
-		return n * Time.deltaTime;
+		if(difference > 180)
+			difference -= 360;
+		if(difference < -180)
+			difference += 360;
+
+		return difference;
 	}
 
 	public void OnPathComplete(Path p)
@@ -476,8 +498,13 @@ public class AI : MonoBehaviour {
 	[RPC]
 	private void SetMoveRPC(bool move)
 	{
-		GameManager.WriteMessage("Animator: " + move.ToString());
 		Animator.SetBool ("Moving", move);
+	}
+
+	[RPC]
+	private void SetAbilityAnimRPC(int ability)
+	{
+		Animator.SetInteger ("Ability", ability);
 	}
 
 	/*****************************

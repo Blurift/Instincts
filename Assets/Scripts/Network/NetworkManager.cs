@@ -76,7 +76,7 @@ public class NetworkManager : MonoBehaviour {
 		{
 			Vector3 move = ((Input.GetAxis ("Vertical") * transform.up) + (Input.GetAxis ("Horizontal") * transform.right)).normalized;
 			
-			move*= 4*Time.deltaTime;
+			move*= 15*Time.deltaTime;
 			Camera.main.transform.position += move;
 			
 
@@ -195,8 +195,6 @@ public class NetworkManager : MonoBehaviour {
 			}
 
 			//Test for player
-			//if(false)
-			//	return;
 
 			Players[player] = null;
 			PlayerNames[player] = user;
@@ -232,6 +230,9 @@ public class NetworkManager : MonoBehaviour {
 				go.networkView.SetScope(player, true);
 				AIManager.Instance.SpawnEnemy(go, player);
 			}
+
+			//Sync All Props to new player.
+			DestructableManager.SyncPropsNewPlayer(player);
 		}
 	}
 
