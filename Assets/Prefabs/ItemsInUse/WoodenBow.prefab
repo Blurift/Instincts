@@ -30,6 +30,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
+  m_RootOrder: 0
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -60,6 +61,11 @@ MonoBehaviour:
     Effect: 0
     Damage: 1
     AltDamage: 0
+  Source: {fileID: 0}
+  EffectAnimation: {fileID: 0}
+  EffectSound: {fileID: 100000, guid: 20aa3f4040dcb25498d44242193d79f4, type: 2}
+  EffectProjectile: {fileID: 100000, guid: dcf520d2ee80e5c4ea546bfa36f2638d, type: 2}
+  RaycastProjectile: 0
 --- !u!148 &14800000
 NetworkView:
   m_ObjectHideFlags: 1
@@ -90,9 +96,8 @@ SpriteRenderer:
   m_UseLightProbes: 0
   m_LightProbeAnchor: {fileID: 0}
   m_ScaleInLightmap: 1
-  m_SortingLayer: 2
-  m_SortingOrder: 4
   m_SortingLayerID: 2905277101
+  m_SortingOrder: 4
   m_Sprite: {fileID: 21300000, guid: b62c1ff9a8a1ba6439920460466daabc, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1001 &100100000
