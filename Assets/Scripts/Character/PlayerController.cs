@@ -163,6 +163,78 @@ public class PlayerController : EntityController {
 			lastFootstep = Time.time;
 		}
 	}
+
+	[RPC]
+	public void SetEquipped(string name)
+	{
+		UnsetEquipped ();
+		GameObject obj = ItemInUseManager.Create (name);
+
+		if (obj == null)
+						return;
+
+		obj.transform.position = EquipPosition.position;
+		obj.transform.rotation = transform.rotation;
+		obj.transform.parent = transform;
+
+		Equipped = obj;
+	}
+
+	[RPC]
+	public void SetEquippedNet(string name, NetworkViewID netID)
+	{
+		if(Network.isServer)
+		{
+			NetworkManager.SendRPC(networkView, networkView.owner, "SetEquipped", name);
+		}
+		UnsetEquipped ();
+		GameObject obj = ItemInUseManager.Create (name);
+		
+		if (obj == null)
+			return;
+		
+		obj.transform.position = EquipPosition.position;
+		obj.transform.rotation = transform.rotation;
+		obj.transform.parent = transform;
+		if(obj.networkView != null)
+			obj.networkView.viewID = netID;
+		
+		Equipped = obj;
+	}
+
+	public GameObject GetEquipped()
+	{
+		return Equipped;
+	}
+
+	[RPC]
+	public void UnsetEquipped()
+	{
+		if(Equipped != null)
+		{
+			Destroy (Equipped);
+		}
+	}
+
+	[RPC]
+	public void UseEquipped()
+	{
+		if(Network.isServer)
+		{
+			NetworkManager.SendRPC(networkView, networkView.owner, "UseEquipped");
+			return;
+		}
+		/*
+		 * TODO
+		 * Refactring needed / Placeholder mostly
+		 */
+
+		ItemRangedEquip r = Equipped.GetComponent<ItemRangedEquip>();
+		if(r != null)
+		{
+			r.RangedFireEffects();
+		}
+	}
 	
 	private void UpdateInput()
 	{
@@ -192,8 +264,6 @@ public class PlayerController : EntityController {
 
 			Rotate (angle);
 		}
-
-
 	}
 	
 	[RPC]

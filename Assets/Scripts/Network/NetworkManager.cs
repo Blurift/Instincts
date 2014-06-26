@@ -22,6 +22,22 @@ public class NetworkManager : MonoBehaviour {
 	private Dictionary<NetworkPlayer,GameObject> Players;
 	private Dictionary<NetworkPlayer, string> PlayerNames;
 
+	public static void SendRPC(NetworkView view, string name, params object[] values)
+	{
+		SendRPC(view, null, name, values);
+	}
+
+	public static void SendRPC(NetworkView view, NetworkPlayer owner, string name, params object[] values)
+	{
+		foreach(KeyValuePair<NetworkPlayer, GameObject> pair in Instance.Players)
+		{
+			if( pair.Value.networkView.owner != owner)
+			{
+				view.RPC(name, pair.Key, values);
+			}
+		}
+	}
+
 	public static GameObject GetPlayer(NetworkPlayer player)
 	{
 		foreach(KeyValuePair<NetworkPlayer, GameObject> pair in Instance.Players)

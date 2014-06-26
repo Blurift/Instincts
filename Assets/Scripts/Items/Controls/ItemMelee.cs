@@ -23,6 +23,7 @@ public class ItemMelee : ItemBehaviour {
 
 		if(currentEquip != null)
 		{
+			controller.networkView.RPC("UseEquipped", RPCMode.Server);
 			ItemMeleeEquipped ranged = (ItemMeleeEquipped)currentEquip.GetComponent(typeof(ItemMeleeEquipped));
 			ranged.Use(controller.transform.position, aim);
 		}

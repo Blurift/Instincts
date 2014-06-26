@@ -12,6 +12,8 @@ public class ItemRangedEquip : MonoBehaviour {
 	public GameObject EffectSound;
 	public GameObject EffectProjectile;
 
+	public Transform ProjectileSource;
+
 	public bool RaycastProjectile = false;
 
 	public void Fire(float x, float y)
@@ -29,7 +31,7 @@ public class ItemRangedEquip : MonoBehaviour {
 		if(Network.isServer)
 		{
 
-			Vector2 origin = new Vector2(transform.position.x,transform.position.y);
+			Vector2 origin = new Vector2(ProjectileSource.position.x,ProjectileSource.position.y);
 			
 			Vector3 point = new Vector2(x,y) - origin;
 			
@@ -61,7 +63,7 @@ public class ItemRangedEquip : MonoBehaviour {
 			}
 			else
 			{
-				GameObject p = (GameObject)Instantiate(EffectProjectile, transform.position, transform.rotation);
+				GameObject p = (GameObject)Instantiate(EffectProjectile, ProjectileSource.position, transform.rotation);
 
 				//GameObject goProj = 
 				//Projectile proj = goProj.GetComponent<Projectile>();
@@ -78,12 +80,7 @@ public class ItemRangedEquip : MonoBehaviour {
 	{
 		if (Network.isServer) return;
 
-		if(networkView.isMine)
-		{
-			networkView.RPC("RangedFireEffects", RPCMode.Others);
-		}
-
-		Vector3 p = new Vector3(transform.position.x,transform.position.y,-3);
+		Vector3 p = new Vector3(ProjectileSource.position.x,ProjectileSource.position.y,-3);
 
 		//Will be used to acurately control effects over the network
 		if(EffectAnimation != null)

@@ -21,6 +21,8 @@ public class Projectile : MonoBehaviour {
 		rigidbody2D.transform.position += transform.up * Time.deltaTime * Speed;
 	}
 
+
+
 	void OnCollisionEnter2D(Collision2D collision)
 	{
 		if(collision.gameObject == Source)
@@ -53,6 +55,41 @@ public class Projectile : MonoBehaviour {
 			}
 		}
 
+		Destroy(gameObject);
+	}
+
+	void OnTriggerEnter2D(Collider2D other)
+	{
+		Collide (other);
+	}
+
+	private void Collide(Collider2D other)
+	{
+		if(other.gameObject == Source)
+			return;
+		if(Network.isServer)
+		{
+			HealthSystem health = other.gameObject.GetComponent<HealthSystem>();
+				
+			if(health != null)
+			{
+				health.TakeDamage(Damage, Source);
+			}
+		}
+		
+		if(collisionEffect != null && collisionEffect != "")
+		{
+			EffectManager.CreateEffect(transform.position, collisionEffect);
+		}
+		
+		if(ItemDrop != "" && Network.isServer)
+		{
+			if(Random.Range(1,100) > DropPercent)
+			{
+				ItemManager.SpawnItem(ItemDrop, gameObject.transform.position);
+			}
+		}
+		
 		Destroy(gameObject);
 	}
 }

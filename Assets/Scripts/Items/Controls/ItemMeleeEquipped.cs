@@ -49,7 +49,7 @@ public class ItemMeleeEquipped : MonoBehaviour {
 		else
 		{
 			networkView.RPC("Use", RPCMode.Server, origin, aim);
-			networkView.RPC("UseEffects", RPCMode.All);
+			UseEffects();
 		}
 	}
 

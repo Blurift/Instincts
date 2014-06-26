@@ -31,6 +31,7 @@ public class ItemRanged : ItemBehaviour {
 	{
 		if(Ammo > 0)
 		{
+			controller.networkView.RPC("UseEquipped", RPCMode.Server);
 			//Get the vector position the gun is aiming at.
 			Vector3 aim3 = Camera.main.ScreenToWorldPoint (Input.mousePosition);
 			Vector2 aim = new Vector2 (aim3.x, aim3.y);

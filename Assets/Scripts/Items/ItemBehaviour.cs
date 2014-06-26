@@ -12,15 +12,28 @@ public class ItemBehaviour : MonoBehaviour {
 		if (EquippedPrefab == null)
 			return;
 
+		NetworkViewID viewID = Network.AllocateViewID ();
+
+		controller.SetEquippedNet (EquippedPrefab.name, viewID);
+		controller.networkView.RPC ("SetEquippedNet", RPCMode.Server, EquippedPrefab.name, viewID);
+		currentEquip = controller.GetEquipped ();
+
+		/* OLD CODE
 		currentEquip = (GameObject)Network.Instantiate (EquippedPrefab, controller.EquipPosition.position, Quaternion.identity, 0);
 		ItemEquipManager equipManager = currentEquip.GetComponent<ItemEquipManager> ();
 		equipManager.EquipPosition = controller.EquipPosition;
+		*/
 	}
 
 	public virtual void Unequip(PlayerController controller)
 	{
 		if(currentEquip != null)
-			((ItemEquipManager)currentEquip.GetComponent (typeof(ItemEquipManager))).Destroy ();
+		{
+			controller.UnsetEquipped();
+			controller.networkView.RPC ("UnsetEquipped", RPCMode.Others);
+
+			//((ItemEquipManager)currentEquip.GetComponent (typeof(ItemEquipManager))).Destroy ();
+		}
 		currentEquip = null;
 	}
 

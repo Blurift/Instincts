@@ -18,8 +18,11 @@ public class AIManager : MonoBehaviour {
 
 		foreach(GameObject go in EnemyPre)
 		{
-			Logger.Write("Enemy " + go.name + " loaded");
-			EnemyPrefabs.Add(go.name, go);
+			if(go != null)
+			{
+				Logger.Write("Enemy " + go.name + " loaded");
+				EnemyPrefabs.Add(go.name, go);
+			}
 		}
 
 		Instance = this;
