@@ -67,7 +67,7 @@ MonoBehaviour:
     ItemNeeded:
     - Wood
     - MetalScraps
-    ItemQNeeded: 0300000003000000
+    ItemQNeeded: 0200000002000000
   - ItemName: ShrapnelPellets
     ItemNeeded:
     - MetalScraps
@@ -82,6 +82,19 @@ MonoBehaviour:
     - Wood
     - MetalScraps
     ItemQNeeded: 0100000001000000
+  - ItemName: 9mmPistol
+    ItemNeeded:
+    - MetalScraps
+    - Wood
+    ItemQNeeded: 0500000001000000
+  - ItemName: 9mmAmmo
+    ItemNeeded:
+    - MetalScraps
+    ItemQNeeded: 05000000
+  - ItemName: SubMachineGun
+    ItemNeeded:
+    - MetalScraps
+    ItemQNeeded: 0a000000
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1

@@ -21,7 +21,11 @@ public class CraftingManagerEditor : Editor {
 		for(int i = 0; i < Items.Count; i++)
 		{
 			EditorGUILayout.BeginHorizontal();
-			Items[i].Foldout = EditorGUILayout.Foldout(Items[i].Foldout, Items[i].ItemName);
+
+			if(Items[i].Item != null)
+				Items[i].Foldout = EditorGUILayout.Foldout(Items[i].Foldout, Items[i].Item.Name);
+			else
+				Items[i].Foldout = EditorGUILayout.Foldout(Items[i].Foldout, "Is New");
 			if(GUILayout.Button("Delete", GUILayout.Width(Screen.width*0.2f), GUILayout.MinWidth(70)))
 			{
 				deleteItem = i;
@@ -32,9 +36,9 @@ public class CraftingManagerEditor : Editor {
 			{
 				EditorGUILayout.BeginHorizontal();
 				GUILayout.Space(Screen.width*0.1f);
-				string originalName = Items[i].ItemName;
-				Items[i].ItemName = EditorGUILayout.TextField(Items[i].ItemName);
-				if(originalName != Items[i].ItemName) dirty = true;
+				Item original = Items[i].Item;
+				Items[i].Item = (Item)EditorGUILayout.ObjectField(Items[i].Item, typeof(Item), false);
+				if(original != Items[i].Item) dirty = true;
 				EditorGUILayout.EndHorizontal();
 
 				EditorGUILayout.BeginHorizontal();
@@ -42,7 +46,7 @@ public class CraftingManagerEditor : Editor {
 				EditorGUILayout.LabelField("Ingrediants");
 				EditorGUILayout.EndHorizontal();
 
-				List<string> Needs = new List<string>();
+				List<Item> Needs = new List<Item>();
 				List<int> NeedsQ = new List<int>();
 
 				int deleteIngrediant = -1;
@@ -57,9 +61,9 @@ public class CraftingManagerEditor : Editor {
 					{
 						EditorGUILayout.BeginHorizontal();
 						GUILayout.Space(Screen.width*0.2f);
-						string oIng = Needs[j];
+						Item oIng = Needs[j];
 						int oW = NeedsQ[j];
-						Needs[j] = EditorGUILayout.TextField(Needs[j]);
+						Needs[j] = (Item)EditorGUILayout.ObjectField(Needs[j], typeof(Item), false);
 						NeedsQ[j] = EditorGUILayout.IntField(NeedsQ[j]);
 						if(oIng != Needs[j] || oW != NeedsQ[j]) dirty = true;
 						if(GUILayout.Button("Delete"))
@@ -81,7 +85,7 @@ public class CraftingManagerEditor : Editor {
 				GUILayout.Space(Screen.width*0.2f);
 				if(GUILayout.Button("Add"))
 				{
-					Needs.Add("");
+					Needs.Add(null);
 					NeedsQ.Add(1);
 					dirty = true;
 				}

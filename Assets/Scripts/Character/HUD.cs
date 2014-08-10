@@ -377,7 +377,7 @@ public class HUD : MonoBehaviour {
 					GUI.color = Color.white;
 				}
 				
-				GUI.Label(craftItemRect, craftItems[i].ItemName);
+				GUI.Label(craftItemRect, craftItems[i].Item.Name);
 				
 			}
 			
@@ -391,7 +391,7 @@ public class HUD : MonoBehaviour {
 					CraftableItem item = craftItems[craftIndex];
 					for(int j = 0; j < item.ItemNeeded.Length; j++)
 					{
-						if(!Inventory.IsStackAvailable(item.ItemNeeded[j],item.ItemQNeeded[j]))
+						if(!Inventory.IsStackAvailable(item.ItemNeeded[j].name,item.ItemQNeeded[j]))
 						{
 							craftIt = false;
 						}
@@ -401,9 +401,10 @@ public class HUD : MonoBehaviour {
 					{
 						for(int j = 0; j < item.ItemNeeded.Length; j++)
 						{
-							Inventory.RetrieveFromStack(item.ItemNeeded[j],item.ItemQNeeded[j]);
+							Inventory.RetrieveFromStack(item.ItemNeeded[j].name,item.ItemQNeeded[j]);
 						}
-						networkView.RPC("CraftItem", RPCMode.Server, item.ItemName, Network.player);
+						Inventory.AddToInventory(item.Item.name,item.Item.StackAmount);
+						//networkView.RPC("CraftItem", RPCMode.Server, item.Item.name, Network.player);
 					}
 				}
 			}

@@ -28,6 +28,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
+  m_RootOrder: 0
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -57,7 +58,7 @@ MonoBehaviour:
   - {fileID: 100000, guid: dcf520d2ee80e5c4ea546bfa36f2638d, type: 2}
   - {fileID: 100000, guid: 3a18f21101ca2ee48833771407afe8cc, type: 2}
   - {fileID: 100000, guid: 00fd1437ca723a44ea64e974fc526478, type: 2}
-  - {fileID: 0}
+  - {fileID: 100000, guid: 7c8740760caf1bd4c8df6aed29d71ddb, type: 2}
   - {fileID: 0}
   - {fileID: 0}
 --- !u!148 &14800000

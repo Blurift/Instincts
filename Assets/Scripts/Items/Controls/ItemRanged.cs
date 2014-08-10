@@ -46,7 +46,7 @@ public class ItemRanged : ItemBehaviour {
 				ItemRangedEquip ranged = (ItemRangedEquip)currentEquip.GetComponent(typeof(ItemRangedEquip));
 				ranged.Fire(aim.x,aim.y);
 				Ammo--;
-				networkView.RPC("ItemRangedSetRPC", RPCMode.Server, Ammo);
+				//networkView.RPC("ItemRangedSetRPC", RPCMode.Server, Ammo);
 			}
 		}
 	}
@@ -64,43 +64,5 @@ public class ItemRanged : ItemBehaviour {
 	public override string HUDDisplay ()
 	{
 		return AmmoName + ": " + Ammo;
-	}
-
-	public override void CopyFromControl (ItemBehaviour control)
-	{
-		this.Ammo = ((ItemRanged)control).Ammo;
-	}
-
-	public override void VerifyControlWithServer (NetworkPlayer player)
-	{
-		if(Network.isServer)
-		{
-			Item item = (Item)GetComponent(typeof(Item));
-			networkView.RPC("ItemRangedSetRPC", player, Ammo);
-
-		}
-		ItemRangedSetRPC (Ammo);
-		
-	}
-
-	public override void VerifyControlWithServer ()
-	{
-		if(Network.isServer)
-		{
-			Item item = (Item)GetComponent(typeof(Item));
-			
-			if(!item.IsOwned)
-				networkView.RPC("ItemRangedSetRPC", RPCMode.Others, Ammo);
-			else
-				networkView.RPC("ItemRangedSetRPC", networkView.owner, Ammo);
-		}
-		ItemRangedSetRPC (Ammo);
-		
-	}
-
-	[RPC]
-	void ItemRangedSetRPC(int rAmmo)
-	{
-		Ammo = rAmmo;
 	}
 }

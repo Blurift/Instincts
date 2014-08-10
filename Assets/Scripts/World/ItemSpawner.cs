@@ -38,12 +38,9 @@ public class ItemSpawner : MonoBehaviour {
 			if(currentSpawn != null)
 			{
 				ItemDrop itemDrop = (ItemDrop)currentSpawn.GetComponent(typeof(ItemDrop));
-				Item item = (Item)currentSpawn.GetComponent(typeof(Item));
 
 				lastSpawn = Time.time;
 				itemDrop.DespawnTime = Time.time + 120;
-				if(item.IsOwned)
-					currentSpawn = null;
 			}
 		}
 		else if(Network.isClient)

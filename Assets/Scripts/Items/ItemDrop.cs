@@ -3,10 +3,13 @@ using System.Collections;
 
 public class ItemDrop : MonoBehaviour {
 
-	public static Item ItemToPickUp = null;
+	public static ItemDrop ItemToPickUp = null;
+
+	public int DropID = 0;
 
 	public float DespawnTime = 0;
 	public Item item;
+	public int ItemStack;
 
 	private bool ready = false;
 
@@ -19,8 +22,6 @@ public class ItemDrop : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-
-		//item = new Item (); //(Item)GetComponent(typeof(Item));
 
 		if (item == null)
 			return;
@@ -58,24 +59,21 @@ public class ItemDrop : MonoBehaviour {
 		if(ready && !HUD.Instance.HUDFocus)
 		{
 			//Check distance to player;
-			if(Helper.DistanceFloatFromTarget(gameObject.transform.position, Camera.main.transform.position) < 2)
+			if(Vector2.Distance(gameObject.transform.position, Camera.main.transform.position) < 2)
 			{
-				ItemToPickUp = item;
+				ItemToPickUp = this;
 			}
 		}
 
-		if (Time.time > DespawnTime && Network.isServer && !item.IsOwned)
+		if (Time.time > DespawnTime && Network.isServer)
 		{
 			RemoveFromWorld();
-			Network.Destroy(gameObject);
 		}
 	}
 
 	public void RemoveFromWorld()
 	{
-		RemoveNetworkBufferedRPC(networkView.viewID);
-
-		Destroy (this);
+		ItemManager.RemoveDropFromWorld (DropID);
 	}
 
 	[RPC]

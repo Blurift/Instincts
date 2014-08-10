@@ -6,20 +6,21 @@ public class ItemManager : MonoBehaviour {
 
 	public static ItemManager Instance;
 
-	public Dictionary<string, GameObject> ItemPrefabs;
+	public Dictionary<string, Item> ItemPrefabs;
+	
+	public Item[] ItemObjects;
 
-	public string[] ItemNames;
-	public GameObject[] ItemObjects;
+	public GameObject ItemDropPrefab;
+	private List<GameObject> currentItemDrops = new List<GameObject> ();
+	private int DropCounter = 0;
 
 	// Use this for initialization
 	void Start () {
-		ItemPrefabs = new Dictionary<string, GameObject> ();
-		if (ItemNames.Length == ItemObjects.Length && ItemNames.Length > 0)
-		{
-			for (int i = 0; i < ItemNames.Length; i++) {
-				if(ItemNames[i] != null && ItemObjects[i] != null)
-					ItemPrefabs.Add(ItemNames[i],ItemObjects[i]);
-			}
+		ItemPrefabs = new Dictionary<string, Item> ();
+
+		for (int i = 0; i < ItemObjects.Length; i++) {
+			if(ItemObjects[i] != null)
+				ItemPrefabs.Add(ItemObjects[i].name,ItemObjects[i]);
 		}
 
 		Instance = this;
@@ -30,26 +31,105 @@ public class ItemManager : MonoBehaviour {
 	
 	}
 
-	[RPC]
-	void SpawnItemRPC(string itemName, Vector3 position, NetworkViewID id)
+	public static ScriptableObject CreateItem(string name)
 	{
-		GameObject o = (GameObject)Instantiate (Instance.ItemPrefabs [itemName], position, Quaternion.identity);
-		o.networkView.viewID = id;
+		if(Instance.ItemPrefabs.ContainsKey(name))
+		{
+			return (ScriptableObject)Instantiate(Instance.ItemPrefabs[name]);
+		}
+
+		Debug.LogError ("ItemManager: Create item name not reconised - (" + name + ")");
+		return null;
+	}
+
+	public static ScriptableObject CreateItem(Item item)
+	{
+		return CreateItem (item.name);
+	}
+
+	[RPC]
+	GameObject SpawnItemRPC(string itemName, Vector3 position, int id, int stack)
+	{
+		if(!ItemPrefabs.ContainsKey(itemName))
+		{
+			Debug.LogError("ItemManager: Could not spawn item (" + itemName +")");
+			return null;
+		}
+		GameObject o = (GameObject)Instantiate (ItemDropPrefab, position, Quaternion.identity);
+		ItemDrop d = o.GetComponent<ItemDrop>();
+		
+		d.DropID = id;
+		d.item = ItemPrefabs[itemName];
+		d.ItemStack = stack;
+		if (stack == -1)
+			d.ItemStack = d.item.StackAmount;
+
+		currentItemDrops.Add (o);
+		return o;
+	}
+
+	[RPC]
+	GameObject SpawnItemWorld (string name, Vector3 worldPosition, int stack)
+	{
+		if (Network.isServer)
+		{
+			networkView.RPC("SpawnItemRPC", RPCMode.Others, name, worldPosition, DropCounter, stack);
+			GameObject o = SpawnItemRPC(name,worldPosition,DropCounter, stack);
+
+			if(0!=null)
+				DropCounter++;
+
+			return o;
+		}
+		return null;
+	}
+
+	public static GameObject SpawnItem(string itemName, Vector3 worldPosition, int stack)
+	{
+		if(Network.isServer)
+		{
+			return Instance.SpawnItemWorld(itemName, worldPosition, stack);
+		}
+		else
+			Instance.networkView.RPC("SpawnItemWorld", RPCMode.Server, itemName, worldPosition, stack);
+
+		return null;
 	}
 
 	public static GameObject SpawnItem(string itemName, Vector3 worldPosition)
 	{
+		return SpawnItem (itemName, worldPosition, -1);
+	}
+
+	[RPC]
+	void RemoveDropRPC(int id)
+	{
+		for(int i = 0; i < currentItemDrops.Count; i++)
+		{
+			GameObject o = currentItemDrops[i];
+			if(o.GetComponent<ItemDrop>().DropID == id)
+			{
+				Destroy (currentItemDrops[i]);
+				currentItemDrops.RemoveAt(i);
+			}
+		}
+	}
+
+	[RPC]
+	void RemoveDrop(int id)
+	{
 		if(Network.isServer)
 		{
-			NetworkViewID id = Network.AllocateViewID();
-			GameObject o = (GameObject)Instantiate (Instance.ItemPrefabs [itemName], worldPosition, Quaternion.identity);
-
-			o.networkView.viewID = id;
-			Instance.networkView.RPC("SpawnItemRPC", RPCMode.Others, itemName, worldPosition, id);
-			return o;
+			RemoveDropRPC(id);
+			networkView.RPC("RemoveDropRPC", RPCMode.Others, id);
 		}
+		else
+			networkView.RPC("RemoveDrop", RPCMode.Server, id);
+	}
 
-		return null;
+	public static void RemoveDropFromWorld(int id)
+	{
+		Instance.RemoveDrop (id);
 	}
 
 	public static GameObject CraftItem(string itemName, NetworkPlayer player)
@@ -65,5 +145,14 @@ public class ItemManager : MonoBehaviour {
 		}
 		
 		return null;
+	}
+
+	public static void InitializeDropsForPlayer(NetworkPlayer player)
+	{
+		foreach(GameObject g in Instance.currentItemDrops)
+		{
+			ItemDrop d = g.GetComponent<ItemDrop>();
+			Instance.networkView.RPC("SpawnItemRPC", player, d.item.name, d.transform.position, d.DropID, d.ItemStack);
+		}
 	}
 }

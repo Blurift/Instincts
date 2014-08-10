@@ -29,7 +29,7 @@ public class Inventory : MonoBehaviour {
 
 		ItemsToEquip = null;
 
-		GameManager.WriteMessage ("Inventory Init: " + Equipment.Length);
+		//GameManager.WriteMessage ("Inventory Init: " + Equipment.Length);
 
 		if(networkView.isMine)
 			GameManager.ControllingInventory = this;
@@ -59,84 +59,6 @@ public class Inventory : MonoBehaviour {
 
 		}
 	}
-	
-	[RPC]
-	void CraftItem(string itemName, NetworkPlayer player)
-	{
-		if(Network.isServer)
-		{
-
-			GameObject itemGO = ItemManager.CraftItem(itemName, player);
-
-			Item item = (Item)itemGO.GetComponent(typeof(Item));
-
-			item.ChangeOwnerRPC(player);
-
-			networkView.RPC("CraftItemAttach", player, itemGO.networkView.viewID);
-		}
-	}
-
-	[RPC]
-	void CraftItemAttach(NetworkViewID viewId)
-	{
-		GameObject[] items = GameObject.FindGameObjectsWithTag ("Item");
-
-		for(int i = items.Length-1 ; i > -1; i--)
-		{
-			if(items[i].networkView.viewID == viewId)
-			{
-				Item item  = (Item)items[i].GetComponent(typeof(Item));
-				AddToInventory(item);
-				break;
-			}
-		}
-	}
-
-	[RPC]
-	void ItemAttach(NetworkViewID viewId)
-	{
-		GameObject[] items = GameObject.FindGameObjectsWithTag ("Item");
-
-		Item item = null;
-
-		for(int i = items.Length-1 ; i > -1; i--)
-		{
-			if(items[i].networkView.viewID == viewId)
-			{
-				item = (Item)items[i].GetComponent(typeof(Item));
-				break;
-			}
-		}
-
-
-
-		if(item != null)
-		{
-			//GameManager.WriteMessage("Equipping Item: " + Equipment.Length);
-			if(Equipment.Length > 0)
-			{
-				for (int i = 0; i < Equipment.Length; i++)
-				{
-					if(Equipment[i] == null)
-					{
-
-						item.networkView.RPC("ChangeOwnerRPC", RPCMode.Server, Network.player);
-						item.invOwner = this;
-						Equipment[i] = item;
-						break;
-					}
-				}
-			}
-			else
-			{
-				item.networkView.RPC("ChangeOwnerRPC", RPCMode.Server, Network.player);
-				item.invOwner = this;
-				ItemsToEquip.Add(item);
-			}
-		}
-	}
-
-
 
 	public void PickUpItem(Item item)
 	{
@@ -149,19 +71,41 @@ public class Inventory : MonoBehaviour {
 			if(item == Items[i])
 			{
 				Items.RemoveAt(i);
-				item.networkView.RPC("DropItemInWorldRPC", RPCMode.Server, transform.position);
+				Destroy(item);
+				networkView.RPC("DropItem", RPCMode.Server, i, "I");
 			}
 		}
 
 		for(int i = 0; i < Equipment.Length; i++)
 		{if(item == Equipment[i])
 			{
+
 				Equipment[i] = null;
-				item.networkView.RPC("DropItemInWorldRPC", RPCMode.Server, transform.position);
+				Destroy(item);
+				networkView.RPC("DropItem", RPCMode.Server, i, "E");
 			}
 		}
 	}
 
+	[RPC]
+	public void DropItem(int i, string type)
+	{
+		if(type == "I")
+		{
+			ItemManager.SpawnItem(Items[i].name, transform.position);
+			Destroy (Items[i]);
+			Items.RemoveAt(i);
+
+		}
+		if(type == "E")
+		{
+			ItemManager.SpawnItem(Items[i].name, transform.position);
+			Destroy(Equipment[i]);
+			Equipment[i] = null;
+		}
+	}
+
+	[RPC]
 	public void DropAll()
 	{
 		if(SelectedIndex > -1)
@@ -176,17 +120,14 @@ public class Inventory : MonoBehaviour {
 		//Drop all Inventory Items
 		for(int i = Items.Count-1; i > -1; i--)
 		{
-			Items[i].networkView.RPC("DropItemInWorldRPC", RPCMode.Server, transform.position);
-			Items.RemoveAt(i);
+			DropItem (Items[i]);
 		}
 
 		for(int i = 0; i < Equipment.Length; i++)
 		{
 			if(Equipment[i] != null)
 			{
-				Equipment[i].networkView.RPC("DropItemInWorldRPC", RPCMode.Server, transform.position);
-				Equipment[i] = null;
-
+				DropItem (Equipment[i]);
 			}
 		}
 	}
@@ -262,50 +203,6 @@ public class Inventory : MonoBehaviour {
 		return null;
 	}
 
-	public void AddToInventory(Item item)
-	{
-		if(!item.Stackable)
-		{
-			item.networkView.RPC("ChangeOwnerRPC", RPCMode.Server, Network.player);
-			Items.Add(item);
-			return;
-		}
-
-		int stackLeft = item.StackAmount;
-
-		for(int i = 0; i < Items.Count; i++)
-		{
-			Item itemC = Items[i];
-			if(itemC.Name == item.Name)
-			{
-				int stackSpace = itemC.StackMax - itemC.StackAmount;
-
-				if(stackLeft <= stackSpace)
-				{
-					itemC.StackAmount += stackLeft;
-
-					stackLeft = 0;
-					item.networkView.RPC("DestroyItem", RPCMode.Server);
-					break;
-				}
-				else
-				{
-					itemC.StackAmount = itemC.StackMax;
-					stackLeft -= stackSpace;
-				}
-			}
-		}
-
-		if(stackLeft > 0)
-		{
-			item.StackAmount = stackLeft;
-			item.networkView.RPC("ChangeOwnerRPC", RPCMode.Server, Network.player);
-			item.invOwner = this;
-			Items.Add(item);
-
-		}
-	}
-
 	public bool IsStackAvailable(string name, int need)
 	{
 		int amount = 0;
@@ -333,7 +230,8 @@ public class Inventory : MonoBehaviour {
 			if(Items[i].name == name && amount < need)
 			{
 				amount += Items[i].TakeFromStack(need - amount);
-
+				if(Items[i].StackAmount > 0)
+					ChangeStack(i, Items[i].StackAmount);
 			}
 		}
 
@@ -341,12 +239,111 @@ public class Inventory : MonoBehaviour {
 		{
 			if(Items[i].StackAmount <= 0)
 			{
-				Items[i].DestroyItem();
-				Items.RemoveAt(i);
+				RemoveFromInventory(i);
 			}
 		}
 
 		return amount;
+	}
+
+	public void RemoveFromInventory(int i)
+	{
+		RemoveFromInventoryRPC (i);
+		if(Network.isServer)
+			networkView.RPC ("RemoveFromInventoryRPC", networkView.owner, i);
+		else
+			networkView.RPC ("RemoveFromInventoryRPC", RPCMode.Server, i);
+	}
+
+	[RPC]
+	public void RemoveFromInventoryRPC(int i)
+	{
+		Destroy (Items [i]);
+		Items.RemoveAt (i);
+
+	}
+
+	public void AddToInventory(string name, int stack, int custom)
+	{
+		AddToInventoryRPC (name, stack, custom);
+
+		if(Network.isServer)
+			networkView.RPC("AddToInventoryRPC", networkView.owner, name,stack,custom);
+		else
+			networkView.RPC("AddToInventoryRPC", RPCMode.Server, name,stack,custom);
+	}
+
+	[RPC]
+	void AddToInventoryRPC(string name, int stack, int custom)
+	{
+		ScriptableObject s = ItemManager.CreateItem (name);
+		Item item = (Item)s;
+
+		if(!item.Stackable)
+		{
+			Items.Add ((Item)s);
+			return;
+		}
+
+		int stackLeft = stack;
+
+		for(int i = 0; i < Items.Count; i++)
+		{
+			Item itemC = Items[i];
+			if(itemC.Name == item.Name)
+			{
+				int stackSpace = itemC.StackMax - itemC.StackAmount;
+				
+				if(stackLeft <= stackSpace)
+				{
+					ChangeStack(i, itemC.StackAmount + stackLeft);
+					//itemC.StackAmount += stackLeft;
+					
+					stackLeft = 0;
+					Destroy (item);
+					break;
+				}
+				else
+				{
+					ChangeStack(i,itemC.StackMax);
+					stackLeft -= stackSpace;
+				}
+			}
+		}
+		
+		if(stackLeft > 0)
+		{
+			item.StackAmount = stackLeft;
+			Items.Add(item);			
+		}		
+	}
+
+	[RPC]
+	public void AddToInventory(string name, int amount)
+	{
+		ScriptableObject s = ItemManager.CreateItem (name);
+		Item item = (Item)s;
+		if(item.Stackable)
+			item.StackAmount = Mathf.Clamp (amount, 0, item.StackMax);
+
+		Items.Add (item);
+	}
+
+	public void ChangeStack(int i, int a)
+	{
+		ChangeStackRPC (i, a);
+		if(Network.isServer)
+			networkView.RPC ("ChangeStackRPC", networkView.owner, i, a);
+		else
+			networkView.RPC ("ChangeStackRPC", RPCMode.Server, i, a);
+	}
+
+	[RPC]
+	public void ChangeStackRPC(int i, int a)
+	{
+		if (Items [i].Stackable)
+			Items [i].StackAmount = Mathf.Clamp (a, 0, Items [i].StackMax);
+
 	}
 
 	public void VerifyItem(Item item)

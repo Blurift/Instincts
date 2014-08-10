@@ -70,7 +70,10 @@ public class EffectManager : MonoBehaviour {
 	private GameObject CreateLocalP(Vector3 pos, string effect, Quaternion rotation)
 	{
 		if (!Effects.ContainsKey (effect))
+		{
+			Debug.LogError("No effect with this name - (" +  effect + ")");
 			return null;
+		}
 		return (GameObject)Instantiate (Effects [effect], pos, rotation);
 	}
 

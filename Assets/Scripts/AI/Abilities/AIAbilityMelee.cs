@@ -11,17 +11,17 @@ public class AIAbilityMelee : AIAbility {
 		if (!base.Use (target))
 			return false;
 
-		Vector2 direction = (new Vector2(SourceAbility.position.x,SourceAbility.position.y) + target).normalized;
+		Vector2 direction = (target - new Vector2(SourceAbility.position.x,SourceAbility.position.y)).normalized;
 
 		/*
 		 * Check to see if the the ability hits anythign when triggered
 		 */
 		RaycastHit2D hit = Physics2D.Raycast(base.SourceAbility.position,direction,MaximumRange,Layers);
-		if(hit.collider != null)
+		if(hit.collider != null )
 		{
 			HealthSystem h = hit.collider.gameObject.GetComponent<HealthSystem>();
 
-			if(h != null)
+			if(h != null && hit.collider.gameObject != SourceAI)
 			{
 				h.TakeDamage(Damage,SourceAI);
 				if(HitEffect != null)

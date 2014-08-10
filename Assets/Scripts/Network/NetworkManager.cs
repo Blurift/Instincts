@@ -27,11 +27,11 @@ public class NetworkManager : MonoBehaviour {
 		SendRPC(view, null, name, values);
 	}
 
-	public static void SendRPC(NetworkView view, NetworkPlayer owner, string name, params object[] values)
+	public static void SendRPC(NetworkView view, NetworkPlayer except, string name, params object[] values)
 	{
 		foreach(KeyValuePair<NetworkPlayer, GameObject> pair in Instance.Players)
 		{
-			if( pair.Value.networkView.owner != owner)
+			if( pair.Value.networkView.owner != except)
 			{
 				view.RPC(name, pair.Key, values);
 			}
@@ -90,12 +90,11 @@ public class NetworkManager : MonoBehaviour {
 	void Update () {
 		if(Network.isServer)
 		{
-			Vector3 move = ((Input.GetAxis ("Vertical") * transform.up) + (Input.GetAxis ("Horizontal") * transform.right)).normalized;
+			/*Vector3 move = ((Input.GetAxis ("Vertical") * transform.up) + (Input.GetAxis ("Horizontal") * transform.right)).normalized;
 			
 			move*= 15*Time.deltaTime;
 			Camera.main.transform.position += move;
-			
-
+			*/
 		}
 	}
 
@@ -110,20 +109,18 @@ public class NetworkManager : MonoBehaviour {
 		Instance.Players = new Dictionary<NetworkPlayer, GameObject> ();
 		Instance.PlayerNames = new Dictionary<NetworkPlayer, string> ();
 
-		string serverName = "Server";
-		int maxPlayers = 8;
-		int port = 7000;
+		ServerSettings settings = ServerSettings.Default;
 		bool setup = false;
-		bool nat = true;
+
 
 		StreamReader reader = new StreamReader (Instance.serverSysFile);
 		try
 		{
-			serverName = reader.ReadLine ();
-			maxPlayers = int.Parse(reader.ReadLine());
-			port = int.Parse(reader.ReadLine());
+			settings.ServerName = reader.ReadLine ();
+			settings.MaxPlayers = int.Parse(reader.ReadLine());
+			settings.Port = int.Parse(reader.ReadLine());
 			if(!reader.ReadLine().Equals("True"))
-				nat = false;
+				settings.UseNAT = false;
 			setup = true;
 		}
 		catch (System.Exception)
@@ -134,15 +131,25 @@ public class NetworkManager : MonoBehaviour {
 		reader.Close ();
 
 		//Fix some settings;
-		if(maxPlayers > 16)
-			maxPlayers = 16;
+		if(settings.MaxPlayers > 16)
+			settings.MaxPlayers = 16;
 
-		GameManager.WriteMessage ("Starting server with " + maxPlayers + " max players on port " + port);
-		Network.InitializeServer( maxPlayers, port, nat);
-		MasterServer.dedicatedServer = true;
-		MasterServer.RegisterHost (typeName, serverName);
-		Camera.main.gameObject.AddComponent (typeof(AudioListener));
+		if(!settings.Dedicated)
+		{
+			settings.MaxPlayers--;
+		}
+		//else
+		//	Camera.main.gameObject.AddComponent (typeof(AudioListener));
 
+		MasterServer.dedicatedServer = settings.Dedicated;
+		Network.InitializeServer(settings.MaxPlayers, settings.MaxPlayers, settings.UseNAT);
+
+		if(!settings.LAN)
+		{
+			MasterServer.RegisterHost (typeName, settings.ServerName);
+		}
+
+		GameManager.WriteMessage ("Starting server with " + settings.MaxPlayers + " max players on port " + settings.Port);
 	}
 
 	public static void JoinServer(string user, string pass)
@@ -174,11 +181,11 @@ public class NetworkManager : MonoBehaviour {
 	void OnServerInitialized()
 	{
 		GameManager.WriteMessage ("Server Started");
+		LoginToServer (playerName, "", Network.player, Network.AllocateViewID ());
 	}
 
 	void OnPlayerConnected(NetworkPlayer player)
 	{
-
 		GameManager.WriteMessage ("Player " + player.ToString () + " connecting");
 	}
 
@@ -221,22 +228,10 @@ public class NetworkManager : MonoBehaviour {
 				SpawnPlayer(id, GetSpawnLocation(), user);
 			}
 
-			GameObject itemGO = ItemManager.CraftItem("WoodStick", player);
-			Players[player].networkView.RPC("ItemAttach", player, itemGO.networkView.viewID);
+			Players[player].GetComponent<Inventory>().AddToInventory("WoodStick",1);
 
 			//Loop through all items
-			int itemCount = 0;
-			foreach(GameObject go in GameObject.FindGameObjectsWithTag("Item"))
-			{
-				Item item = (Item)go.GetComponent(typeof(Item));
-
-				if(!item.IsOwned)
-				{
-					ItemManager.Instance.networkView.RPC("SpawnItemRPC", player, item.name, go.transform.position, go.networkView.viewID);
-					item.VerifyItemWithServer(player);
-					itemCount++;
-				}
-			}
+			ItemManager.InitializeDropsForPlayer(player);
 			//GameManager.SendMessage("Sent " + itemCount + " itemSpawns to " + PlayerNames[player], true);
 
 			//Loop through all AI
@@ -298,8 +293,8 @@ public class NetworkManager : MonoBehaviour {
 
 			SpawnPlayer (id, GetSpawnLocation (), PlayerNames[player]);
 
-			GameObject itemGO = ItemManager.CraftItem("WoodStick", player);
-			Players[player].networkView.RPC("ItemAttach", player, itemGO.networkView.viewID);
+			//Give player default weapon.
+			Players[player].GetComponent<Inventory>().AddToInventory("WoodStick",1);
 		}
 	}
 
@@ -451,5 +446,34 @@ public class NetworkManager : MonoBehaviour {
 		}
 
 		return false;
+	}
+}
+
+public class ServerSettings
+{
+	public string ServerName;
+	public int Port;
+	public int MaxPlayers;
+	public bool Dedicated;
+	public bool LAN = false;
+	public bool UseNAT = true;
+
+	public ServerSettings()
+	{
+	}
+
+	public static ServerSettings Default
+	{
+		get {
+			ServerSettings val = new ServerSettings ();
+
+			val.ServerName = "Server";
+			val.Port = 12777;
+			val.MaxPlayers = 8;
+			val.Dedicated = false;
+			val.LAN = false;
+
+			return val;
+		}
 	}
 }

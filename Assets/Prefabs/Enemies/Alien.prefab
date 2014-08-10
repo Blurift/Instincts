@@ -200,7 +200,7 @@ MonoBehaviour:
   Speed: 1.25
   BaseSpeed: 1.25
   MaxRotation: 120
-  ChaseModifier: 3
+  ChaseModifier: 3.5
   PatrolPath: {fileID: 0}
   PatrolPathIndex: 0
 --- !u!114 &11400002
@@ -275,7 +275,7 @@ MonoBehaviour:
   Damage:
     Effect: 0
     Damage: 11
-    AltDamage: 0
+    AltDamage: 5
   Weight: 1
   Layers:
     serializedVersion: 2

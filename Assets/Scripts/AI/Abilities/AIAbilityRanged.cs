@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[AddComponentMenu("AI/Abilities/Ranged")]
 public class AIAbilityRanged : AIAbility {
 
 	public GameObject ProjectileEffect;
@@ -14,11 +15,10 @@ public class AIAbilityRanged : AIAbility {
 	{
 		if (!base.Use (target))
 			return false;
-
 		if(FireEffect != null)
 			SourceAI.GetComponent<AI>().SyncEffect(target, FireEffect.name);
 
-		Vector2 direction = (new Vector2(SourceAbility.position.x,SourceAbility.position.y) + target).normalized;
+		Vector2 direction = (target - new Vector2(SourceAbility.position.x,SourceAbility.position.y)).normalized;
 
 		if(Raycast)
 		{
@@ -27,18 +27,18 @@ public class AIAbilityRanged : AIAbility {
 			{
 				HealthSystem h = hit.collider.gameObject.GetComponent<HealthSystem>();
 				
-				if(h != null)
+				if(h != null && hit.collider.gameObject != SourceAI)
 				{
 					h.TakeDamage(Damage,SourceAI);
 				}
 			}
 			if (ProjectileEffect != null)
-				SourceAI.GetComponent<AI> ().FireProjectile (target, ProjectileEffect.name, null);
+				SourceAI.GetComponent<AI> ().FireProjectile (SourceAbility.position, ProjectileEffect.name, null);
 		}
 		else
 		{
 			if (ProjectileEffect != null)
-				SourceAI.GetComponent<AI> ().FireProjectile (target, ProjectileEffect.name, Damage);
+				SourceAI.GetComponent<AI> ().FireProjectile (SourceAbility.position, ProjectileEffect.name, Damage);
 		}
 
 		return true;

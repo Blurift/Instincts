@@ -106,7 +106,7 @@ public class PlayerController : EntityController {
 			
 			if(ItemDrop.ItemToPickUp != null)
 			{
-				HUD.HelperInput("Pickup " + ItemDrop.ItemToPickUp.Name,"F",0.1f);
+				HUD.HelperInput("Pickup " + ItemDrop.ItemToPickUp.item.Name,"F",0.1f);
 				
 				if(Vector3.Distance(transform.position, ItemDrop.ItemToPickUp.transform.position) < 2)
 				{
@@ -117,8 +117,9 @@ public class PlayerController : EntityController {
 							FirstItem = true;
 							HUD.HelperMessage("You just picked up your first item, Press (I) to open up the inventory and crafting screens. Pick up more items to find new crafting recipes.", 10,3);
 						}
-						Inventory.AddToInventory(ItemDrop.ItemToPickUp);
-						ItemDrop.ItemToPickUp.GetComponent<ItemDrop>().RemoveFromWorld();
+						Inventory.AddToInventory(ItemDrop.ItemToPickUp.item.name, 1, -1);
+						ItemManager.RemoveDropFromWorld(ItemDrop.ItemToPickUp.DropID);
+						//ItemDrop.ItemToPickUp.GetComponent<ItemDrop>().RemoveFromWorld(); //Old code Pre Item Update
 					}
 				}
 				else
@@ -222,7 +223,7 @@ public class PlayerController : EntityController {
 		if(Network.isServer)
 		{
 			NetworkManager.SendRPC(networkView, networkView.owner, "UseEquipped");
-			return;
+			//return;
 		}
 		/*
 		 * TODO
@@ -233,6 +234,11 @@ public class PlayerController : EntityController {
 		if(r != null)
 		{
 			r.RangedFireEffects();
+		}
+		ItemMeleeEquipped m = Equipped.GetComponent<ItemMeleeEquipped> ();
+		if(m != null)
+		{
+			m.UseEffects();
 		}
 	}
 	
@@ -269,19 +275,17 @@ public class PlayerController : EntityController {
 	[RPC]
 	void DeathRespawn ()
 	{
-		if(Network.isServer)
-		{
-			networkView.RPC("DeathRespawn", networkView.owner);
-		}
-		else if(networkView.isMine)
+		if(networkView.isMine)
 		{
 			//Drop player items;
 			Inventory.DropAll();
 			
 			//Respawn player
 			NetworkManager.Respawn();
-			
-			
+		}
+		else if(Network.isServer)
+		{
+			networkView.RPC("DeathRespawn", networkView.owner);
 		}
 	}
 	

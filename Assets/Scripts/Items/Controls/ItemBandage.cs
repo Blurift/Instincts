@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[System.Serializable]
 public class ItemBandage : ItemBehaviour {
 
 	public override void UseItem (PlayerController controller, Item item)

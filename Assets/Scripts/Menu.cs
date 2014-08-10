@@ -19,6 +19,7 @@ public class Menu : MonoBehaviour {
 	private string LanIP = "";
 	private string LanPort = "";
 	private string serverSysFile = "";
+	private NetworkSearchType networkSearchType = NetworkSearchType.Internet;
 
 	//PlayerInfo
 	private static string Username = "Player";
@@ -79,7 +80,7 @@ public class Menu : MonoBehaviour {
 		"<b>Music</b>\nThis could be YOU\n\n" +
 		"<b>A* Pathfinding</b>\nhttp://www.arongranberg.com/\n\n" +
 		"<b>QA Testing</b>\nSam Dalby\nJoey Testo\n\n" +
-		"<b>Special Thanks</b>\nKarleigh Brown\nLuke Cross\nJessica Muller";
+		"<b>Special Thanks</b>\nKarleigh Brown\nLuke Cross\nJessica Mueller";
 
 	float buttonWidth = 1;
 	float buttonHeight = 1;
@@ -93,11 +94,7 @@ public class Menu : MonoBehaviour {
 		serverSysFile = Logger.Path() + "server.sys";
 
 		GetPlayerName ();
-
-		//if (Authenticated)
-			CurrentScreen = ScreenType.MainMenu;
-		//else
-			//CurrentScreen = ScreenType.Login;
+		CurrentScreen = ScreenType.MainMenu;
 
 		float boxWidth = Screen.width * 0.25f;
 		float boxHeight = Screen.height * 0.5f;
@@ -163,16 +160,52 @@ public class Menu : MonoBehaviour {
 
 		if(CurrentScreen == ScreenType.FindGame)
 		{
-			hostList = MasterServer.PollHostList();
-
 			//GUI Measurements
 			buttonWidth = Screen.width*0.18f;
 			buttonHeight = buttonWidth*0.2f;
 			buttonMargin = Screen.width*0.01f;
 			buttonSizeW = Screen.width*0.2f;
 			buttonSizeH = buttonHeight + buttonMargin*2;
-			
+
+			//Network Search buttons and messages;
+			{
+				float buttonNetworkSearchWidth = buttonWidth/2;
+				float networkSearchTypeOffset = buttonSizeW+buttonMargin;
+
+				Rect networkSearchTypeButtonInternet = new Rect(networkSearchTypeOffset,buttonSizeH/2,buttonNetworkSearchWidth,buttonHeight);
+				networkSearchTypeOffset += buttonNetworkSearchWidth + buttonMargin;
+				Rect networkSearchTypeButtonLAN = new Rect(networkSearchTypeOffset,buttonSizeH/2,buttonNetworkSearchWidth,buttonHeight);
+				networkSearchTypeOffset += buttonNetworkSearchWidth + buttonMargin;
+				Rect networkSearchTypeButtonDirect = new Rect(networkSearchTypeOffset,buttonSizeH/2,buttonNetworkSearchWidth,buttonHeight);
+				networkSearchTypeOffset += buttonNetworkSearchWidth + buttonMargin;
+				Rect networkSearchStatus = new Rect(networkSearchTypeOffset, buttonSizeH/2, 300,30);
+
+				if(GUI.Button(networkSearchTypeButtonInternet, "Internet") && networkSearchType != NetworkSearchType.Internet)
+				{
+					RefreshHostList();
+					networkSearchType = NetworkSearchType.Internet;
+				}
+
+				if(GUI.Button(networkSearchTypeButtonLAN, "LAN"))
+				{
+					hostList = null;
+					networkSearchType = NetworkSearchType.LAN;
+				}
+				if(GUI.Button(networkSearchTypeButtonDirect, "Direct"))
+				{
+					hostList = null;
+					networkSearchType = NetworkSearchType.Direct;
+				}
+
+				GUI.Label(networkSearchStatus, "Status: "+hostListStatus);
+			}
+
+
+			//Server List gui measurements
 			Rect ServerListRect = new Rect(buttonSizeW,buttonSizeH,Screen.width-buttonSizeW,Screen.height-buttonHeight*2);
+
+
+			hostList = MasterServer.PollHostList();
 			float serverListHeight = 200;
 			if(hostList != null) serverListHeight = hostList.Length * buttonHeight;
 
@@ -252,19 +285,23 @@ public class Menu : MonoBehaviour {
 				NetworkManager.playerName = Username;
 				
 				Network.isMessageQueueRunning = false;
-				if(LanIP == "" && selectedServer > -1)
+
+				switch(networkSearchType)
 				{
+				case NetworkSearchType.Internet:
 					Network.Connect(hostList[selectedServer]);
 					CurrentScreen = ScreenType.Connecting;
-				}
-				else if(LanIP != "")
-				{
+					break;
+				case NetworkSearchType.LAN:
+					break;
+				case NetworkSearchType.Direct:
 					Network.Connect(LanIP, int.Parse(LanPort));
 					CurrentScreen = ScreenType.Connecting;
+					break;
 				}
 			}
 
-			GUI.Label(new Rect(buttonWidth + buttonMargin*2, buttonHeight/2, 300,30), "Status: "+hostListStatus);
+
 
 			buttonI++;
 
@@ -280,12 +317,12 @@ public class Menu : MonoBehaviour {
 			Username = GUI.TextArea(new Rect(buttonMargin,buttonMargin + (buttonI*buttonSizeH) + buttonHeight/2, buttonWidth,buttonHeight/2), Username);
 			buttonI++;
 
-			GUI.Label(new Rect(buttonMargin,buttonMargin + (buttonI*buttonSizeH), buttonWidth,buttonHeight/2), "JoinIP");
+			GUI.Label(new Rect(buttonMargin,buttonMargin + (buttonI*buttonSizeH), buttonWidth,buttonHeight/2), "Direct Connect");
 			LanIP = GUI.TextArea(new Rect(buttonMargin,buttonMargin + (buttonI*buttonSizeH) + buttonHeight/2, buttonWidth,buttonHeight/2), LanIP);
 			LanPort = GUI.TextArea(new Rect(buttonMargin,buttonMargin + (buttonI*buttonSizeH) + (buttonHeight/2)*2, buttonWidth,buttonHeight/2), LanPort);
 			buttonI+=2;
 
-			GameTips = GUI.Toggle(new Rect(buttonMargin,buttonMargin + (buttonI*buttonSizeH), buttonWidth,buttonHeight), GameTips, " Use in game hints");
+			GameTips = GUI.Toggle(new Rect(buttonMargin,buttonMargin + (buttonI*buttonSizeH), buttonWidth,buttonHeight), GameTips, "Use in game hints");
 
 			if(GameTips)
 				PlayerPrefs.SetInt("GameTips",1);
@@ -299,127 +336,6 @@ public class Menu : MonoBehaviour {
 				CurrentScreen = ScreenType.MainMenu;
 			}
 
-
-		}
-
-		if(CurrentScreen == ScreenType.Login)
-		{
-			buttonWidth = Screen.width*0.15f;
-			buttonHeight = buttonWidth*0.3f;
-			float buttonDivider = buttonHeight *0.2f;
-			
-			buttonI = 0;
-
-			float estY = (buttonHeight*3) + (buttonDivider*2);
-
-			float x = Screen.width/2 - buttonWidth/2;
-			float y = Screen.height/2-estY/2 + buttonHeight;
-			
-			float logoRatio = (float)logo.height / (float)logo.width;
-			float logoW = buttonWidth*3;
-			float logoH = logoW*logoRatio;
-			float logoX = Screen.width/2 - logoW/2;
-			float logoY = y + buttonHeight - logoH;
-			
-			float buildRatio = (float)build.height / (float)build.width;
-			float buildW = Screen.width/3;
-			float buildH = buildW * buildRatio;
-			float buildX = Screen.width/2 - buildW/2;
-			float buildY = logoY - buttonDivider - buildH;
-			
-			GUI.DrawTexture(new Rect(logoX,logoY,logoW,logoH), logo);
-			GUI.DrawTexture(new Rect(buildX,buildY,buildW,buildH), build);
-
-			buttonI++;
-			GUI.Label(new Rect(x, y + (buttonI*(buttonHeight+buttonDivider)), buttonWidth,buttonHeight/2), "Username", LabelCenter);
-			Username = GUI.TextField(new Rect(x, y + (buttonI*(buttonHeight+buttonDivider)) + buttonHeight/2, buttonWidth,buttonHeight/2), Username);
-			buttonI++;
-
-			GUI.Label(new Rect(x, y + (buttonI*(buttonHeight+buttonDivider)), buttonWidth,buttonHeight/2), "Password", LabelCenter);
-			password = GUI.PasswordField(new Rect(x, y + (buttonI*(buttonHeight+buttonDivider)) + buttonHeight/2, buttonWidth,buttonHeight/2), password, '*');
-			buttonI++;
-
-			if(GUI.Button(new Rect(x, y + (buttonI*(buttonHeight+buttonDivider)), buttonWidth,buttonHeight/2), "Login"))
-			{
-				//Boolean check whether or not the username and password could be verified.
-				bool verified = false;
-
-				const string SERVER_VALID_DATA_HEADER = "LOGGED__";
-				const int GID = 1;
-				
-				string hash = HashString(Username + password + GID + "BLULOG");
-				string postString = "user=" + Username +
-					"&pass=" + password +
-						"&gid=" + GID +
-						"&hash=" + hash;
-
-				string logString = "";
-				
-				try
-				{
-					logString = WebPost("http://blurift.com/scripts/game_auth.php", postString);
-				}
-				catch (System.Exception e)
-				{
-					throw e;
-				}
-
-				if(logString.Trim().Length > SERVER_VALID_DATA_HEADER.Length)
-				{
-					if (logString.Trim().Substring(0, SERVER_VALID_DATA_HEADER.Length).Equals(SERVER_VALID_DATA_HEADER))
-					{
-						string toParse = logString.Trim().Substring(SERVER_VALID_DATA_HEADER.Length);
-						
-						string[] licences = Regex.Split(toParse, "__L__");
-						
-						int count = 0;
-
-						//Check each licence to make sure its correct.
-						for (int i = 0; i < licences.Length; i++)
-						{
-							string[] licenceData = Regex.Split(licences[i], "__D__");
-							if(licenceData.Length > 1)
-								count++;
-						}
-						
-						if (count > 0)
-						{
-							verified = true;
-
-							SavePlayerName();
-							/*
-							if (File.Exists(playerFile))
-								File.Delete(playerFile);
-							StreamWriter writer = new StreamWriter(playerFile);
-							
-							writer.WriteLine(user);
-							writer.WriteLine(pass);
-							writer.WriteLine(count);
-							
-							writer.Close();
-							*/
-							
-						}
-						else
-						{
-							authError = "No game licence.";
-						}
-					}
-				}
-
-				if(logString.Trim().Equals("__NO_AUTH__"))
-					authError = "Wrong username/password";
-				else if(logString.Trim().Equals("__NO_GAME_PASS__"))
-					authError = "No game licence.";
-
-				if(verified)
-				{
-					CurrentScreen = ScreenType.MainMenu;
-				}
-			}
-			buttonI++;
-
-			GUI.Label(new Rect(x, y + (buttonI*(buttonHeight+buttonDivider)), buttonWidth,buttonHeight/2), authError, LabelCenter);
 
 		}
 
@@ -459,7 +375,7 @@ public class Menu : MonoBehaviour {
 
 			if(File.Exists(serverSysFile))
 			{
-				if(GUI.Button(new Rect(x,y + (buttonI*(buttonHeight+buttonDivider)),buttonWidth,buttonHeight), "Start Server"))
+				if(GUI.Button(new Rect(x,y + (buttonI*(buttonHeight+buttonDivider)),buttonWidth,buttonHeight), "Host Game"))
 				{
 					NetworkManager.Server = true;
 					Network.SetLevelPrefix(LevelLoader.LEVEL_GAME);
@@ -469,7 +385,7 @@ public class Menu : MonoBehaviour {
 				buttonI+=1;
 			}
 
-			if(GUI.Button(new Rect(x, y + (buttonI*(buttonHeight+buttonDivider)),buttonWidth,buttonHeight), "Play"))
+			if(GUI.Button(new Rect(x, y + (buttonI*(buttonHeight+buttonDivider)),buttonWidth,buttonHeight), "Join Game"))
 			{
 				SavePlayerName();
 				selectedServer = -1;
@@ -589,8 +505,6 @@ public class Menu : MonoBehaviour {
 				OptionsScreen = OptionsScreenType.Graphics;
 			}
 			buttonI++;
-
-
 		}
 	}
 
@@ -600,16 +514,17 @@ public class Menu : MonoBehaviour {
 		hostPings = new Dictionary<string, Ping> ();
 	}
 
+	private void NetworkSearchLanGames()
+	{
+	}
+
 	void OnMasterServerEvent(MasterServerEvent msEvent)
 	{
 		if (msEvent == MasterServerEvent.HostListReceived)
 		{
 			hostList = MasterServer.PollHostList ();
-
 			hostListStatus = "Found " + hostList.Length + " servers.";
 		}
-
-
 	}
 
 	void OnConnectedToServer()
@@ -820,4 +735,11 @@ public enum ScreenType
 	Error,
 	Connecting,
 	Login,
+}
+
+public enum NetworkSearchType
+{
+	Internet,
+	LAN,
+	Direct,
 }

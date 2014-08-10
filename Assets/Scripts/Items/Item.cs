@@ -1,8 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using System;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
-public class Item : MonoBehaviour {
+public class Item : ScriptableObject {
 
 	public string Name;
 	public string Description;
@@ -19,57 +23,27 @@ public class Item : MonoBehaviour {
 	private float canUseTime = 0;
 	public bool RequiresPress = true;
 
-	public ItemBehaviour[] ControlList;
+	[SerializeField]
+	//public ItemBehaviour[] ControlList;
+	//public List<ItemBehaviour> ControlList;
+	public ItemBehaviour BController = new ItemBehaviour ();
 
-	public bool IsOwned = false;
-	public NetworkPlayer owner;
 	public Inventory invOwner;
 
-	void Start()
+	void OnEnable()
 	{
 		name = name.Replace ("(Clone)", "");
+		name = name.Replace ("(Item)", "");
 	}
 
-	void Update()
-	{
-		if(owner != null && IsOwned)
-		{
-			if(!Network.isServer && owner != Network.player)
-			{
-				Destroy(gameObject);
-			}
-		}
-	}
 
-	[RPC]
-	public void ChangeOwnerRPC(NetworkPlayer owner)
-	{
-		if(Network.isServer)
-		{
-			networkView.RPC("ChangeOwnerRPC", RPCMode.OthersBuffered, owner);
-		}
-
-		this.owner = owner;
-		IsOwned = true;
-		if (light != null)
-			light.enabled = false;
-
-		SpriteRenderer renderer = (SpriteRenderer)GetComponent (typeof(SpriteRenderer));
-		if(owner == null)
-			renderer.enabled = true;
-		else
-			renderer.enabled = false;
-	}
 
 	public void UseItem(PlayerController character, bool pressed)
 	{
 		if(Time.time > canUseTime && !(RequiresPress && !pressed))
 		{
 			canUseTime = Time.time + ItemCoolDown;
-			for (int i = 0; i < ControlList.Length; i++)
-			{
-				ControlList[i].UseItem(character, this);
-			}
+			BController.UseItem(character, this);
 		}
 	}
 	
@@ -78,27 +52,18 @@ public class Item : MonoBehaviour {
 		if(Time.time > canUseTime)
 		{
 			canUseTime = Time.time + ItemCoolDown;
-			for (int i = 0; i < ControlList.Length; i++)
-			{
-				ControlList[i].UseItemAlt(character);
-			}
+			//BController.UseItemAlt(character, this);
 		}
 	}
 	
 	public void Equip(PlayerController character)
 	{
-		for (int i = 0; i < ControlList.Length; i++)
-		{
-			ControlList[i].Equip(character);
-		}
+		BController.Equip (character);
 	}
 	
 	public void Unequip(PlayerController character)
 	{
-		for (int i = 0; i < ControlList.Length; i++)
-		{
-			ControlList[i].Unequip(character);
-		}
+		BController.Unequip (character);
 	}
 
 	public void Reload(PlayerController character)
@@ -106,51 +71,29 @@ public class Item : MonoBehaviour {
 		if(Time.time > canUseTime)
 		{
 			canUseTime = Time.time;
-			for (int i = 0; i < ControlList.Length; i++)
-			{
-				canUseTime += ControlList[i].Reload(character);
-			}
+			BController.Reload(character);
 		}
 	}
 
 	public int TakeFromStack(int need)
 	{
-		int ret = StackAmount;
-
-		if(StackAmount >= need)
+		int r = 0;
+		if(need  >= StackAmount)
 		{
-			StackAmount -= need;
-			ret = need;
-		}
-		else
-		{
+			r = StackAmount;
 			StackAmount = 0;
+			return r;
 		}
 
-		if(StackAmount == 0)
-		{
-			if(invOwner != null)
-			{
-				invOwner.VerifyItem(this);
-			}
-
-			networkView.RPC("DestroyItem", RPCMode.Server);
-		}
-
-		if(!Network.isServer)
-			networkView.RPC("ChangeStackRPC", RPCMode.Server, StackAmount);
-		ChangeStackRPC (StackAmount);
-		return ret;
+		StackAmount -= need;
+		return need;
 	}
 
 	public string HUDDisplay()
 	{
 		string HUD = Name;
 
-		for(int i = 0; i < ControlList.Length; i++)
-		{
-			HUD += "\n" + ControlList[i].HUDDisplay();
-		}
+		HUD += BController.HUDDisplay ();
 
 		return HUD;
 	}
@@ -159,107 +102,45 @@ public class Item : MonoBehaviour {
 	{
 		string desc = "<b>" + Name + "</b>";
 
-		for(int i = 0; i < ControlList.Length; i++)
-		{
-			if(ControlList[i].DescValue() != "") desc += "\n" + ControlList[i].DescValue();
-		}
+		desc += BController.DescValue ();
 
 		desc += "\n" + Description;
 
 		return desc;
 	}
 
-	[RPC]
-	public void ChangeStackRPC(int amount)
+	/// <summary>
+	/// Gets the items attributes and returns it as a string;
+	/// </summary>
+	/// <returns>The item update.</returns>
+	public string GetItemUpdate()
 	{
-		if(Network.isServer)
-		{
-			if(!IsOwned)
-			{
-				networkView.RPC("ChangeStackRPC", RPCMode.Others, amount);
-			}
-			else
-				networkView.RPC("ChangeStackRPC", owner, amount);
-		}
-
-		StackAmount = amount;
+		return "";
 	}
 
-	[RPC]
-	public void ChangeStack(int amount, NetworkPlayer player)
+	/// <summary>
+	/// Updates the item with the given parameters
+	/// </summary>
+	/// <param name="update">Update.</param>
+	public void UpdateItem(string update)
 	{
-		networkView.RPC("ChangeStackRPC", player, amount);
 
-		ChangeStackRPC (amount);
 	}
 
-	[RPC]
-	public void DropItemInWorldRPC(Vector3 pos)
+#if UNITY_EDITOR
+	[MenuItem("Assets/Create/Item")]
+	public static void CreateItem()
 	{
-		if(Network.isServer)
-		{
-			if(owner != null)
-			{
-				GameObject newDrop = ItemManager.SpawnItem(Name, pos);
+		Item asset = ScriptableObject.CreateInstance<Item> ();
 
-				Item item = (Item)newDrop.GetComponent(typeof(Item));
+		AssetDatabase.CreateAsset (asset, "Assets/Prefabs/Items/NewItem.asset");
+		AssetDatabase.SaveAssets ();
 
-				item.CopyFromItem(this);
+		EditorUtility.FocusProjectWindow ();
 
-				DestroyItem();
-			}
-		}
+		Selection.activeObject = asset;
 	}
-
-	[RPC]
-	public void DestroyItem()
-	{
-		if(Network.isServer)
-		{
-			Network.RemoveRPCs(networkView.viewID);
-			if(IsOwned)
-			{
-				networkView.RPC("DestroyItem", owner);
-			}
-			else
-			{
-				networkView.RPC("DestroyItem", RPCMode.Others);
-			}
-		}
-		Destroy (gameObject);
-	}
-
-	public void CopyFromItem(Item item)
-	{
-		this.StackAmount = item.StackAmount;
-
-		for (int i = 0; i < ControlList.Length; i++)
-		{
-			ControlList[i].CopyFromControl(item.ControlList[i]);
-		}
-
-		VerifyItemWithServer ();
-	}
-
-	public void VerifyItemWithServer()
-	{
-		ChangeStackRPC(StackAmount);
-		
-		for (int i = 0; i < ControlList.Length; i++)
-		{
-			ControlList[i].VerifyControlWithServer();
-		}
-	}
-
-	public void VerifyItemWithServer(NetworkPlayer player)
-	{
-		ChangeStack(StackAmount,player);
-
-		for (int i = 0; i < ControlList.Length; i++)
-		{
-			ControlList[i].VerifyControlWithServer(player);
-		}
-	}
+#endif
 }
 
 public enum ItemType

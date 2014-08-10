@@ -13,6 +13,8 @@ public class ItemMeleeEquipped : MonoBehaviour {
 
 	public Animator AnimatorControl;
 
+	public GameObject Owner;
+
 	[RPC]
 	public void Use(Vector3 origin, Vector3 aim)
 	{
@@ -42,19 +44,18 @@ public class ItemMeleeEquipped : MonoBehaviour {
 
 					HealthSystem health = hit.collider.GetComponent<HealthSystem>();
 
-					health.TakeDamage(Damage, gameObject);
+					health.TakeDamage(Damage, Owner);
 				}
 			}
 		}
 		else
 		{
 			networkView.RPC("Use", RPCMode.Server, origin, aim);
-			UseEffects();
 		}
 	}
 
 	[RPC]
-	void UseEffects()
+	public void UseEffects()
 	{
 		if(EffectUse != null)
 			Instantiate(EffectUse, transform.position, transform.rotation);

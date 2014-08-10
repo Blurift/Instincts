@@ -12,12 +12,13 @@ public class CraftingManager : MonoBehaviour {
 	void Start () {
 		Instance = this;
 	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
 
+
+	/// <summary>
+	/// Finds a list of what is available to craft for the player 
+	/// </summary>
+	/// <returns>The crafts.</returns>
+	/// <param name="inv">Inv.</param>
 	public static CraftableItem[] AvailableCrafts(Inventory inv)
 	{
 		List<CraftableItem> crafts = new List<CraftableItem> ();
@@ -31,7 +32,7 @@ public class CraftingManager : MonoBehaviour {
 
 			for(int j = 0; j < item.ItemNeeded.Length; j++)
 			{
-				if(!inv.IsStackAvailable(item.ItemNeeded[j],item.ItemQNeeded[j]))
+				if(!inv.IsStackAvailable(item.ItemNeeded[j].name,item.ItemQNeeded[j]))
 				{
 					canCraft = false;
 				}
@@ -46,10 +47,20 @@ public class CraftingManager : MonoBehaviour {
 }
 
 [System.Serializable]
-public class CraftableItem
+public class CraftableItemV
 {
 	public string ItemName;
 	public string[] ItemNeeded;
+	public int[] ItemQNeeded;
+	[System.NonSerialized]
+	public bool Foldout = false;
+}
+
+[System.Serializable]
+public class CraftableItem
+{
+	public Item Item;
+	public Item[] ItemNeeded;
 	public int[] ItemQNeeded;
 	[System.NonSerialized]
 	public bool Foldout = false;

@@ -219,6 +219,20 @@ public class AI : MonoBehaviour {
 
 	}
 
+	public bool AbilityRange(Vector2 target)
+	{
+		for(int i = 0 ; i < Abilities.Length; i++)
+		{
+			float distance = Vector2.Distance(transform.position, target);
+
+			if(distance > Abilities[i].MinimumRange && distance < Abilities[i].MaximumRange)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public void AddAction(AIAction action)
 	{
 		if(!Actions.Contains(action))
@@ -261,12 +275,14 @@ public class AI : MonoBehaviour {
 
 	public void FireProjectile(Vector3 src, string eff, Quaternion rotation, DamageType damage)
 	{
+		Debug.Log ("AI Projectile: Firing");
 		if (Network.isServer)
-			networkView.RPC ("FireProjectile", RPCMode.Others, src, eff, rotation);
+			networkView.RPC ("FireProjectileRPC", RPCMode.Others, src, eff, rotation);
 		
 		GameObject proj = EffectManager.CreateLocal (src, eff, rotation);
 		if(proj != null)
 		{
+			Debug.Log ("AI Projectile: Gameobject Created");
 			Projectile p = proj.GetComponent<Projectile>();
 			p.Source = gameObject;
 			p.Damage = damage;
@@ -276,6 +292,7 @@ public class AI : MonoBehaviour {
 	[RPC]
 	public void FireProjectileRPC(Vector3 src, string eff, Quaternion rotation)
 	{
+		Debug.Log ("Projectile fired");
 		GameObject proj = EffectManager.CreateLocal (src, eff, rotation);
 		if(proj != null)
 		{
@@ -314,13 +331,14 @@ public class AI : MonoBehaviour {
 	 * Methods to move and control movement
 	 ****************************/
 
+	// TODO
+	// Need to work on updating movement a lot and  perform differently based on behaviour.
 	private void calculateMovement()
 	{
 		if(Time.time < StunnedUntil)
 			return;
 
-
-
+		//Checking if current path is up
 		if(CurrentPath != null)
 		{
 			if(currentWaypoint >= CurrentPath.vectorPath.Count)
@@ -332,7 +350,7 @@ public class AI : MonoBehaviour {
 		
 		bool move = true;
 		
-		if (Vector3.Distance (currentWaypointPos, transform.position) < 1.5f)
+		if (Vector3.Distance (currentWaypointPos, transform.position) < 1f)
 		{
 			
 			if(CurrentPath != null)
@@ -345,8 +363,6 @@ public class AI : MonoBehaviour {
 			}
 			else
 				move = false;
-			
-			
 		}
 		
 		if(Target != null)
@@ -362,8 +378,8 @@ public class AI : MonoBehaviour {
 				//Debug.Log("No obstructions chase player");
 				currentWaypointPos = Target.transform.position;
 
-
-				move = true;
+				if(AbilityRange(Target.transform.position))
+					move = false;
 			}
 		}
 
@@ -395,6 +411,12 @@ public class AI : MonoBehaviour {
 
 		SetMove (move);
 		
+	}
+
+	private Vector2 MoveInRange(Vector2 target)
+	{
+
+		return Vector2.zero;
 	}
 	
 	private float calculateAngle(Vector2 dir)
@@ -488,23 +510,24 @@ public class AI : MonoBehaviour {
 		if (move != isMoving)
 		{
 			isMoving = move;;
-			Animator.SetBool ("Moving", move);
+			if(Animator != null)
+				Animator.SetBool ("Moving", move);
 			networkView.RPC ("SetMoveRPC", RPCMode.Others, move);
 		}
-			
-
 	}
 
 	[RPC]
 	private void SetMoveRPC(bool move)
 	{
-		Animator.SetBool ("Moving", move);
+		if(Animator != null)
+			Animator.SetBool ("Moving", move);
 	}
 
 	[RPC]
 	private void SetAbilityAnimRPC(int ability)
 	{
-		Animator.SetInteger ("Ability", ability);
+		if(Animator != null)
+			Animator.SetInteger ("Ability", ability);
 	}
 
 	/*****************************
