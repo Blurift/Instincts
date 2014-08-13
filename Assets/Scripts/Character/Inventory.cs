@@ -72,7 +72,7 @@ public class Inventory : MonoBehaviour {
 			{
 				Items.RemoveAt(i);
 				Destroy(item);
-				networkView.RPC("DropItem", RPCMode.Server, i, "I");
+				networkView.RPC("DropItemRPC", RPCMode.Server, i, "I");
 			}
 		}
 
@@ -82,13 +82,13 @@ public class Inventory : MonoBehaviour {
 
 				Equipment[i] = null;
 				Destroy(item);
-				networkView.RPC("DropItem", RPCMode.Server, i, "E");
+				networkView.RPC("DropItemRPC", RPCMode.Server, i, "E");
 			}
 		}
 	}
 
 	[RPC]
-	public void DropItem(int i, string type)
+	public void DropItemRPC(int i, string type)
 	{
 		if(type == "I")
 		{

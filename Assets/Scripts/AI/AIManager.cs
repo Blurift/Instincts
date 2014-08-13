@@ -20,7 +20,7 @@ public class AIManager : MonoBehaviour {
 		{
 			if(go != null)
 			{
-				Logger.Write("Enemy " + go.name + " loaded");
+				//Logger.Write("Enemy " + go.name + " loaded");
 				EnemyPrefabs.Add(go.name, go);
 			}
 		}
@@ -44,7 +44,7 @@ public class AIManager : MonoBehaviour {
 
 	public GameObject SpawnEnemy(string name, Vector3 position)
 	{
-		GameManager.WriteMessage ("Spawning " + name + " at " + position.ToString ());
+		//GameManager.WriteMessage ("Spawning " + name + " at " + position.ToString ());
 		NetworkViewID id = Network.AllocateViewID ();
 		if (Network.isServer)
 			networkView.RPC ("SpawnEnemyRPC", RPCMode.Others, name, position, id);

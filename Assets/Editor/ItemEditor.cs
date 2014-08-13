@@ -17,6 +17,8 @@ public class ItemEditor : Editor {
 	private SerializedProperty m_Stackable;
 	private SerializedProperty m_StackAmount;
 	private SerializedProperty m_StackMax;
+	private SerializedProperty m_Cooldown;
+
 	
 	private SerializedProperty m_CuresBleeding;
 	private SerializedProperty m_CuresPoison;
@@ -47,6 +49,7 @@ public class ItemEditor : Editor {
 		m_Stackable = m_Object.FindProperty ("Stackable");
 		m_StackAmount = m_Object.FindProperty ("StackAmount");
 		m_StackMax = m_Object.FindProperty ("StackMax");
+		m_Cooldown = m_Object.FindProperty ("ItemCoolDown");
 
 		m_CuresBleeding = m_Object.FindProperty ("BController.CuresBleeding");
 		m_CuresPoison = m_Object.FindProperty ("BController.CuresPoison");
@@ -77,6 +80,8 @@ public class ItemEditor : Editor {
 		EditorGUILayout.PropertyField (m_Weight);
 		EditorGUILayout.PropertyField (m_Icon);
 		EditorGUILayout.PropertyField (m_EquippedPrefab);
+
+		EditorGUILayout.PropertyField (m_Cooldown);
 
 		EditorGUILayout.PropertyField (m_Stackable, new GUIContent("Stack Options"));
 

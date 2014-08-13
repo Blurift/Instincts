@@ -19,7 +19,7 @@ public class Item : ScriptableObject {
 	public int StackAmount = 1;
 	public int StackMax = 1;
 
-	public float ItemCoolDown;
+	public float ItemCoolDown = 1;
 	private float canUseTime = 0;
 	public bool RequiresPress = true;
 

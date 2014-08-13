@@ -277,6 +277,7 @@ public class PlayerController : EntityController {
 	{
 		if(networkView.isMine)
 		{
+			Debug.Log("DeathRespawn: Respawning");
 			//Drop player items;
 			Inventory.DropAll();
 			
@@ -285,6 +286,7 @@ public class PlayerController : EntityController {
 		}
 		else if(Network.isServer)
 		{
+			Debug.Log ("DeathRespawn: Server");
 			networkView.RPC("DeathRespawn", networkView.owner);
 		}
 	}

@@ -206,14 +206,14 @@ public class AI : MonoBehaviour {
 
 			if(Abilities[i].Weight > use.Weight && Abilities[i].Usable(target))
 			{
-				Debug.Log("Setting Ability");
+				//Debug.Log("Setting Ability");
 				use = Abilities[i];
 			}
 		}
 
 		if (use != null && use.Use (target))
 		{
-			Debug.Log("Using Ability");
+			//Debug.Log("Using Ability");
 			GlobalAttackCooldownUntil = Time.time + use.GlobalCooldown;
 		}
 

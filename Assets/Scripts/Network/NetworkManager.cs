@@ -80,7 +80,6 @@ public class NetworkManager : MonoBehaviour {
 		if(Server)
 		{
 			StartServer();
-			AudioListener.volume = 0;
 		}
 		else
 			JoinServer(playerName,"");
@@ -138,7 +137,8 @@ public class NetworkManager : MonoBehaviour {
 		{
 			settings.MaxPlayers--;
 		}
-		//else
+		else
+			AudioListener.volume = 0;
 		//	Camera.main.gameObject.AddComponent (typeof(AudioListener));
 
 		MasterServer.dedicatedServer = settings.Dedicated;
@@ -181,6 +181,8 @@ public class NetworkManager : MonoBehaviour {
 	void OnServerInitialized()
 	{
 		GameManager.WriteMessage ("Server Started");
+		//TODO
+		//Check if dedicated server
 		LoginToServer (playerName, "", Network.player, Network.AllocateViewID ());
 	}
 
@@ -204,7 +206,7 @@ public class NetworkManager : MonoBehaviour {
 			//Logger.Write("Player " + player.ToString() + " : " + user + " - " +player.ipAddress + " trying to log in");
 			
 			//Loop through all connected players and send details.
-			networkView.RPC("RandomMessage", player, "Sending players through");
+			//networkView.RPC("RandomMessage", player, "Sending players through");
 			foreach(KeyValuePair<NetworkPlayer, GameObject> pair in Players)
 			{
 				if(pair.Key != player)
@@ -235,7 +237,7 @@ public class NetworkManager : MonoBehaviour {
 			//GameManager.SendMessage("Sent " + itemCount + " itemSpawns to " + PlayerNames[player], true);
 
 			//Loop through all AI
-			networkView.RPC("RandomMessage", player, "Sending AI through");
+			//networkView.RPC("RandomMessage", player, "Sending AI through");
 			foreach(GameObject go in GameObject.FindGameObjectsWithTag("AI"))
 			{
 				go.networkView.SetScope(player, true);
@@ -287,6 +289,7 @@ public class NetworkManager : MonoBehaviour {
 	{
 		if(Network.isServer)
 		{
+			Debug.Log("Respawning player");
 			DeletePlayerState(player);
 
 			Network.Destroy (Players [player]);
@@ -312,7 +315,7 @@ public class NetworkManager : MonoBehaviour {
 	{
 		SavePlayerState (player);
 		GameManager.NetMessage(PlayerNames[player] + " left the game");
-		Logger.Write ("Player " + player.ToString () + " has left or been disconnected.");
+		//Logger.Write ("Player " + player.ToString () + " has left or been disconnected.");
 		Network.RemoveRPCs (player);
 		Network.DestroyPlayerObjects (player);
 		Players.Remove (player);
@@ -334,7 +337,10 @@ public class NetworkManager : MonoBehaviour {
 
 	public static void Respawn()
 	{
-		Instance.networkView.RPC ("RespawnPlayer", RPCMode.Server, Network.player, Network.AllocateViewID());
+		if(Network.isServer)
+			Instance.RespawnPlayer(Network.player, Network.AllocateViewID());
+		else
+			Instance.networkView.RPC ("RespawnPlayer", RPCMode.Server, Network.player, Network.AllocateViewID());
 	}
 
 	[RPC]

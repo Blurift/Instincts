@@ -28,8 +28,8 @@ public class ItemSpawner : MonoBehaviour {
 
 				currentSpawn = ItemManager.SpawnItem(Items[itemToSpawn], transform.position);
 
-				string itemLog = "Item " + Items[itemToSpawn] + " was spawned at " + transform.position.ToString();
-				Debug.Log(itemLog);
+				//string itemLog = "Item " + Items[itemToSpawn] + " was spawned at " + transform.position.ToString();
+				//Debug.Log(itemLog);
 				//GameManager.WriteMessage(itemLog);
 
 				lastSpawn = Time.time;
