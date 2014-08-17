@@ -2,16 +2,19 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml;
+using System.Xml.Serialization;
 
 public class NetworkManager : MonoBehaviour {
 
 	public static NetworkManager Instance = null;
 
 	//Static info
-	private const string typeName = "BluriftInstinctsPreview";
+	private const string typeName = Menu.TypeName;
 
+	public static ServerSettings Settings;
 	private string serverSysFile = "";
-	public static string playerName = "";
+
 	public static bool Server = false;
 
 	//PrefabInfo
@@ -21,6 +24,12 @@ public class NetworkManager : MonoBehaviour {
 	//Players
 	private Dictionary<NetworkPlayer,GameObject> Players;
 	private Dictionary<NetworkPlayer, string> PlayerNames;
+	private Dictionary<NetworkPlayer, string> PlayerUIDs;
+	private Dictionary<NetworkPlayer, NetworkPlayerState> PlayerStates;
+
+	//StateSave
+	private float stateLastSync = 0;
+	private float stateSyncTime = 30;
 
 	public static void SendRPC(NetworkView view, string name, params object[] values)
 	{
@@ -29,9 +38,9 @@ public class NetworkManager : MonoBehaviour {
 
 	public static void SendRPC(NetworkView view, NetworkPlayer except, string name, params object[] values)
 	{
-		foreach(KeyValuePair<NetworkPlayer, GameObject> pair in Instance.Players)
+		foreach(KeyValuePair<NetworkPlayer, NetworkPlayerState> pair in Instance.PlayerStates)
 		{
-			if( pair.Value.networkView.owner != except)
+			if(pair.Value.GameObject.networkView.owner != except && pair.Value.Ready)
 			{
 				view.RPC(name, pair.Key, values);
 			}
@@ -44,17 +53,16 @@ public class NetworkManager : MonoBehaviour {
 		{
 			if(pair.Key == player)
 				return pair.Value;
-		}
-		
+		}	
 		return null;
 	}
 
 	public static string GetPlayerName(NetworkPlayer player)
 	{
-		foreach(KeyValuePair<NetworkPlayer, string> pair in Instance.PlayerNames)
+		foreach(KeyValuePair<NetworkPlayer, NetworkPlayerState> pair in Instance.PlayerStates)
 		{
 			if(pair.Key == player)
-				return pair.Value;
+				return pair.Value.Name;
 		}
 		
 		return null;
@@ -82,7 +90,7 @@ public class NetworkManager : MonoBehaviour {
 			StartServer();
 		}
 		else
-			JoinServer(playerName,"");
+			JoinServer(Menu.MainProfile.Name,Menu.MainProfile.UID);
 	}
 	
 	// Update is called once per frame
@@ -94,6 +102,20 @@ public class NetworkManager : MonoBehaviour {
 			move*= 15*Time.deltaTime;
 			Camera.main.transform.position += move;
 			*/
+
+			if(Time.time - stateSyncTime > stateLastSync)
+			{
+				SaveState ();
+				stateLastSync = Time.time;
+			}
+		}
+	}
+
+	private void SaveState()
+	{
+		foreach(KeyValuePair<NetworkPlayer,GameObject> pl in Players)
+		{
+			SavePlayerState(pl.Key);
 		}
 	}
 
@@ -103,31 +125,18 @@ public class NetworkManager : MonoBehaviour {
 		Debug.Log ("Server starting");
 		GameManager.WriteMessage("Attempting to start server");
 
-		Instance.serverSysFile = Logger.Path() + "server.sys";
-
 		Instance.Players = new Dictionary<NetworkPlayer, GameObject> ();
 		Instance.PlayerNames = new Dictionary<NetworkPlayer, string> ();
+		Instance.PlayerUIDs = new Dictionary<NetworkPlayer, string> ();
+		Instance.PlayerStates = new Dictionary<NetworkPlayer, NetworkPlayerState> ();
 
-		ServerSettings settings = ServerSettings.Default;
+		ServerSettings settings = Settings;
 		bool setup = false;
-
-
-		StreamReader reader = new StreamReader (Instance.serverSysFile);
-		try
+		
+		if(settings == null)
 		{
-			settings.ServerName = reader.ReadLine ();
-			settings.MaxPlayers = int.Parse(reader.ReadLine());
-			settings.Port = int.Parse(reader.ReadLine());
-			if(!reader.ReadLine().Equals("True"))
-				settings.UseNAT = false;
-			setup = true;
+			settings = ServerSettings.Default;
 		}
-		catch (System.Exception)
-		{
-			GameManager.WriteMessage("Couldnt read server profile");
-			return;
-		}
-		reader.Close ();
 
 		//Fix some settings;
 		if(settings.MaxPlayers > 16)
@@ -149,7 +158,10 @@ public class NetworkManager : MonoBehaviour {
 			MasterServer.RegisterHost (typeName, settings.ServerName);
 		}
 
-		GameManager.WriteMessage ("Starting server with " + settings.MaxPlayers + " max players on port " + settings.Port);
+		if(settings.Dedicated)
+			GameManager.WriteMessage ("Starting server with " + settings.MaxPlayers + " max players on port " + settings.Port);
+		else
+			GameManager.WriteMessage ("Starting server with " + (settings.MaxPlayers+1) + " max players on port " + settings.Port);
 	}
 
 	public static void JoinServer(string user, string pass)
@@ -183,12 +195,12 @@ public class NetworkManager : MonoBehaviour {
 		GameManager.WriteMessage ("Server Started");
 		//TODO
 		//Check if dedicated server
-		LoginToServer (playerName, "", Network.player, Network.AllocateViewID ());
+		LoginToServer (Menu.MainProfile.Name, Menu.MainProfile.UID, Network.player, Network.AllocateViewID ());
 	}
 
 	void OnPlayerConnected(NetworkPlayer player)
 	{
-		GameManager.WriteMessage ("Player " + player.ToString () + " connecting");
+		GameManager.ServerMessage ("Player " + player.ToString () + " connecting");
 	}
 
 	[RPC]
@@ -198,7 +210,7 @@ public class NetworkManager : MonoBehaviour {
 	}
 
 	[RPC]
-	void LoginToServer(string user, string pass, NetworkPlayer player, NetworkViewID id)
+	void LoginToServer(string user, string uid, NetworkPlayer player, NetworkViewID id)
 	{
 		if(Network.isServer)
 		{
@@ -223,14 +235,27 @@ public class NetworkManager : MonoBehaviour {
 
 			Players[player] = null;
 			PlayerNames[player] = user;
+			PlayerUIDs[player] = uid;
 
+			NetworkPlayerState playerState = new NetworkPlayerState();
+			playerState.Name =user;
+			playerState.UID = uid;
 
-			if(!LoadPlayerState(id,player))
+			PlayerStates[player] = playerState;
+
+			PlayerController.PlayerState state = LoadPlayerState(id,player);
+			if(state == null)
 			{
 				SpawnPlayer(id, GetSpawnLocation(), user);
+				Players[player].GetComponent<Inventory>().AddToInventory("WoodStick",1);
+			}
+			else
+			{
+				SpawnPlayer(id, state.Position, user);
+				Players[player].GetComponent<PlayerController>().SetPlayerState(state);
 			}
 
-			Players[player].GetComponent<Inventory>().AddToInventory("WoodStick",1);
+			playerState.Ready = true;
 
 			//Loop through all items
 			ItemManager.InitializeDropsForPlayer(player);
@@ -258,15 +283,16 @@ public class NetworkManager : MonoBehaviour {
 		{
 			if(PlayerPrefab != null)
 			{
-				Logger.Write("Player " + id.owner.ToString() + " spawned at " + pos.ToString());
 				//Respawn player
-				
 				GameObject newPlayer = (GameObject)GameObject.Instantiate(PlayerPrefab, pos, Quaternion.identity);
 				
 				newPlayer.networkView.viewID = id;
 				newPlayer.name = name;
+				PlayerController p = newPlayer.GetComponent<PlayerController>();
+				p.PlayerName = name;
 				
 				Players[id.owner] = newPlayer;
+				PlayerStates[id.owner].GameObject = newPlayer;
 				
 				networkView.RPC("SpawnPlayer", RPCMode.Others, id, pos, name);
 			}
@@ -280,8 +306,10 @@ public class NetworkManager : MonoBehaviour {
 			p.name = name;
 
 			newPlayer.networkView.viewID = id;
-			GameManager.WriteMessage("Spawned as " + pos.ToString());
+			//GameManager.WriteMessage("Spawned as " + pos.ToString());
 		}
+
+
 	}
 
 	[RPC]
@@ -292,12 +320,16 @@ public class NetworkManager : MonoBehaviour {
 			Debug.Log("Respawning player");
 			DeletePlayerState(player);
 
-			Network.Destroy (Players [player]);
+			Network.Destroy (PlayerStates[player].GameObject);
 
-			SpawnPlayer (id, GetSpawnLocation (), PlayerNames[player]);
+			SpawnPlayer (id, GetSpawnLocation (), PlayerStates[player].Name);
 
 			//Give player default weapon.
-			Players[player].GetComponent<Inventory>().AddToInventory("WoodStick",1);
+			//Players[player].GetComponent<Inventory>().AddToInventory("WoodStick",1);
+			PlayerStates[player].GameObject.GetComponent<Inventory>().AddToInventory("WoodStick",1);
+			PlayerStates[player].GameObject.GetComponent<Inventory>().AddToInventory("Cloth",1);
+
+			GameManager.ServerMessage(PlayerStates[player].Name + " has been killed");
 		}
 	}
 
@@ -314,20 +346,25 @@ public class NetworkManager : MonoBehaviour {
 	void OnPlayerDisconnected(NetworkPlayer player)
 	{
 		SavePlayerState (player);
-		GameManager.NetMessage(PlayerNames[player] + " left the game");
+		GameManager.ServerMessage(PlayerStates[player].Name + " left the game");
 		//Logger.Write ("Player " + player.ToString () + " has left or been disconnected.");
 		Network.RemoveRPCs (player);
 		Network.DestroyPlayerObjects (player);
 		Players.Remove (player);
+		PlayerStates.Remove(player);
 	}
 
 	public static void Disconnect()
 	{
-		if(Network.isClient)
+		if(Network.isServer)
 		{
-			Network.Disconnect(200);
-			Application.LoadLevel(LevelLoader.LEVEL_MENU);
+			Instance.SaveState();
+			for (int i = 0; i < Network.connections.Length; i++) {
+				Network.CloseConnection(Network.connections[i], true);
+			}
 		}
+		Network.Disconnect(200);
+		Application.LoadLevel(LevelLoader.LEVEL_MENU);
 	}
 	
 	public static void RemoveNetworkBuffer(NetworkViewID viewID)
@@ -379,7 +416,7 @@ public class NetworkManager : MonoBehaviour {
 
 	private string GetStatePath()
 	{
-		string path = Logger.Path() + "/States";
+		string path = GameManager.ServerPlayerPath() + "/States";
 
 		if(!Directory.Exists(path))
 			Directory.CreateDirectory(path);
@@ -389,69 +426,56 @@ public class NetworkManager : MonoBehaviour {
 
 	private void DeletePlayerState(NetworkPlayer player)
 	{
-		string file = GetStatePath() + "/" + PlayerNames[player] + ".pla";
+		string file = GetStatePath() + "/" + PlayerUIDs[player] + ".pla";
 		if(File.Exists(file))
 			File.Delete(file);
 	}
 
 	private void SavePlayerState(NetworkPlayer player)
 	{
-		string file = GetStatePath() + "/" + PlayerNames[player] + ".pla";
+		string file = GetStatePath() + "/" + PlayerUIDs[player] + ".pla";
 		if(File.Exists(file))
 			File.Delete(file);
 
 
-		GameObject p = Players [player];
+		GameObject p = PlayerStates[player].GameObject;
+		PlayerController pc = p.GetComponent<PlayerController> ();
 
 		StreamWriter writer = new StreamWriter (file);
-		writer.WriteLine(p.transform.position.x);
-		writer.WriteLine(p.transform.position.y);
-		writer.WriteLine(p.GetComponent<HealthSystem>().Health);
-
-
+		XmlSerializer serializer = new XmlSerializer (typeof(PlayerController.PlayerState));
+		serializer.Serialize (writer, pc.GetPlayerState ());
 		writer.Close ();
 
 
 	}
 
-	private bool LoadPlayerState(NetworkViewID id, NetworkPlayer player)
+	private PlayerController.PlayerState LoadPlayerState(NetworkViewID id, NetworkPlayer player)
 	{
-		string file = GetStatePath() + "/" + PlayerNames[player] + ".pla";
+		string file = GetStatePath() + "/" + PlayerUIDs[player] + ".pla";
 
-		float x;
-		float y;
-		int health;
+		PlayerController.PlayerState state;
+
+
 
 		if(File.Exists(file))
 		{
 			StreamReader reader = new StreamReader(file);
-
-			bool created = false;
-
-			try
-			{
-				x = float.Parse(reader.ReadLine());
-				y = float.Parse(reader.ReadLine());
-				health = int.Parse(reader.ReadLine());
-
-				Vector3 pos = new Vector3(x,y,0);
-
-				SpawnPlayer(id, pos, PlayerNames[player]);
-
-				Players[player].GetComponent<HealthSystem>().Health = health;
-
-				created = true;
-			}
-			catch( System.Exception e)
-			{
-				created = false;
-			}
+			XmlSerializer serializer = new XmlSerializer(typeof(PlayerController.PlayerState));
+			state = (PlayerController.PlayerState)serializer.Deserialize(reader);
 			reader.Close();
 
-			return created;
+			return state;
 		}
 
-		return false;
+		return null;
+	}
+
+	private class NetworkPlayerState
+	{
+		public string Name;
+		public GameObject GameObject;
+		public string UID;
+		public bool Ready = false;
 	}
 }
 
@@ -474,7 +498,7 @@ public class ServerSettings
 			ServerSettings val = new ServerSettings ();
 
 			val.ServerName = "Server";
-			val.Port = 12777;
+			val.Port = 7868;
 			val.MaxPlayers = 8;
 			val.Dedicated = false;
 			val.LAN = false;

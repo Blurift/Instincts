@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Name: WoodStick
   m_EditorClassIdentifier: 
   Name: Wood Stick
-  Description: Hit you enemies with it.
+  Description: Hit your enemies with it.
   Weight: 2
   Icon: {fileID: 2800000, guid: bc94421363b205f4eb5b04f7fcd1b542, type: 3}
   IType: 2

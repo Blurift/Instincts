@@ -16,6 +16,7 @@ public class DestructableProp : MonoBehaviour {
 	private HealthSystem health;
 
 	public GameObject[] DeathEffect;
+	public GameObject Drop;
 
 	// Use this for initialization
 	void Start () {
@@ -32,7 +33,10 @@ public class DestructableProp : MonoBehaviour {
 			Instantiate (DeathEffect[random], transform.position, transform.rotation);
 		}
 
-
+		if (Network.isServer && Drop != null)
+		{
+			ItemManager.SpawnItem(Drop.name, transform.position);
+		}
 
 		Destroy (gameObject);
 	}

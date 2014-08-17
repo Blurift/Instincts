@@ -10,14 +10,14 @@ public class SpawnerAI : MonoBehaviour {
 	public string[] Enemies;
 
 	private float lastSpawn = 0;
-	private AIManager aiManagerScript;
+	//private AIManager aiManagerScript;
 
 
 
 	// Use this for initialization
 	void Start () {
 		GameObject aiManager = GameObject.FindWithTag("AIManager");
-		aiManagerScript = aiManager.GetComponent(typeof(AIManager)) as AIManager;
+		//aiManagerScript = aiManager.GetComponent(typeof(AIManager)) as AIManager;
 	}
 	
 	// Update is called once per frame

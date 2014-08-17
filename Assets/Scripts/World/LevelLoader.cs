@@ -1,4 +1,10 @@
-﻿using UnityEngine;
+﻿/* Level Loader
+ * Author: Keirron Stach
+ * Created: 14/08/2014
+ * Edited: 14/08/2014
+ */
+
+using UnityEngine;
 using System.Collections;
 
 public class LevelLoader : MonoBehaviour {
@@ -19,6 +25,7 @@ public class LevelLoader : MonoBehaviour {
 	//Info
 	public bool[] needsLoad;
 	private int currenLevel = -1;
+	public LevelAttributes[] Levels;
 
 	// Use this for initialization
 	void Start () {
@@ -46,5 +53,11 @@ public class LevelLoader : MonoBehaviour {
 
 		foreach (GameObject g in FindObjectsOfType(typeof(GameObject)))
 						g.SendMessage ("OnNetworkLoadedLevel", SendMessageOptions.DontRequireReceiver);
+	}
+
+	public class LevelAttributes
+	{
+		public string Name = "Level";
+		public bool LoadFirst = false;
 	}
 }

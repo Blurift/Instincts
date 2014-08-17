@@ -69,6 +69,9 @@ public class HUD : MonoBehaviour {
 	private float chatOrigin = 0;
 	private string chatText = "";
 	private bool chatPreviousReturnState = false;
+	private GUIStyle chatFont;
+	private GUIStyle chatInputFont;
+	private string chatFull = "";
 
 
 	public bool ShowInventory
@@ -98,6 +101,15 @@ public class HUD : MonoBehaviour {
 			EquipmentSetup();
 
 			HelperSetup(equipPanelRect.x,equipPanelRect.y-10,equipPanelRect.width);
+
+			chatFont = new GUIStyle(InvSkin.label);
+			chatFont.fontSize = 16;
+			chatFont.alignment = TextAnchor.UpperLeft;
+
+			chatInputFont = new GUIStyle(InvSkin.textArea);
+			chatInputFont.fontSize = 15;
+			chatInputFont.alignment = TextAnchor.UpperLeft;
+
 		}
 	}
 
@@ -127,6 +139,7 @@ public class HUD : MonoBehaviour {
 	{
 		if(networkView.isMine)
 		{
+
 			if(Event.current.keyCode == KeyCode.Return && Event.current.type == EventType.KeyDown)
 			{
 				if(showChat && chatText != "")
@@ -139,6 +152,7 @@ public class HUD : MonoBehaviour {
 			}
 
 			GUI.skin = InvSkin;
+			Menu.SetFontSize(GUI.skin);
 			if(invStackStyle == null)
 			{
 				invStackStyle = new GUIStyle(GUI.skin.GetStyle("Label"));
@@ -197,7 +211,7 @@ public class HUD : MonoBehaviour {
 				float chatTextHeight = chatHeight * 0.2f;
 				float chatTextY = sHeight - chatTextHeight;
 				chatScrollHeight = chatHeight * 0.8f;
-				chatScrollInnerH = GameManager.messages.Count*20;
+				chatScrollInnerH = chatFont.CalcHeight(new GUIContent(chatFull), chatWidth-12);
 				if(chatScrollInnerH < chatScrollHeight) chatScrollInnerH = chatScrollHeight;
 
 				Rect chatRect = new Rect (0, chatY, chatWidth, chatHeight);
@@ -207,22 +221,22 @@ public class HUD : MonoBehaviour {
 
 				chatScrollPosition = GUI.BeginScrollView(chatScrollRect, chatScrollPosition, chatScrollInner, false, true);
 
-				for (int i = 0; i < GameManager.messages.Count; i++)
-				{
-					GUI.Label(new Rect(0,20*i, chatScrollInner.width,20),GameManager.messages[i]);
-				}
+				GUI.Label(new Rect(0,0, chatScrollInner.width,chatScrollInnerH),chatFull,chatFont);
+
 
 				GUI.EndScrollView(true);
 				if(showChat)
 				{
 					GUI.SetNextControlName("ChatTextBox");
-					chatText = GUI.TextField (chatTextRect, chatText);
+
+
+					chatText = GUI.TextField (chatTextRect, chatText, chatInputFont);
 					GUI.FocusControl("ChatTextBox");
 					FixScroll();
 				}
 				else
 				{
-					GUI.TextField (chatTextRect, chatText);
+					GUI.TextField (chatTextRect, chatText, chatInputFont);
 					GUI.FocusControl("");
 				}
 
@@ -350,14 +364,18 @@ public class HUD : MonoBehaviour {
 		
 		if(windowID == windowCrafting)
 		{
-			
-			
 			CraftableItem[] craftItems = CraftingManager.AvailableCrafts(Inventory);
-			
+
+			GUIStyle craftFont = new GUIStyle (InvSkin.label);
+
+
+			float craftItemHeight = craftScrollRect.height * 0.15f;
+			StyleHelper.SetFontSize(craftFont,craftScrollRect.height*0.7f);
+
 			if(craftIndex >= craftItems.Length)
 				craftIndex = -1;
 			
-			int craftScrollHeight = craftItems.Length*20;
+			int craftScrollHeight = (int)(craftItems.Length*craftItemHeight);
 			if(craftScrollHeight < (int)craftScrollRect.height)
 				craftScrollHeight = (int)craftScrollRect.height;
 			
@@ -365,7 +383,7 @@ public class HUD : MonoBehaviour {
 			
 			for(int i = 0 ; i < craftItems.Length; i++)
 			{
-				Rect craftItemRect = new Rect(0,i*20,(int)craftScrollRect.width,20);
+				Rect craftItemRect = new Rect(0,i*craftItemHeight,(int)craftScrollRect.width,craftItemHeight);
 				
 				if(craftItemRect.Contains(Event.current.mousePosition)&& Input.GetMouseButtonDown(0))
 					craftIndex = i;
@@ -509,10 +527,17 @@ public class HUD : MonoBehaviour {
 
 	public void ChatUpdate()
 	{
+		chatFull = "";
+		for (int i = 0; i < GameManager.messages.Count; i++)
+		{	
+			chatFull += GameManager.messages[i];
+			if(i != GameManager.messages.Count -1)
+				chatFull += "\n";
+		}
+
 		if(!showChat)
 		{
 			TweenChat(1, 0,Time.time+2,Time.time + 3.5f);
-
 		}
 		FixScroll ();
 	}
@@ -686,7 +711,7 @@ public class HUD : MonoBehaviour {
 					GUI.Label(equipBar, Inventory.Equipment[i].StackAmount.ToString(), invStackStyle);
 				}
 			}
-			GUI.Label(equipBar, i.ToString(), Menu.UpperLeft);
+			GUI.Label(equipBar, (i+1).ToString(), Menu.UpperLeft);
 
 			//If the equipment slot has been clicked on
 			if(equipBar.Contains(Event.current.mousePosition) && Input.GetMouseButtonDown(0) && Inventory.Equipment[i] != null)

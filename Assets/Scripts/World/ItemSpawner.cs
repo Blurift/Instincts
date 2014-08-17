@@ -3,7 +3,7 @@ using System.Collections;
 
 public class ItemSpawner : MonoBehaviour {
 
-	public string[] Items;
+	public Item[] Items;
 	public float SpawnRate;
 
 
@@ -26,7 +26,7 @@ public class ItemSpawner : MonoBehaviour {
 
 				int itemToSpawn = Random.Range(0,Items.Length);
 
-				currentSpawn = ItemManager.SpawnItem(Items[itemToSpawn], transform.position);
+				currentSpawn = ItemManager.SpawnItem(Items[itemToSpawn].name, transform.position);
 
 				//string itemLog = "Item " + Items[itemToSpawn] + " was spawned at " + transform.position.ToString();
 				//Debug.Log(itemLog);

@@ -102,6 +102,7 @@ public class PlayerController : EntityController {
 						item.Reload(this);
 					}
 				}
+
 			}
 			
 			if(ItemDrop.ItemToPickUp != null)
@@ -117,7 +118,7 @@ public class PlayerController : EntityController {
 							FirstItem = true;
 							HUD.HelperMessage("You just picked up your first item, Press (I) to open up the inventory and crafting screens. Pick up more items to find new crafting recipes.", 10,3);
 						}
-						Inventory.AddToInventory(ItemDrop.ItemToPickUp.item.name, 1, -1);
+						Inventory.AddToInventory(ItemDrop.ItemToPickUp.item.name, ItemDrop.ItemToPickUp.ItemStack, ItemDrop.ItemToPickUp.ItemCharges);
 						ItemManager.RemoveDropFromWorld(ItemDrop.ItemToPickUp.DropID);
 						//ItemDrop.ItemToPickUp.GetComponent<ItemDrop>().RemoveFromWorld(); //Old code Pre Item Update
 					}
@@ -153,6 +154,10 @@ public class PlayerController : EntityController {
 			}
 			
 		}
+		else
+		{
+			playerDistance = Vector2.Distance(Camera.main.transform.position, transform.position);
+		}
 		
 		//Process Effects
 		if(!idleWalk && Time.time - lastFootstep > FootstepInterval)
@@ -163,6 +168,9 @@ public class PlayerController : EntityController {
 			
 			lastFootstep = Time.time;
 		}
+
+		if (Network.isServer)
+			Inventory.VerifyItems ();
 	}
 
 	[RPC]
@@ -177,6 +185,10 @@ public class PlayerController : EntityController {
 		obj.transform.position = EquipPosition.position;
 		obj.transform.rotation = transform.rotation;
 		obj.transform.parent = transform;
+
+		ItemMeleeEquipped m = obj.GetComponent<ItemMeleeEquipped> ();
+		if (m != null)
+			m.Owner = gameObject;
 
 		Equipped = obj;
 	}
@@ -310,8 +322,15 @@ public class PlayerController : EntityController {
 	{
 		if (networkView.isMine)
 		{
+			if(true)
+			{
+				GUI.Label(new Rect(10,10,200,30), "Rotation: " + transform.rotation.eulerAngles.z.ToString());
+				GUI.Label(new Rect(10,40,200,30), "Position: " + transform.position.ToString());
+				GUI.Label(new Rect(10,70,200,30), "Health: " + Health.Health + " / " + Health.HealthMax);
+				GUI.Label(new Rect(10,100,200,30), "Hunger: " + Health.Hunger + " / " + Health.HungerMax);
+			}
 			Color guiColor = Color.white;
-			GUI.Label(new Rect(10,10,200,30), transform.rotation.eulerAngles.z.ToString());
+
 			if(bloodOpacity > 0)
 			{
 				guiColor = Color.white;
@@ -386,8 +405,10 @@ public class PlayerController : EntityController {
 		{
 			networkView.RPC("SetAnimIdle", RPCMode.Others, idle);
 		}
-		ArmsAnimator.SetBool ("Idle", idle);
-		FeetAnimator.SetBool ("Idle", idle);
+		if(ArmsAnimator !=null)
+			ArmsAnimator.SetBool ("Idle", idle);
+		if(FeetAnimator != null)
+			FeetAnimator.SetBool ("Idle", idle);
 		idleWalk = idle;
 	}
 	
@@ -398,6 +419,32 @@ public class PlayerController : EntityController {
 		{
 			networkView.RPC("SetAnimEquipped", RPCMode.Others, equip);
 		}
-		ArmsAnimator.SetBool ("Equipped", equip);
+		if(ArmsAnimator != null)
+			ArmsAnimator.SetBool ("Equipped", equip);
+	}
+
+	public void SetPlayerState(PlayerState state)
+	{
+		transform.position = state.Position;
+		Health.SetHealthState (state.Health);
+		Inventory.SetInvState (state.Inventory);
+	}
+
+	public PlayerState GetPlayerState()
+	{
+		PlayerState state = new PlayerState ();
+		state.Position = transform.position;
+		state.Health = Health.GetHealthState ();
+		state.Inventory = Inventory.GetInvState ();
+
+		return state;
+	}
+
+	[System.Serializable]
+	public class PlayerState
+	{
+		public Vector2 Position;
+		public HealthSystem.HealthState Health;
+		public Inventory.InventoryState Inventory;
 	}
 }

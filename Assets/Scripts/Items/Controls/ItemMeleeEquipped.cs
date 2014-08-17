@@ -34,7 +34,7 @@ public class ItemMeleeEquipped : MonoBehaviour {
 				origin += new Vector3(direction.x,direction.y,0) * charRadius;
 
 				RaycastHit2D hit = Physics2D.Raycast (origin, direction, 1, Layers);
-				GameManager.WriteMessage("Player: " + origin.ToString() + " : " + direction.ToString());
+				//GameManager.WriteMessage("Player: " + origin.ToString() + " : " + direction.ToString());
 				if(hit != false)
 				{
 					if(HitEffect != null && HitEffect != "")
@@ -44,6 +44,8 @@ public class ItemMeleeEquipped : MonoBehaviour {
 
 					HealthSystem health = hit.collider.GetComponent<HealthSystem>();
 
+					if(Owner == null)
+						Owner = transform.parent.gameObject;
 					health.TakeDamage(Damage, Owner);
 				}
 			}

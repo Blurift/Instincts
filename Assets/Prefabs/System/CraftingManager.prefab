@@ -12,7 +12,7 @@ GameObject:
   m_Layer: 0
   m_Name: CraftingManager
   m_TagString: Untagged
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: -1203168336, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -23,7 +23,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 100000}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 35.3067398, y: 75.1801605, z: .0427246094}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -40,61 +40,41 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CraftableItems:
-  - ItemName: Torch
+  - Item: {fileID: 11400000, guid: 68cd0cb2552f28240a1ae418e1a989d5, type: 2}
     ItemNeeded:
-    - Wood
-    - Cloth
-    ItemQNeeded: 0100000001000000
-  - ItemName: Bandage
-    ItemNeeded:
-    - Cloth
-    ItemQNeeded: 02000000
-  - ItemName: WoodClub
-    ItemNeeded:
-    - Wood
+    - {fileID: 11400000, guid: eba147d33c12f354cb1c6d01bf2459c9, type: 2}
     ItemQNeeded: 03000000
-  - ItemName: WrappedWoodClub
+  - Item: {fileID: 11400000, guid: 7f3174cc2f994cf4ca476576729b6bc5, type: 2}
     ItemNeeded:
-    - WoodClub
-    - Cloth
-    ItemQNeeded: 0100000002000000
-  - ItemName: SpikedWoodClub
+    - {fileID: 11400000, guid: f20358341ae1e8d4488c4d5eadad2891, type: 2}
+    ItemQNeeded: 03000000
+  - Item: {fileID: 11400000, guid: b04c8b0fedd3db14d94e2566463dbc3c, type: 2}
     ItemNeeded:
-    - WrappedWoodClub
-    - MetalScraps
-    ItemQNeeded: 0100000003000000
-  - ItemName: ShrapnelGun
+    - {fileID: 11400000, guid: 7f3174cc2f994cf4ca476576729b6bc5, type: 2}
+    ItemQNeeded: 02000000
+  - Item: {fileID: 11400000, guid: 7f3174cc2f994cf4ca476576729b6bc5, type: 2}
     ItemNeeded:
-    - Wood
-    - MetalScraps
-    ItemQNeeded: 0200000002000000
-  - ItemName: ShrapnelPellets
-    ItemNeeded:
-    - MetalScraps
+    - {fileID: 11400000, guid: e9a2cda849551694aad05094aebfa6dc, type: 2}
     ItemQNeeded: 01000000
-  - ItemName: WoodenBow
+  - Item: {fileID: 11400000, guid: 100746e5ac2725541b23cea941ca2a78, type: 2}
     ItemNeeded:
-    - Wood
-    - Cloth
-    ItemQNeeded: 0300000001000000
-  - ItemName: WoodenArrows
+    - {fileID: 11400000, guid: 68cd0cb2552f28240a1ae418e1a989d5, type: 2}
+    - {fileID: 11400000, guid: 7f3174cc2f994cf4ca476576729b6bc5, type: 2}
+    ItemQNeeded: 0100000002000000
+  - Item: {fileID: 11400000, guid: 5d52d8040f1ffd84382f0d61d3ebb58f, type: 2}
     ItemNeeded:
-    - Wood
-    - MetalScraps
+    - {fileID: 11400000, guid: 8f1e366073e2ffe4ea57b25a9bc48495, type: 2}
+    ItemQNeeded: 02000000
+  - Item: {fileID: 11400000, guid: f42ed78c573e08c4890255bb41c13147, type: 2}
+    ItemNeeded:
+    - {fileID: 11400000, guid: 100746e5ac2725541b23cea941ca2a78, type: 2}
+    - {fileID: 11400000, guid: 5d52d8040f1ffd84382f0d61d3ebb58f, type: 2}
+    ItemQNeeded: 0100000003000000
+  - Item: {fileID: 11400000, guid: 2567a98ba413e244489568533e1a4cf0, type: 2}
+    ItemNeeded:
+    - {fileID: 11400000, guid: eba147d33c12f354cb1c6d01bf2459c9, type: 2}
+    - {fileID: 11400000, guid: 7f3174cc2f994cf4ca476576729b6bc5, type: 2}
     ItemQNeeded: 0100000001000000
-  - ItemName: 9mmPistol
-    ItemNeeded:
-    - MetalScraps
-    - Wood
-    ItemQNeeded: 0500000001000000
-  - ItemName: 9mmAmmo
-    ItemNeeded:
-    - MetalScraps
-    ItemQNeeded: 05000000
-  - ItemName: SubMachineGun
-    ItemNeeded:
-    - MetalScraps
-    ItemQNeeded: 0a000000
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1

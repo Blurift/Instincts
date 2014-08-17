@@ -29,6 +29,7 @@ public class MusicManager : MonoBehaviour {
 	// Use this for initialization
 	void Start ()
 	{
+		return;
 		if(tracks.Length > 0 && !Network.isServer)
 		{
 			player.clip = tracks[0];
@@ -38,6 +39,7 @@ public class MusicManager : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+		return;
 		if (!player.isPlaying && !Network.isServer)
 		{
 			index ++;

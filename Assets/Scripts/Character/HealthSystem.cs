@@ -70,7 +70,7 @@ public class HealthSystem : MonoBehaviour {
 		set
 		{
 			hunger = value;
-			if(Network.isServer && networkView != null)
+			if(networkView != null)
 				networkView.RPC("ChangeHunger", RPCMode.Others, hunger);
 			if(hunger > HungerMax)
 				hunger = Hunger;
@@ -237,7 +237,7 @@ public class HealthSystem : MonoBehaviour {
 	[RPC]
 	public void BleedingRPC(bool bleed)
 	{
-		if(Network.isServer)
+		if(Network.isServer && networkView != null)
 			networkView.RPC("BleedingRPC", RPCMode.Others, bleed);
 		if(bleed)
 			AddHealthEffect (new HealthBleeding ());
@@ -290,6 +290,27 @@ public class HealthSystem : MonoBehaviour {
 				return true;
 
 		return false;
+	}
+
+	public void SetHealthState(HealthState state)
+	{
+		Health = state.Health;
+		Hunger = state.Hunger;
+	}
+
+	public HealthState GetHealthState()
+	{
+		HealthState state = new HealthState ();
+		state.Health = Health;
+		state.Hunger = Hunger;
+		return state;
+	}
+
+	[System.Serializable]
+	public class HealthState
+	{
+		public int Health;
+		public int Hunger;
 	}
 }
 

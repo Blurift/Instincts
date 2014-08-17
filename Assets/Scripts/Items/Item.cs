@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using System.Text.RegularExpressions;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -24,8 +25,6 @@ public class Item : ScriptableObject {
 	public bool RequiresPress = true;
 
 	[SerializeField]
-	//public ItemBehaviour[] ControlList;
-	//public List<ItemBehaviour> ControlList;
 	public ItemBehaviour BController = new ItemBehaviour ();
 
 	public Inventory invOwner;
@@ -35,8 +34,6 @@ public class Item : ScriptableObject {
 		name = name.Replace ("(Clone)", "");
 		name = name.Replace ("(Item)", "");
 	}
-
-
 
 	public void UseItem(PlayerController character, bool pressed)
 	{
@@ -127,6 +124,16 @@ public class Item : ScriptableObject {
 
 	}
 
+	public ItemState GetItemState()
+	{
+		ItemState state = new ItemState ();
+		state.Name = this.name;
+		state.Stack = this.StackAmount;
+		state.Charges = this.BController.Charges;
+		return state;
+	}
+
+
 #if UNITY_EDITOR
 	[MenuItem("Assets/Create/Item")]
 	public static void CreateItem()
@@ -141,6 +148,14 @@ public class Item : ScriptableObject {
 		Selection.activeObject = asset;
 	}
 #endif
+
+	[System.Serializable]
+	public class ItemState
+	{
+		public string Name;
+		public int Stack;
+		public int Charges;
+	}
 }
 
 public enum ItemType

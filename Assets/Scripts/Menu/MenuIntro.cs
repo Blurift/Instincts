@@ -22,7 +22,7 @@ public class MenuIntro : MonoBehaviour {
 			"(1) Instincts is in a PRE-ALPHA state.\n" +
 			"It is not a complete game and should not be considered so.\n\n\n" +
 			"(2) This means while playing you will encounter performance issues, bugs, incompatibility issues and many other unforeseen problems.\n\n\n" +
-			"(3)If you come accross you can report it too support@blurift.com, we will also have a bug reporting feature on our website(Not Available Yet)\n\n\n" +
+			"(3)If you come accross you can report it too support@blurift.com, we also have a forum at www.blutift.com/forum that you can post bugs and support issues too.\n\n\n" +
 			"Thank you for playing!"
 			;
 
@@ -38,7 +38,7 @@ public class MenuIntro : MonoBehaviour {
 	void OnGUI()
 	{
 		GUI.skin = MenuSkin;
-
+		Menu.SetFontSize (GUI.skin);
 
 		/****DRAW Black BACKGROUND */
 		GUI.color = Color.black;

@@ -5,27 +5,24 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
+using Blurift.BluRMF;
 
 public class Menu : MonoBehaviour {
 
 	//Static info
-	private const string typeName = "BluriftInstinctsPreview";
-	public const string VERSION = "0.31";
+	public const string TypeName = "BluriftInstinctsPreview04";
+	public const string VERSION = "0.4.2";
+
+	public static Profile MainProfile;
+	public static Menu Instance;
 
 	//Gameinfo
-	private HostData[] hostList = new HostData[0];
-	private Dictionary<string, Ping> hostPings = new Dictionary<string, Ping> ();
-	private string hostListStatus = "Searching...";
-	private string LanIP = "";
-	private string LanPort = "";
 	private string serverSysFile = "";
-	private NetworkSearchType networkSearchType = NetworkSearchType.Internet;
 
-	//PlayerInfo
-	private static string Username = "Player";
-	private string password = "";
-	private static bool Authenticated = false;
-	private string authError = "";
+	//ScreenInfo
+	private MenuProfile menuProfile;
+	private MenuJoinGame menuJoinGame;
+	private MenuHost menuHost;
 
 	//NetworkTesting
 	private bool doneTesting = false;
@@ -49,9 +46,15 @@ public class Menu : MonoBehaviour {
 	public GUISkin MenuSkin;
 	public static GUIStyle LabelCenter;
 	public static GUIStyle LabelRight;
+	public static GUIStyle LabelLeft;
 	public static GUIStyle LowerLeft;
+	public static GUIStyle LowerCenter;
+	public static GUIStyle LowerRight;
 	public static GUIStyle UpperLeft;
+	public static GUIStyle UpperCenter;
+	public static GUIStyle UpperRight;
 
+	public Texture2D BackgroundImage;
 	public Texture2D filler;
 	public Texture2D logo;
 	public Texture2D build;
@@ -61,10 +64,6 @@ public class Menu : MonoBehaviour {
 	private Color scrollItemFocus = new Color(0.7f,0.4f,0.4f);
 	private Color scrollItemFocusAlt = new Color(0.6f,0.2f,0.2f);
 
-	private Vector2 serverScrollPosition = Vector2.zero;
-	private int scrollItemHeight = 22;
-	private int selectedServer = -1;
-
 	//Player prefs
 	public static bool GameTips;
 
@@ -73,10 +72,9 @@ public class Menu : MonoBehaviour {
 	private Rect creditsScrollView;
 	private Vector2 creditsScrollPos = Vector2.zero;
 
-	private Rect patchNotesRect;
-
 	private string creditsText = "<b>Lead Designer/Programmer</b>\nKeirron Stach\n\n" +
 		"<b>Sound Assets</b>\nFreesound.org Creative Commons\n\n" +
+		"<b>Concept Art</b>\nLisa Hignett\nZakodia Art Studio\n\n" +
 		"<b>Music</b>\nThis could be YOU\n\n" +
 		"<b>A* Pathfinding</b>\nhttp://www.arongranberg.com/\n\n" +
 		"<b>QA Testing</b>\nSam Dalby\nJoey Testo\n\n" +
@@ -91,9 +89,9 @@ public class Menu : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		serverSysFile = Logger.Path() + "server.sys";
+		Instance = this;
+		serverSysFile = GameManager.SavePath() + "server.sys";
 
-		GetPlayerName ();
 		CurrentScreen = ScreenType.MainMenu;
 
 		float boxWidth = Screen.width * 0.25f;
@@ -106,6 +104,16 @@ public class Menu : MonoBehaviour {
 			GameTips = true;
 		else
 			GameTips = false;
+
+		menuProfile = new MenuProfile ();
+
+		if (!menuProfile.ProfileAvailable ())
+			SwitchScreen (ScreenType.CreateProfile);
+
+		if(PlayerPrefs.HasKey("Profile"))
+		{
+			MainProfile = Profile.LoadProfile(MenuProfile.GetProfilePath(PlayerPrefs.GetString("Profile")));
+		}
 	}
 	
 	// Update is called once per frame
@@ -113,32 +121,95 @@ public class Menu : MonoBehaviour {
 	
 	}
 
-	void OnGUI()
+	public static void SetFontSize(GUISkin skin)
 	{
+		float h = Screen.height;
+		skin.textField.fontSize = (int)(0.07f * h);
+		skin.button.fontSize = (int)(0.02f * h);
+		skin.label.fontSize = (int)(0.02f * h);
+	}
 
-		GUI.skin = MenuSkin;
+	public static GUIStyle GetCustomStyleFont(GUIStyle original, float size)
+	{
+		GUIStyle s = new GUIStyle (original);
+		s.fontSize = (int)(size * Screen.height);
+		return s;
+	}
+
+	public static void SetTextAlignments(GUISkin skin)
+	{
+		if(LabelLeft == null)
+		{
+			LabelLeft = new GUIStyle (GUI.skin.GetStyle ("Label"));
+			LabelLeft.alignment = TextAnchor.MiddleLeft;
+		}
 		if(LabelCenter == null)
 		{
 			LabelCenter = new GUIStyle (GUI.skin.GetStyle ("Label"));
-			LabelCenter.alignment = TextAnchor.UpperCenter;
+			LabelCenter.alignment = TextAnchor.MiddleCenter;
 		}
 		if(LabelRight == null)
 		{
 			LabelRight = new GUIStyle (GUI.skin.GetStyle ("Label"));
-			LabelRight.alignment = TextAnchor.UpperRight;
+			LabelRight.alignment = TextAnchor.MiddleRight;
 		}
 		if(UpperLeft == null)
 		{
 			UpperLeft = new GUIStyle (GUI.skin.GetStyle ("Label"));
 			UpperLeft.alignment = TextAnchor.UpperLeft;
 		}
+		if(UpperCenter == null)
+		{
+			UpperCenter = new GUIStyle (GUI.skin.GetStyle ("Label"));
+			UpperCenter.alignment = TextAnchor.UpperCenter;
+		}
+		if(UpperRight == null)
+		{
+			UpperRight = new GUIStyle (GUI.skin.GetStyle ("Label"));
+			UpperRight.alignment = TextAnchor.UpperRight;
+		}
 		if(LowerLeft == null)
 		{
 			LowerLeft = new GUIStyle (GUI.skin.GetStyle ("Label"));
 			LowerLeft.alignment = TextAnchor.LowerLeft;
 		}
+		if(LowerCenter == null)
+		{
+			LowerCenter = new GUIStyle (GUI.skin.GetStyle ("Label"));
+			LowerCenter.alignment = TextAnchor.LowerCenter;
+		}
+		if(LowerRight == null)
+		{
+			LowerRight = new GUIStyle (GUI.skin.GetStyle ("Label"));
+			LowerRight.alignment = TextAnchor.LowerRight;
+		}
+	}
+
+	void OnGUI()
+	{
+
+		GUI.skin = MenuSkin;
+		SetFontSize (GUI.skin);
+
+		SetTextAlignments (GUI.skin);
 
 		Screen.showCursor = true;
+
+		if(CurrentScreen == ScreenType.CreateProfile)
+		{
+			if(menuProfile != null)
+				menuProfile.DrawCreateProfileScreen();
+			else
+				CurrentScreen = ScreenType.MainMenu;
+		}
+
+		if(CurrentScreen == ScreenType.SelectProfile)
+		{
+			if(menuProfile != null)
+				menuProfile.DrawSelectProfileScreen();
+			else
+				CurrentScreen = ScreenType.MainMenu;
+		}
 
 		if(CurrentScreen == ScreenType.Connecting)
 		{
@@ -148,6 +219,15 @@ public class Menu : MonoBehaviour {
 				CurrentScreen = ScreenType.MainMenu;
 			}
 		}
+
+		if(CurrentScreen == ScreenType.HostGame)
+		{
+			if(menuHost != null)
+				menuHost.Draw();
+			else
+				CurrentScreen = ScreenType.MainMenu;
+		}
+
 		
 		if(CurrentScreen == ScreenType.Error)
 		{			
@@ -160,190 +240,19 @@ public class Menu : MonoBehaviour {
 
 		if(CurrentScreen == ScreenType.FindGame)
 		{
-			//GUI Measurements
-			buttonWidth = Screen.width*0.18f;
-			buttonHeight = buttonWidth*0.2f;
-			buttonMargin = Screen.width*0.01f;
-			buttonSizeW = Screen.width*0.2f;
-			buttonSizeH = buttonHeight + buttonMargin*2;
-
-			//Network Search buttons and messages;
-			{
-				float buttonNetworkSearchWidth = buttonWidth/2;
-				float networkSearchTypeOffset = buttonSizeW+buttonMargin;
-
-				Rect networkSearchTypeButtonInternet = new Rect(networkSearchTypeOffset,buttonSizeH/2,buttonNetworkSearchWidth,buttonHeight);
-				networkSearchTypeOffset += buttonNetworkSearchWidth + buttonMargin;
-				Rect networkSearchTypeButtonLAN = new Rect(networkSearchTypeOffset,buttonSizeH/2,buttonNetworkSearchWidth,buttonHeight);
-				networkSearchTypeOffset += buttonNetworkSearchWidth + buttonMargin;
-				Rect networkSearchTypeButtonDirect = new Rect(networkSearchTypeOffset,buttonSizeH/2,buttonNetworkSearchWidth,buttonHeight);
-				networkSearchTypeOffset += buttonNetworkSearchWidth + buttonMargin;
-				Rect networkSearchStatus = new Rect(networkSearchTypeOffset, buttonSizeH/2, 300,30);
-
-				if(GUI.Button(networkSearchTypeButtonInternet, "Internet") && networkSearchType != NetworkSearchType.Internet)
-				{
-					RefreshHostList();
-					networkSearchType = NetworkSearchType.Internet;
-				}
-
-				if(GUI.Button(networkSearchTypeButtonLAN, "LAN"))
-				{
-					hostList = null;
-					networkSearchType = NetworkSearchType.LAN;
-				}
-				if(GUI.Button(networkSearchTypeButtonDirect, "Direct"))
-				{
-					hostList = null;
-					networkSearchType = NetworkSearchType.Direct;
-				}
-
-				GUI.Label(networkSearchStatus, "Status: "+hostListStatus);
-			}
-
-
-			//Server List gui measurements
-			Rect ServerListRect = new Rect(buttonSizeW,buttonSizeH,Screen.width-buttonSizeW,Screen.height-buttonHeight*2);
-
-
-			hostList = MasterServer.PollHostList();
-			float serverListHeight = 200;
-			if(hostList != null) serverListHeight = hostList.Length * buttonHeight;
-
-			//If rect is too short it will not display properly in the scrollview. make it the scroll view height.
-			if(serverListHeight < ServerListRect.height) serverListHeight = ServerListRect.height;
-			
-			Rect ServerListInside = new Rect(0,0,ServerListRect.width-20,serverListHeight);
-			
-			serverScrollPosition = GUI.BeginScrollView(ServerListRect, serverScrollPosition, ServerListInside, false, true);
-			
-			if(hostList != null)
-			{
-				float scrollItemNameWidth = ServerListInside.width*0.6f;
-				float scrollItemPlayersWidth = ServerListInside.width*0.2f;
-				float scrollItemPingWidth = ServerListInside.width*0.2f;
-				
-				int iMeasure = 0;
-				for(int i = 0; i < hostList.Length; i++)
-				{
-					//if(hostPings[i].isDone)
-					if(true)
-					{
-						
-						Rect scrollItem = new Rect(0,iMeasure*(scrollItemHeight+2), ServerListInside.width,scrollItemHeight);
-						Rect scrollItemName = new Rect(0,scrollItem.y,scrollItemNameWidth-2,scrollItemHeight);
-						Rect scrollItemPlayers = new Rect(scrollItemNameWidth, scrollItem.y, scrollItemPlayersWidth-2, scrollItemHeight);
-						Rect scrollItemPing = new Rect(scrollItemNameWidth + scrollItemPlayersWidth, scrollItem.y, scrollItemPingWidth, scrollItemHeight);
-						
-						//Draw Server name
-						Color boxColor = scrollItemColor;
-						if(selectedServer == i)
-							boxColor = scrollItemFocus;
-						GUI.color = boxColor;
-						GUI.DrawTexture(scrollItemName, filler);
-						GUI.DrawTexture(scrollItemPing, filler);
-						boxColor = scrollItemColorAlt;
-						if(selectedServer == i)
-							boxColor = scrollItemFocusAlt;
-						GUI.color = boxColor;
-						GUI.DrawTexture(scrollItemPlayers, filler);
-						
-						
-						GUI.color = Color.white;
-						
-						GUI.Label(scrollItemName, hostList[i].gameName);
-						GUI.Label(scrollItemPlayers, hostList[i].connectedPlayers + " / " + hostList[i].playerLimit);
-
-						Ping ping;
-
-						if(hostPings.ContainsKey(hostList[i].gameName))
-						{
-							ping  = hostPings[hostList[i].gameName];
-							if(ping != null && hostPings[hostList[i].gameName].isDone)
-								GUI.Label(scrollItemPing, ping.time.ToString());
-						}
-						else
-							GUI.Label(scrollItemPing, "--");
-						
-						if(Input.GetMouseButtonDown(0) && scrollItem.Contains(Event.current.mousePosition))
-						{
-							selectedServer = i;
-							LanIP = "";
-						}
-						
-						iMeasure++;
-					}
-				}
-			}
-			
-			GUI.EndScrollView(true);
-
-			buttonI = 0;
-
-			if(GUI.Button(new Rect(buttonMargin,buttonMargin + (buttonI*buttonSizeH), buttonWidth,buttonHeight), "Join Game"))
-			{
-				
-				NetworkManager.playerName = Username;
-				
-				Network.isMessageQueueRunning = false;
-
-				switch(networkSearchType)
-				{
-				case NetworkSearchType.Internet:
-					Network.Connect(hostList[selectedServer]);
-					CurrentScreen = ScreenType.Connecting;
-					break;
-				case NetworkSearchType.LAN:
-					break;
-				case NetworkSearchType.Direct:
-					Network.Connect(LanIP, int.Parse(LanPort));
-					CurrentScreen = ScreenType.Connecting;
-					break;
-				}
-			}
-
-
-
-			buttonI++;
-
-			if(GUI.Button(new Rect(buttonMargin,buttonMargin + (buttonI*buttonSizeH), buttonWidth,buttonHeight), "Refresh"))
-			{
-				MasterServer.ClearHostList();
-				hostListStatus = "Refreshing... ";
-				RefreshHostList();
-			}
-			buttonI++;
-
-			GUI.Label(new Rect(buttonMargin,buttonMargin + (buttonI*buttonSizeH), buttonWidth,buttonHeight/2), "Name");
-			Username = GUI.TextArea(new Rect(buttonMargin,buttonMargin + (buttonI*buttonSizeH) + buttonHeight/2, buttonWidth,buttonHeight/2), Username);
-			buttonI++;
-
-			GUI.Label(new Rect(buttonMargin,buttonMargin + (buttonI*buttonSizeH), buttonWidth,buttonHeight/2), "Direct Connect");
-			LanIP = GUI.TextArea(new Rect(buttonMargin,buttonMargin + (buttonI*buttonSizeH) + buttonHeight/2, buttonWidth,buttonHeight/2), LanIP);
-			LanPort = GUI.TextArea(new Rect(buttonMargin,buttonMargin + (buttonI*buttonSizeH) + (buttonHeight/2)*2, buttonWidth,buttonHeight/2), LanPort);
-			buttonI+=2;
-
-			GameTips = GUI.Toggle(new Rect(buttonMargin,buttonMargin + (buttonI*buttonSizeH), buttonWidth,buttonHeight), GameTips, "Use in game hints");
-
-			if(GameTips)
-				PlayerPrefs.SetInt("GameTips",1);
+			if(menuJoinGame != null)
+				menuJoinGame.Draw();
 			else
-				PlayerPrefs.SetInt("GameTips",0);
-
-			buttonI ++;
-
-			if(GUI.Button(new Rect(buttonMargin,buttonMargin + (buttonI*buttonSizeH), buttonWidth,buttonHeight), "Back"))
-			{
-				CurrentScreen = ScreenType.MainMenu;
-			}
-
-
+				SwitchScreen(ScreenType.MainMenu);
 		}
 
 		if(CurrentScreen == ScreenType.MainMenu)
 		{
-			buttonWidth = Screen.width*0.15f;
-			buttonHeight = buttonWidth*0.3f;
-			float buttonDivider = buttonHeight *0.2f;
+			buttonHeight = (Screen.height/2)/7;
+			buttonWidth = buttonHeight * 3.5f;;
+			float buttonDivider = buttonHeight * 0.2f;
+
+
 			
 			buttonI = 0;
 
@@ -356,45 +265,51 @@ public class Menu : MonoBehaviour {
 			float y = Screen.height/2-estY/2 + buttonHeight;
 
 			float logoRatio = (float)logo.height / (float)logo.width;
-			float logoW = buttonWidth*3;
+			float logoW = buttonWidth*3.5f;
 			float logoH = logoW*logoRatio;
 			float logoX = Screen.width/2 - logoW/2;
-			float logoY = y + buttonHeight - logoH;
+			float logoY = logoH/2;
 
-			float buildRatio = (float)build.height / (float)build.width;
-			float buildW = Screen.width/3;
-			float buildH = buildW * buildRatio;
-			float buildX = Screen.width/2 - buildW/2;
-			float buildY = logoY - buttonDivider - buildH;
+			float welcomeW = Screen.width/3;
+			float welcomeH = 50;
+			float welcomeX = Screen.width/2 - welcomeW/2;
+			float welcomeY = logoY + logoH*1.1f;
 
 			GUI.DrawTexture(new Rect(logoX,logoY,logoW,logoH), logo);
-			GUI.DrawTexture(new Rect(buildX,buildY,buildW,buildH), build);
+			GUI.Label(new Rect(welcomeX,welcomeY,welcomeW,welcomeH), "Version: " + VERSION + "\nHello " + MainProfile.Name, LabelCenter);
+
 
 			//GUI.Label(new Rect(x, y + (buttonI*(buttonHeight+buttonDivider)), buttonWidth,buttonHeight/2), Username, LabelCenter);
 			buttonI+=1;
 
-			if(File.Exists(serverSysFile))
+			if(GUI.Button(new Rect(x,y + (buttonI*(buttonHeight+buttonDivider)),buttonWidth,buttonHeight), "Host Game"))
 			{
-				if(GUI.Button(new Rect(x,y + (buttonI*(buttonHeight+buttonDivider)),buttonWidth,buttonHeight), "Host Game"))
-				{
-					NetworkManager.Server = true;
-					Network.SetLevelPrefix(LevelLoader.LEVEL_GAME);
-					Application.LoadLevel(LevelLoader.LEVEL_GAME);
-					//NetworkManager.StartServer();
-				}
-				buttonI+=1;
+				SwitchScreen(ScreenType.HostGame);
+				//NetworkManager.Server = true;
+				//Network.SetLevelPrefix(LevelLoader.LEVEL_GAME);
+				//Application.LoadLevel(LevelLoader.LEVEL_GAME);
+				//NetworkManager.StartServer();
 			}
+			buttonI+=1;
 
 			if(GUI.Button(new Rect(x, y + (buttonI*(buttonHeight+buttonDivider)),buttonWidth,buttonHeight), "Join Game"))
 			{
-				SavePlayerName();
-				selectedServer = -1;
-				hostListStatus= " Finding...";
-				RefreshHostList();
-
-				CurrentScreen = ScreenType.FindGame;
+				SwitchScreen(ScreenType.FindGame);
 			}
 			buttonI+=1;
+
+			if(GUI.Button(new Rect(x, y + (buttonI*(buttonHeight+buttonDivider)),buttonWidth,buttonHeight), "Create Profile"))
+			{
+				this.SwitchScreen(ScreenType.CreateProfile);
+			}
+			buttonI+=1;
+
+			if(GUI.Button(new Rect(x, y + (buttonI*(buttonHeight+buttonDivider)),buttonWidth,buttonHeight), "Select Profile"))
+			{
+				this.SwitchScreen(ScreenType.SelectProfile);
+			}
+			buttonI+=1;
+
 
 			
 			if(GUI.Button(new Rect(x, y + (buttonI*(buttonHeight+buttonDivider)),buttonWidth,buttonHeight), "Options"))
@@ -508,29 +423,17 @@ public class Menu : MonoBehaviour {
 		}
 	}
 
-	private void RefreshHostList()
-	{
-		MasterServer.RequestHostList (typeName);
-		hostPings = new Dictionary<string, Ping> ();
-	}
-
-	private void NetworkSearchLanGames()
-	{
-	}
-
 	void OnMasterServerEvent(MasterServerEvent msEvent)
 	{
 		if (msEvent == MasterServerEvent.HostListReceived)
 		{
-			hostList = MasterServer.PollHostList ();
-			hostListStatus = "Found " + hostList.Length + " servers.";
+			menuJoinGame.hostList = MasterServer.PollHostList ();
+			menuJoinGame.hostListStatus = "Found " + menuJoinGame.hostList.Length + " servers.";
 		}
 	}
 
 	void OnConnectedToServer()
 	{
-
-		NetworkManager.playerName = Username;
 		NetworkManager.Server = false;
 
 		LevelLoader.Instance.LoadLevel (LevelLoader.LEVEL_GAME);
@@ -541,33 +444,6 @@ public class Menu : MonoBehaviour {
 	{
 		CurrentScreen = ScreenType.Error;
 		ScreenMessage = "Could not connect to server. " + error.ToString ();
-		Logger.Write (ScreenMessage);
-	}
-
-	void SavePlayerName()
-	{
-		string file = Logger.Path() + "player.dat";
-		if(File.Exists(file))
-			File.Delete(file);
-		StreamWriter writer = new StreamWriter(file);
-		writer.WriteLine(Username);
-		writer.WriteLine(password);
-		writer.Close();
-	}
-	
-	void GetPlayerName()
-	{
-		string file = Logger.Path() + "player.dat";
-		if(File.Exists(file))
-		{
-			StreamReader reader = new StreamReader(file);
-			Username = reader.ReadLine();
-			if(!reader.EndOfStream)
-				password = reader.ReadLine();
-			else
-				password = "";
-			reader.Close();
-		}
 	}
 
 	private void TestConnection()
@@ -657,17 +533,6 @@ public class Menu : MonoBehaviour {
 			testStatus = "Done testing";
 		}
 	}
-
-	private void SetPings()
-	{
-		for (int i = 0; i < hostList.Length; i++)
-		{
-			if(!hostPings.ContainsKey(hostList[i].gameName))
-			{
-				hostPings.Add(hostList[i].gameName, new Ping(hostList[i].ip[0]));
-			}
-		}
-	}
 	
 	public static string WebPost(string _URL, string _postString)
 	{
@@ -725,16 +590,53 @@ public class Menu : MonoBehaviour {
 		Controls,
 		Other,
 	}
+
+	public void SwitchScreen(ScreenType s)
+	{
+		switch(s)
+		{
+		case ScreenType.CreateProfile:
+			menuProfile = new MenuProfile();
+			break;
+		case ScreenType.SelectProfile:
+			menuProfile = new MenuProfile();
+			break;
+		case ScreenType.FindGame:
+			menuJoinGame = new MenuJoinGame();
+			break;
+		case ScreenType.HostGame:
+			menuHost = new MenuHost();
+			break;
+		}
+
+		CurrentScreen = s;
+	}
+}
+
+public static class StyleHelper
+{
+	public static GUISkin SetAllFontSizes(GUISkin skin, float size)
+	{
+		return skin;
+	}
+
+	public static GUIStyle SetFontSize(GUIStyle style, float size)
+	{
+		style.fontSize = (int)size;
+		return style;
+	}
 }
 
 public enum ScreenType
 {
 	MainMenu,
 	FindGame,
+	HostGame,
 	Options,
 	Error,
 	Connecting,
-	Login,
+	CreateProfile,
+	SelectProfile,
 }
 
 public enum NetworkSearchType

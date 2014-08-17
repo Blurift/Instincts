@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5369fed2eb8460a4dacb0f61789f720b, type: 3}
+  m_Name: WoodTorch
+  m_EditorClassIdentifier: 
+  Name: Wooden Torch
+  Description: Hit your enemies with it.
+  Weight: 2.5
+  Icon: {fileID: 2800000, guid: f983746ea170eb34c99470be595a76da, type: 3}
+  IType: 2
+  Stackable: 0
+  StackAmount: 1
+  StackMax: 1
+  ItemCoolDown: .5
+  RequiresPress: 1
+  BController:
+    EquippedPrefab: {fileID: 100000, guid: f63bc73da530c5442820b532acb747f7, type: 2}
+    RestoresHunger: 0
+    CuresBleeding: 0
+    CuresPoison: 0
+    IsMeleeWeapon: 0
+    IsRangedWeapon: 0
+    Damage:
+      Effect: 1
+      Damage: 7
+      AltDamage: 3
+    Charges: 1
+    ChargesMax: 1
+    ChargeOverTime: 0
+    AmmoName: 
+    Durability: 100
+    DurabilityMax: 100
+    HungerToRestore: 0
+    ReloadTime: 1
+  invOwner: {fileID: 0}

@@ -83,6 +83,8 @@ public class ItemBehaviour {
 	{
 		if(IsRangedWeapon)
 		{
+
+			controller.Inventory.ChangeAtts(item);
 		}
 
 		if(IsMeleeWeapon)
@@ -116,7 +118,8 @@ public class ItemBehaviour {
 		if(RestoresHunger)
 		{
 			HealthSystem health = (HealthSystem)controller.GetComponent (typeof(HealthSystem));
-			health.networkView.RPC ("ChangeHunger", RPCMode.Server, health.Hunger + HungerToRestore);
+			health.Hunger = health.Hunger + HungerToRestore;
+			//health.networkView.RPC ("ChangeHunger", RPCMode.Server, health.Hunger + HungerToRestore);
 			item.TakeFromStack(1);
 		}
 	}

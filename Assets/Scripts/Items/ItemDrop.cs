@@ -9,7 +9,9 @@ public class ItemDrop : MonoBehaviour {
 
 	public float DespawnTime = 0;
 	public Item item;
+
 	public int ItemStack;
+	public int ItemCharges = 1;
 
 	private bool ready = false;
 
@@ -19,6 +21,9 @@ public class ItemDrop : MonoBehaviour {
 	private bool showHover = false;
 
 	private string hoverText = "";
+
+	//Attributes
+
 
 	// Use this for initialization
 	void Start () {

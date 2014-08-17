@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 
 public class GameManager : MonoBehaviour {
 
@@ -13,18 +14,24 @@ public class GameManager : MonoBehaviour {
 	{
 		Instance = this;
 
+		if(Debug.isDebugBuild)
+		{
+			Debug.Log("Logger: " + Application.dataPath);
+			Debug.Log("Logger: " + Application.persistentDataPath);
+		}
+
 	}
 
 	void Update()
 	{
 		MousePosition = Camera.main.ScreenToWorldPoint (Input.mousePosition);
-		if(Network.isServer)
-			messageOpacity = 1;
+		//if(Network.isServer)
+		//	messageOpacity = 1;
 	}
 
 	void OnGUI()
 	{
-		if(messageOpacity > 0 && Network.isServer)
+		if(messageOpacity > 0 && Network.isServer && false)
 		{
 			Color gui = Color.white;
 			gui.a = messageOpacity;
@@ -50,15 +57,48 @@ public class GameManager : MonoBehaviour {
 		}
 	}
 
+	public static string SavePath()
+	{
+		string dataPath = Application.dataPath;
+		dataPath = dataPath.Substring (0, dataPath.LastIndexOf ("/")+1);
+		return dataPath;
+	}
+
+	public static string ProfilePath()
+	{
+		string path = Application.persistentDataPath;
+		path += "/Profiles/";
+
+		if (!Directory.Exists (path))
+			Directory.CreateDirectory (path);
+
+		return path;
+	}
+
+	private static string ServerPlayerPathFormat(string server)
+	{
+		return Application.persistentDataPath + "/" + server + "/Players/";
+	}
+
+	public static string ServerPlayerPath()
+	{
+		return ServerPlayerPathFormat ("def");
+	}
+
+	public static string ServerPlayerPath(string serverName)
+	{
+		return ServerPlayerPathFormat (serverName);
+	}
+
 	[RPC]
 	void Message(string message)
 	{
 		messages.Add (message);
-		if (!Network.isServer && HUD.Instance != null)
-			HUD.Instance.ChatUpdate ();
-
 		if (messages.Count > 120)
 			messages.RemoveAt (0);
+
+		if (HUD.Instance != null)
+			HUD.Instance.ChatUpdate ();
 	}
 
 	[RPC]
@@ -72,16 +112,30 @@ public class GameManager : MonoBehaviour {
 		}
 	}
 
+	/// <summary>
+	/// Sends a message to everyone connected to the server
+	/// </summary>
+	/// <param name="message">Message to be sent.</param>
 	public static void NetMessage(string message)
 	{
 		if(Network.isServer)
 		{
-			Instance.Message(message);
-			Instance.networkView.RPC("Message", RPCMode.Others, message);
+			//Instance.Message(message);
+			//Instance.networkView.RPC("Message", RPCMode.Others, message);
+			Instance.SendMessageServer(message, Network.player);
 		}
 		else
 		{
 			Instance.networkView.RPC("SendMessageServer", RPCMode.Server, message, Network.player);
+		}
+	}
+
+	public static void ServerMessage(string message)
+	{
+		if(Network.isServer)
+		{
+			Instance.Message("Server: " + message);
+			Instance.networkView.RPC("Message", RPCMode.Others, "Server: " + message);
 		}
 	}
 

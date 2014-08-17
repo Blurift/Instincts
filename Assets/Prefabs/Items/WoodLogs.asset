@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Name: WoodLogs
   m_EditorClassIdentifier: 
   Name: WoodLogs
-  Description: Logs used for crafting
+  Description: Crafting material.
   Weight: 4
   Icon: {fileID: 2800000, guid: f3f8769bcbb870c428b4f470207a115f, type: 3}
   IType: 4

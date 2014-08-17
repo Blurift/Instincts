@@ -16,6 +16,8 @@ public class CraftingManagerEditor : Editor {
 		Items.AddRange (script.CraftableItems);
 
 		int deleteItem = -1;
+		int moveUpItem = -1;
+		int moveDownItem = -1;
 		bool dirty = false;
 
 		for(int i = 0; i < Items.Count; i++)
@@ -29,6 +31,14 @@ public class CraftingManagerEditor : Editor {
 			if(GUILayout.Button("Delete", GUILayout.Width(Screen.width*0.2f), GUILayout.MinWidth(70)))
 			{
 				deleteItem = i;
+			}
+			if(GUILayout.Button ("U", GUILayout.Width(24)))
+			{
+				moveUpItem = i;
+			}
+			if(GUILayout.Button ("D", GUILayout.Width(24)))
+			{
+				moveDownItem = i;
 			}
 			EditorGUILayout.EndHorizontal();
 
@@ -70,6 +80,8 @@ public class CraftingManagerEditor : Editor {
 						{
 							deleteIngrediant = j;
 						}
+
+
 						EditorGUILayout.EndHorizontal();
 					}
 				}
@@ -98,6 +110,19 @@ public class CraftingManagerEditor : Editor {
 		}
 		if (deleteItem > -1)
 						Items.RemoveAt (deleteItem);
+		CraftableItem temp;
+		if(moveUpItem > 0)
+		{
+			temp = Items[moveUpItem -1];
+			Items[moveUpItem-1] = Items[moveUpItem];
+			Items[moveUpItem] = temp;
+		}
+		if(moveDownItem > -1 && moveDownItem < Items.Count-1)
+		{
+			temp = Items[moveDownItem +1];
+			Items[moveDownItem +1] = Items[moveDownItem];
+			Items[moveDownItem] = temp;
+		}
 
 		if(GUILayout.Button("Add"))
 		{
