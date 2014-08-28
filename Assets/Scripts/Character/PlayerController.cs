@@ -61,10 +61,14 @@ public class PlayerController : EntityController {
 			FirstItem = true;
 			FirstMovement = true;
 		}
+
+        //Set up the camera follow
+        if (networkView.isMine)
+            Camera.main.GetComponent<CameraController>().Target = transform;
 	}
 	
 	// Update is called once per frame
-	void Update () {
+	void FixedUpdate () {
 		UpdateMovement ();
 
 		if (networkView.isMine)
@@ -72,7 +76,7 @@ public class PlayerController : EntityController {
 			if(!FirstMovement)
 			{
 				FirstMovement = true;
-				HUD.HelperMessage ("Welcome to Instincts " + PlayerName + ". Use the WASD keys to move your character. Pressing tab will switch movement between absolute and relative types of movement.", 10, 3);
+				HUD.HelperMessage ("Welcome to Instincts " + PlayerName + ". Use the WASD keys to move your character.", 10, 3);
 			}
 
 			UpdateInput ();
@@ -136,7 +140,7 @@ public class PlayerController : EntityController {
 			
 			if(Input.GetButtonDown("MovementToggle"))
 			{
-				absolute = !absolute;
+				//absolute = !absolute;
 			}
 			
 			if(Input.GetButtonDown("Start") && HUD.ShowChat)
@@ -234,6 +238,7 @@ public class PlayerController : EntityController {
 	{
 		if(Network.isServer)
 		{
+			//Send to everyone but the owner
 			NetworkManager.SendRPC(networkView, networkView.owner, "UseEquipped");
 			//return;
 		}
@@ -259,8 +264,8 @@ public class PlayerController : EntityController {
 
 		//Handle Movement Input
 		{
-			float vert = Input.GetAxis ("Vertical");
-			float hori = Input.GetAxis ("Horizontal");
+			float vert = Input.GetAxisRaw ("Vertical");
+			float hori = Input.GetAxisRaw ("Horizontal");
 
 			SetAnimIdle (vert == 0 && hori == 0);
 			
@@ -274,7 +279,7 @@ public class PlayerController : EntityController {
 
 			UpdateMovement (move);
 			
-			Camera.main.transform.position = new Vector3 (transform.position.x, transform.position.y, Camera.main.transform.position.z);
+			//Camera.main.transform.position = new Vector3 (transform.position.x, transform.position.y, Camera.main.transform.position.z);
 			
 			Vector3 worldMouse = Camera.main.ScreenToWorldPoint (Input.mousePosition) - transform.position;
 			

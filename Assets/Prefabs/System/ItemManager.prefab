@@ -54,10 +54,10 @@ MonoBehaviour:
   - {fileID: 11400000, guid: e80b65e4cfdf5de469f556e8abf8beab, type: 2}
   - {fileID: 11400000, guid: 100746e5ac2725541b23cea941ca2a78, type: 2}
   - {fileID: 11400000, guid: 2567a98ba413e244489568533e1a4cf0, type: 2}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 11400000, guid: 513d4695a0347c04f81d84d4d0ac7cca, type: 2}
+  - {fileID: 11400000, guid: 4b027ec9ef6562143aeeaee346db3030, type: 2}
+  - {fileID: 11400000, guid: 92d168fd9cd23a14bb6068a9e9e6c3cf, type: 2}
+  - {fileID: 11400000, guid: 4531434089b49a54f846ab47aa3e3235, type: 2}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}

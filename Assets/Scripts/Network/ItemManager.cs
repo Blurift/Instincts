@@ -62,6 +62,7 @@ public class ItemManager : MonoBehaviour {
 		d.item = ItemPrefabs[itemName];
 		d.ItemStack = stack;
 		d.ItemCharges = charges;
+		d.DespawnTime = Time.time + 120;
 		if (stack == -1)
 			d.ItemStack = d.item.StackAmount;
 		if (charges == -1)

@@ -75,6 +75,20 @@ MonoBehaviour:
     - {fileID: 11400000, guid: eba147d33c12f354cb1c6d01bf2459c9, type: 2}
     - {fileID: 11400000, guid: 7f3174cc2f994cf4ca476576729b6bc5, type: 2}
     ItemQNeeded: 0100000001000000
+  - Item: {fileID: 11400000, guid: 4b027ec9ef6562143aeeaee346db3030, type: 2}
+    ItemNeeded:
+    - {fileID: 11400000, guid: eba147d33c12f354cb1c6d01bf2459c9, type: 2}
+    - {fileID: 11400000, guid: 8f1e366073e2ffe4ea57b25a9bc48495, type: 2}
+    ItemQNeeded: 030000000a000000
+  - Item: {fileID: 11400000, guid: 4531434089b49a54f846ab47aa3e3235, type: 2}
+    ItemNeeded:
+    - {fileID: 11400000, guid: 8f1e366073e2ffe4ea57b25a9bc48495, type: 2}
+    ItemQNeeded: 01000000
+  - Item: {fileID: 11400000, guid: 92d168fd9cd23a14bb6068a9e9e6c3cf, type: 2}
+    ItemNeeded:
+    - {fileID: 11400000, guid: 4b027ec9ef6562143aeeaee346db3030, type: 2}
+    - {fileID: 11400000, guid: 8f1e366073e2ffe4ea57b25a9bc48495, type: 2}
+    ItemQNeeded: 0100000006000000
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1

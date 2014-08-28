@@ -46,7 +46,8 @@ public class ItemMeleeEquipped : MonoBehaviour {
 
 					if(Owner == null)
 						Owner = transform.parent.gameObject;
-					health.TakeDamage(Damage, Owner);
+                    if(health != null)
+                        health.TakeDamage(Damage, Owner);
 				}
 			}
 		}

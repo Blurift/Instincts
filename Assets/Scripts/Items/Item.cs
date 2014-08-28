@@ -23,6 +23,8 @@ public class Item : ScriptableObject {
 	public float ItemCoolDown = 1;
 	private float canUseTime = 0;
 	public bool RequiresPress = true;
+	public bool Automatic = false;
+	public bool AutomaticAlt = false;
 
 	[SerializeField]
 	public ItemBehaviour BController = new ItemBehaviour ();
@@ -37,7 +39,7 @@ public class Item : ScriptableObject {
 
 	public void UseItem(PlayerController character, bool pressed)
 	{
-		if(Time.time > canUseTime && !(RequiresPress && !pressed))
+		if(Time.time > canUseTime && !(!Automatic && !pressed))
 		{
 			canUseTime = Time.time + ItemCoolDown;
 			BController.UseItem(character, this);
@@ -46,6 +48,7 @@ public class Item : ScriptableObject {
 	
 	public void UseItemAlt(PlayerController character)
 	{
+		//TODO
 		if(Time.time > canUseTime)
 		{
 			canUseTime = Time.time + ItemCoolDown;
@@ -99,9 +102,12 @@ public class Item : ScriptableObject {
 	{
 		string desc = "<b>" + Name + "</b>";
 
-		desc += BController.DescValue ();
+		if (Stackable)
+			desc += " x " + StackAmount;
 
 		desc += "\n" + Description;
+
+		desc += BController.DescValue ();
 
 		return desc;
 	}

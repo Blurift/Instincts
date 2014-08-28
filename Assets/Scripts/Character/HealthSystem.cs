@@ -70,12 +70,19 @@ public class HealthSystem : MonoBehaviour {
 		set
 		{
 			hunger = value;
-			if(networkView != null)
-				networkView.RPC("ChangeHunger", RPCMode.Others, hunger);
 			if(hunger > HungerMax)
-				hunger = Hunger;
-			if(hunger < 0)
-				hunger = 0;
+				hunger = HungerMax;
+			if(Network.isServer)
+			{
+				if(networkView != null)
+					networkView.RPC("ChangeHunger", RPCMode.Others, hunger);
+				if(hunger < 0)
+					hunger = 0;
+			}
+			else
+			{
+				networkView.RPC("ChangeHunger", RPCMode.Server, hunger);
+			}
 		}
 	}
 

@@ -9,7 +9,7 @@
 using UnityEngine;
 using System.Collections;
 
-[AddComponentMenu("Effects/Behaviour")]
+[AddComponentMenu("EffectSystem/BehaviourAll")]
 public class EffectBehaviour : MonoBehaviour {
 
 	public float FadeTime;
@@ -43,6 +43,11 @@ public class EffectBehaviour : MonoBehaviour {
 			if(particleSystem.isPlaying)
 				stop = false;
 		}
+
+        if(particleEmitter != null)
+        {
+            stop = false;
+        }
 
 		if(audio != null)
 		{

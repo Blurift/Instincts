@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
+using Blurift;
 
 public class NetworkManager : MonoBehaviour {
 
@@ -22,9 +23,9 @@ public class NetworkManager : MonoBehaviour {
 	public GameObject[] PlayerPrefabList;
 
 	//Players
-	private Dictionary<NetworkPlayer,GameObject> Players;
-	private Dictionary<NetworkPlayer, string> PlayerNames;
-	private Dictionary<NetworkPlayer, string> PlayerUIDs;
+	//private Dictionary<NetworkPlayer,GameObject> Players;
+	//private Dictionary<NetworkPlayer, string> PlayerNames;
+	//private Dictionary<NetworkPlayer, string> PlayerUIDs;
 	private Dictionary<NetworkPlayer, NetworkPlayerState> PlayerStates;
 
 	//StateSave
@@ -40,7 +41,7 @@ public class NetworkManager : MonoBehaviour {
 	{
 		foreach(KeyValuePair<NetworkPlayer, NetworkPlayerState> pair in Instance.PlayerStates)
 		{
-			if(pair.Value.GameObject.networkView.owner != except && pair.Value.Ready)
+			if(pair.Value.GameObject.networkView.owner != except && pair.Value.Ready && pair.Value.GameObject.networkView.owner != Network.player)
 			{
 				view.RPC(name, pair.Key, values);
 			}
@@ -49,10 +50,10 @@ public class NetworkManager : MonoBehaviour {
 
 	public static GameObject GetPlayer(NetworkPlayer player)
 	{
-		foreach(KeyValuePair<NetworkPlayer, GameObject> pair in Instance.Players)
+		foreach(KeyValuePair<NetworkPlayer, NetworkPlayerState> pair in Instance.PlayerStates)
 		{
 			if(pair.Key == player)
-				return pair.Value;
+				return pair.Value.GameObject;
 		}	
 		return null;
 	}
@@ -113,7 +114,7 @@ public class NetworkManager : MonoBehaviour {
 
 	private void SaveState()
 	{
-		foreach(KeyValuePair<NetworkPlayer,GameObject> pl in Players)
+		foreach(KeyValuePair<NetworkPlayer,NetworkPlayerState> pl in PlayerStates)
 		{
 			SavePlayerState(pl.Key);
 		}
@@ -125,9 +126,9 @@ public class NetworkManager : MonoBehaviour {
 		Debug.Log ("Server starting");
 		GameManager.WriteMessage("Attempting to start server");
 
-		Instance.Players = new Dictionary<NetworkPlayer, GameObject> ();
-		Instance.PlayerNames = new Dictionary<NetworkPlayer, string> ();
-		Instance.PlayerUIDs = new Dictionary<NetworkPlayer, string> ();
+		//Instance.Players = new Dictionary<NetworkPlayer, GameObject> ();
+		//Instance.PlayerNames = new Dictionary<NetworkPlayer, string> ();
+		//Instance.PlayerUIDs = new Dictionary<NetworkPlayer, string> ();
 		Instance.PlayerStates = new Dictionary<NetworkPlayer, NetworkPlayerState> ();
 
 		ServerSettings settings = Settings;
@@ -201,6 +202,7 @@ public class NetworkManager : MonoBehaviour {
 	void OnPlayerConnected(NetworkPlayer player)
 	{
 		GameManager.ServerMessage ("Player " + player.ToString () + " connecting");
+        GameEventManager.PushEvent(this, "PlayerJoined", new GameEvent());
 	}
 
 	[RPC]
@@ -219,23 +221,17 @@ public class NetworkManager : MonoBehaviour {
 			
 			//Loop through all connected players and send details.
 			//networkView.RPC("RandomMessage", player, "Sending players through");
-			foreach(KeyValuePair<NetworkPlayer, GameObject> pair in Players)
+			foreach(KeyValuePair<NetworkPlayer, NetworkPlayerState> pair in PlayerStates)
 			{
 				if(pair.Key != player)
 				{
 					Debug.Log("Sending player data : " + pair.Value.ToString() + " to " + player.ToString() + " : " + id.ToString());
-					networkView.RPC("SpawnPlayer", player, pair.Value.networkView.viewID, pair.Value.transform.position, PlayerNames[pair.Key]);
+                    networkView.RPC("SpawnPlayer", player, pair.Value.GameObject.networkView.viewID, pair.Value.GameObject.transform.position, PlayerStates[pair.Key].Name);
 					//networkView.RPC("RandomMessage", player, pair.Value.networkView.viewID.ToString() + "being sent through");
-					pair.Value.networkView.SetScope(player, true);
-					pair.Value.networkView.RPC("ResetNetworkView", pair.Key);
+					pair.Value.GameObject.networkView.SetScope(player, true);
+					pair.Value.GameObject.networkView.RPC("ResetNetworkView", pair.Key);
 				}
 			}
-
-			//Test for player
-
-			Players[player] = null;
-			PlayerNames[player] = user;
-			PlayerUIDs[player] = uid;
 
 			NetworkPlayerState playerState = new NetworkPlayerState();
 			playerState.Name =user;
@@ -243,16 +239,21 @@ public class NetworkManager : MonoBehaviour {
 
 			PlayerStates[player] = playerState;
 
+
+            /* Make the player
+             * If the player has played before reload there last state.
+             */
 			PlayerController.PlayerState state = LoadPlayerState(id,player);
 			if(state == null)
 			{
 				SpawnPlayer(id, GetSpawnLocation(), user);
-				Players[player].GetComponent<Inventory>().AddToInventory("WoodStick",1);
+				PlayerStates[player].GameObject.GetComponent<Inventory>().AddToInventory("WoodStick",1,-1,"E");
+				PlayerStates[player].GameObject.GetComponent<Inventory>().AddToInventory("Cloth",1);
 			}
 			else
 			{
 				SpawnPlayer(id, state.Position, user);
-				Players[player].GetComponent<PlayerController>().SetPlayerState(state);
+				PlayerStates[player].GameObject.GetComponent<PlayerController>().SetPlayerState(state);
 			}
 
 			playerState.Ready = true;
@@ -291,7 +292,7 @@ public class NetworkManager : MonoBehaviour {
 				PlayerController p = newPlayer.GetComponent<PlayerController>();
 				p.PlayerName = name;
 				
-				Players[id.owner] = newPlayer;
+				//Players[id.owner] = newPlayer;
 				PlayerStates[id.owner].GameObject = newPlayer;
 				
 				networkView.RPC("SpawnPlayer", RPCMode.Others, id, pos, name);
@@ -326,7 +327,7 @@ public class NetworkManager : MonoBehaviour {
 
 			//Give player default weapon.
 			//Players[player].GetComponent<Inventory>().AddToInventory("WoodStick",1);
-			PlayerStates[player].GameObject.GetComponent<Inventory>().AddToInventory("WoodStick",1);
+			PlayerStates[player].GameObject.GetComponent<Inventory>().AddToInventory("WoodStick",1,-1,"E");
 			PlayerStates[player].GameObject.GetComponent<Inventory>().AddToInventory("Cloth",1);
 
 			GameManager.ServerMessage(PlayerStates[player].Name + " has been killed");
@@ -350,8 +351,10 @@ public class NetworkManager : MonoBehaviour {
 		//Logger.Write ("Player " + player.ToString () + " has left or been disconnected.");
 		Network.RemoveRPCs (player);
 		Network.DestroyPlayerObjects (player);
-		Players.Remove (player);
+		//Players.Remove (player);
 		PlayerStates.Remove(player);
+
+        GameEventManager.PushEvent(this, "PlayerLeft", new GameEvent());
 	}
 
 	public static void Disconnect()
@@ -426,14 +429,14 @@ public class NetworkManager : MonoBehaviour {
 
 	private void DeletePlayerState(NetworkPlayer player)
 	{
-		string file = GetStatePath() + "/" + PlayerUIDs[player] + ".pla";
+		string file = GetStatePath() + "/" + PlayerStates[player].UID + ".pla";
 		if(File.Exists(file))
 			File.Delete(file);
 	}
 
 	private void SavePlayerState(NetworkPlayer player)
 	{
-		string file = GetStatePath() + "/" + PlayerUIDs[player] + ".pla";
+        string file = GetStatePath() + "/" + PlayerStates[player].UID + ".pla";
 		if(File.Exists(file))
 			File.Delete(file);
 
@@ -451,7 +454,7 @@ public class NetworkManager : MonoBehaviour {
 
 	private PlayerController.PlayerState LoadPlayerState(NetworkViewID id, NetworkPlayer player)
 	{
-		string file = GetStatePath() + "/" + PlayerUIDs[player] + ".pla";
+        string file = GetStatePath() + "/" + PlayerStates[player].UID + ".pla";
 
 		PlayerController.PlayerState state;
 

@@ -16,7 +16,7 @@ public class DestructableProp : MonoBehaviour {
 	private HealthSystem health;
 
 	public GameObject[] DeathEffect;
-	public GameObject Drop;
+	public Item Drop;
 
 	// Use this for initialization
 	void Start () {
@@ -35,6 +35,7 @@ public class DestructableProp : MonoBehaviour {
 
 		if (Network.isServer && Drop != null)
 		{
+			Debug.Log("Spawning item from drop");
 			ItemManager.SpawnItem(Drop.name, transform.position);
 		}
 

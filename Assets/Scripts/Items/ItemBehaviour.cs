@@ -83,7 +83,29 @@ public class ItemBehaviour {
 	{
 		if(IsRangedWeapon)
 		{
+			if(Charges > 0)
+			{
+				if(!Network.isServer)
+					controller.networkView.RPC("UseEquipped", RPCMode.Server);
+				else
+					controller.UseEquipped();
 
+				//Get the vector position the gun is aiming at.
+				Vector3 aim3 = Camera.main.ScreenToWorldPoint (Input.mousePosition);
+				Vector2 aim = new Vector2 (aim3.x, aim3.y);
+				
+				if(currentEquip != null)
+				{
+					//if(Projectile != null && Projectile != "")
+					//{
+					//	//EffectManager.CreateProjectile(controller.EquipPosition.position, Projectile, controller.transform.rotation, Vector3.Distance(aim3,transform.position));
+					//}
+					
+					ItemRangedEquip ranged = (ItemRangedEquip)currentEquip.GetComponent(typeof(ItemRangedEquip));
+					ranged.Fire(aim.x,aim.y);
+					Charges--;
+				}
+			}
 			controller.Inventory.ChangeAtts(item);
 		}
 
@@ -139,6 +161,12 @@ public class ItemBehaviour {
 	{
 		if(IsRangedWeapon)
 		{
+			int reloadAmmo = controller.Inventory.RetrieveFromStack (AmmoName, ChargesMax - Charges);
+			
+			if(reloadAmmo > 0)
+				Charges += reloadAmmo;
+			
+			return ReloadTime;
 		}
 		return 0;
 	}
@@ -152,14 +180,18 @@ public class ItemBehaviour {
 	public virtual string HUDDisplay()
 	{
 		string val = "";
-		return "";
+		if (IsRangedWeapon)
+			val += "\nAmmo: " + Charges.ToString ();
+		return val;
 	}
 
 	public virtual string DescValue()
 	{
 		string val = "";
 		if(RestoresHunger)
-			val += "Hunger: " + HungerToRestore.ToString() + "\n";
-		return "";
+			val += "\nHunger: " + HungerToRestore.ToString();
+		if (IsRangedWeapon)
+			val += "\nAmmo: " + Charges.ToString ();
+		return val;
 	}
 }

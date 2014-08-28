@@ -28,6 +28,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
+  m_RootOrder: 0
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -39,11 +40,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1729973bee9bfee43915555e2528e409, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MaxEnemyMultiplier: 6
   EnemyPre:
   - {fileID: 100000, guid: be10b05aed8fdaa4db248b07dc25cf67, type: 2}
-  - {fileID: 100000, guid: 071da19cd6d0311489c7604cae51ccc7, type: 2}
   - {fileID: 100000, guid: 04be576f0c5ee3f4ab5a57b86b574efd, type: 2}
+  Enemies: []
 --- !u!148 &14800000
 NetworkView:
   m_ObjectHideFlags: 1

@@ -21,6 +21,8 @@ MonoBehaviour:
   StackMax: 1
   ItemCoolDown: .5
   RequiresPress: 1
+  Automatic: 0
+  AutomaticAlt: 0
   BController:
     EquippedPrefab: {fileID: 100000, guid: f63bc73da530c5442820b532acb747f7, type: 2}
     RestoresHunger: 0

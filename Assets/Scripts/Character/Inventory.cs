@@ -15,12 +15,17 @@ public class Inventory : MonoBehaviour {
 
 	public PlayerController Player;
 
+	void Awake()
+	{
+		Equipment = new Item[6];
+	}
+
 	// Use this for initialization
 	void Start () {
 
 		Player = GetComponent<PlayerController> ();
-		Equipment = new Item[6];
 
+		/*
 		for (int i = 0; i < ItemsToEquip.Count; i++)
 		{
 			if(i < Equipment.Length)
@@ -28,6 +33,7 @@ public class Inventory : MonoBehaviour {
 		}
 
 		ItemsToEquip = null;
+		*/
 
 		//GameManager.WriteMessage ("Inventory Init: " + Equipment.Length);
 
@@ -294,12 +300,12 @@ public class Inventory : MonoBehaviour {
 
 	public void AddToInventory(string name, int stack, int charges, string type)
 	{
-		AddToInventoryRPC (name, stack, charges);
+		AddToInventoryRPC (name, stack, charges, type);
 		
 		if(Network.isServer && !networkView.isMine)
-			networkView.RPC("AddToInventoryRPC", networkView.owner, name,stack,charges);
+			networkView.RPC("AddToInventoryRPC", networkView.owner, name,stack,charges, type);
 		else if(Network.isClient)
-			networkView.RPC("AddToInventoryRPC", RPCMode.Server, name,stack,charges);
+			networkView.RPC("AddToInventoryRPC", RPCMode.Server, name,stack,charges, type);
 	}
 
 	public void AddToInventory(string name, int stack, int charges)
@@ -308,11 +314,29 @@ public class Inventory : MonoBehaviour {
 	}
 
 	[RPC]
-	void AddToInventoryRPC(string name, int stack, int charges)
+	void AddToInventoryRPC(string name, int stack, int charges, string type)
 	{
 		ScriptableObject s = ItemManager.CreateItem (name);
 		Item item = (Item)s;
 		if(charges != -1)		item.BController.Charges = charges;
+
+		if(type == "E")
+		{
+			Debug.Log("Equipment item, " + Equipment.Length);
+			for(int i = 0; i < Equipment.Length; i ++)
+			{
+				if(Equipment[i] == null)
+				{
+					Equipment[i] = item;
+					return;
+				}
+				else
+				{
+					Debug.Log("Equipment is not empty, " + i);
+				}
+			}
+
+		}
 
 		if(!item.Stackable)
 		{
@@ -455,7 +479,7 @@ public class Inventory : MonoBehaviour {
 
 		foreach(Item.ItemState item in state.Equips)
 		{
-			AddToInventory(item.Name,item.Stack,item.Charges);
+			AddToInventory(item.Name,item.Stack,item.Charges, "E");
 		}
 	}
 

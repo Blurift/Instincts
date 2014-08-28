@@ -21,7 +21,10 @@ public class ItemRangedEquip : MonoBehaviour {
 		if(networkView.isMine)
 		{
 			RangedFireEffects();
-			networkView.RPC("FireRPC", RPCMode.Server, x,y);
+			if(Network.isServer)
+				FireRPC(x,y);
+			else
+				networkView.RPC("FireRPC", RPCMode.Server, x,y);
 		}
 	}
 
@@ -78,7 +81,7 @@ public class ItemRangedEquip : MonoBehaviour {
 	[RPC]
 	public void RangedFireEffects()
 	{
-		if (Network.isServer) return;
+		//if (Network.isServer) return;
 
 		Vector3 p = new Vector3(ProjectileSource.position.x,ProjectileSource.position.y,-3);
 

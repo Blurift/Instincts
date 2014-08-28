@@ -11,7 +11,7 @@ public class Menu : MonoBehaviour {
 
 	//Static info
 	public const string TypeName = "BluriftInstinctsPreview04";
-	public const string VERSION = "0.4.2";
+	public const string VERSION = "0.4.4";
 
 	public static Profile MainProfile;
 	public static Menu Instance;

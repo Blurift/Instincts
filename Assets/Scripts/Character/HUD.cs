@@ -3,13 +3,17 @@ using System.Collections;
 using System.Text;
 using System.Text.RegularExpressions;
 
+using Blurift;
+
 public class HUD : MonoBehaviour {
 
 	public static HUD Instance;
 	public PlayerController Controller;
 	public Inventory Inventory;
 
-	//Textures
+    #region Variables
+
+    //Textures
 	public Texture2D EquipmentRack;
 	public Texture2D SelectedEquip;
 	public Texture2D IconDropItem;
@@ -73,8 +77,11 @@ public class HUD : MonoBehaviour {
 	private GUIStyle chatInputFont;
 	private string chatFull = "";
 
+    #endregion
 
-	public bool ShowInventory
+    #region Properties
+
+    public bool ShowInventory
 	{
 		get { return showInventory; }
 	}
@@ -91,12 +98,18 @@ public class HUD : MonoBehaviour {
 	[System.NonSerialized]
 	private bool showChat;
 
-	// Use this for initialization
+    #endregion
+
+    void Awake()
+    {
+        if (networkView.isMine)
+            Instance = this;
+    }
+
+    // Use this for initialization
 	void Start () {
 		if (networkView.isMine)
 		{
-			Instance = this;
-
 			MenuSetup();
 			EquipmentSetup();
 
@@ -463,7 +476,7 @@ public class HUD : MonoBehaviour {
 				x = mousePosition.x;
 				y = mousePosition.y;
 			}
-			float width = 140;
+			float width = Screen.width*0.2f;
 			float height = GUI.skin.GetStyle("Label").CalcHeight(new GUIContent(desc), width);
 			
 			//if(x > Screen.width - (width+10))
@@ -673,11 +686,26 @@ public class HUD : MonoBehaviour {
 		{
 			if(Inventory.Equipment[equipmentIndex] != null)
 			{
-				string[] HudDisplay = Regex.Split(Inventory.Equipment[equipmentIndex].HUDDisplay(), "\n");
-				for(int i = 0; i < HudDisplay.Length; i++)
-				{
-					GUI.Label(new Rect(Screen.width/2+equipPanelWidth/2+equipMargin, Screen.height - 14 - (HudDisplay.Length*22) + (i*22),200,20), HudDisplay[i]);
-				}
+				//Create text font
+				GUIStyle label = Blurift.BluStyle.CustomStyle(GUI.skin.label,Screen.height*0.015f);
+				string text = Inventory.Equipment[equipmentIndex].HUDDisplay();
+
+				//Rect Bounds
+				float x = Screen.width/2+equipPanelWidth/2+equipMargin;
+				float width = Screen.width*0.25f;
+				
+				float height = label.CalcHeight(new GUIContent(text), width);
+				float y = Screen.height - height - Screen.height*0.01f;;
+
+
+
+				GUI.Label(new Rect(x,y,width,height), text, label);
+
+				//string[] HudDisplay = Regex.Split(Inventory.Equipment[equipmentIndex].HUDDisplay(), "\n");
+				//for(int i = 0; i < HudDisplay.Length; i++)
+				//{
+				//	GUI.Label(new Rect(Screen.width/2+equipPanelWidth/2+equipMargin, Screen.height - 14 - (HudDisplay.Length*22) + (i*22),200,20), HudDisplay[i]);
+				//}
 			}
 		}
 	}

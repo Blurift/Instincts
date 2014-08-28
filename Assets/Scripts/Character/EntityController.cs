@@ -72,6 +72,7 @@ public class EntityController : MonoBehaviour {
 			target.Normalize();
 
 		transform.position += target * Time.deltaTime * speed;
+        //rigidbody2D.MovePosition(transform.position + target * Time.deltaTime * speed);
 	}
 
 	/// <summary>

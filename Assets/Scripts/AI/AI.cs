@@ -82,7 +82,7 @@ public class AI : MonoBehaviour {
 
 		if(Network.isServer)
 		{
-			AIManager.Enemies ++;
+			//AIManager.Enemies ++;
 
 			switch (AIType)
 			{
@@ -102,7 +102,7 @@ public class AI : MonoBehaviour {
 	{
 		if(Network.isServer)
 		{
-			AIManager.Enemies --;
+            AIManager.Instance.RemoveEnemy(this);
 
 			if(ItemDrops != null)
 			{
@@ -259,7 +259,7 @@ public class AI : MonoBehaviour {
 
 	void OnDestroy()
 	{
-		AIManager.Enemies --;
+        AIManager.Instance.RemoveEnemy(this);
 		seeker.pathCallback -= OnPathComplete;
 	}
 
