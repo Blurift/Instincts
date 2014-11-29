@@ -1,14 +1,14 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[RequireComponent(typeof(HUD), typeof(HealthSystem), typeof(NetworkView))]
 public class PlayerController : EntityController {
-	
-	public HUD HUD;
-	
+
 	public string PlayerName = "Player";
 	private float playerDistance = 100;
 	
 	public Transform EquipPosition;
+    public Transform CameraTarget;
 	private GameObject Equipped;
 	
 	//Movement
@@ -17,12 +17,15 @@ public class PlayerController : EntityController {
 	//Timers
 	private float lastFootstep = 0;
 	public float FootstepInterval = 1;
+    private float deadTime = 0;
 	
 	//Effects
 	public string[] FootStepEffects;
 	
 	//States
 	bool idleWalk = true;
+    bool dead = false;
+    bool respawned = true;
 	
 	//Tips
 	public bool FirstMovement = false;
@@ -31,11 +34,17 @@ public class PlayerController : EntityController {
 	
 	
 	//Attachments
-	public Inventory Inventory;
-	public GameObject Arms;
-	public Animator ArmsAnimator;
+	
+    public GameObject[] Arms;
+    public Animator Animator;
+	//public Animator ArmsAnimator;
 	public GameObject Feet;
-	public Animator FeetAnimator;
+	//public Animator FeetAnimator;
+
+    public SpriteRenderer Hair;
+    private CameraController cameraController;
+    private HUD hud;
+    public Inventory Inventory;
 
 	void Awake()
 	{
@@ -44,16 +53,18 @@ public class PlayerController : EntityController {
 
 	// Use this for initialization
 	void Start () {
-		Health.Death += DeathRespawn;
+		Health.Death += DeathPlayer;
+        Health.Hit += IsHit;
 		
 		if(networkView.isMine)
 		{
 			gameObject.AddComponent(typeof(AudioListener));
 		}
-		
-		ArmsAnimator = (Animator)Arms.GetComponent (typeof(Animator));
-		FeetAnimator = (Animator)Feet.GetComponent (typeof(Animator));
-		Screen.showCursor = false;
+
+        Animator = GetComponent<Animator>();
+        //ArmsAnimator = (Animator)Arms.GetComponent (typeof(Animator));
+        //FeetAnimator = (Animator)Feet.GetComponent (typeof(Animator));
+		//Screen.showCursor = false;
 		
 		if(!Menu.GameTips)
 		{
@@ -64,11 +75,98 @@ public class PlayerController : EntityController {
 
         //Set up the camera follow
         if (networkView.isMine)
-            Camera.main.GetComponent<CameraController>().Target = transform;
+        {
+            Camera.main.transform.position = new Vector3(CameraTarget.position.x, CameraTarget.position.y, Camera.main.transform.position.z);
+            cameraController = Camera.main.GetComponent<CameraController>();
+            cameraController.Target = CameraTarget;
+            cameraController.Set(CameraTarget.position);
+            hud = GetComponent<HUD>();
+            HUD.Instance = hud;
+        }
+            
 	}
+
+    void IsHit(GameObject s, int d)
+    {
+        if (networkView.isMine)
+            HitRPC();
+        else if (Network.isServer)
+            networkView.RPC("HitRPC", networkView.owner);
+    }
+
+    [RPC]
+    void HitRPC()
+    {
+        if (networkView.isMine)
+            cameraController.Shake();
+    }
 	
+    void Update ()
+    {
+        if (dead)
+        {
+            if(deadTime < Time.time && respawned == false)
+            {
+                Respawn();
+                respawned = true;
+            }
+            return;
+        }
+        if(networkView.isMine)
+        {
+            if (ItemDrop.ItemToPickUp != null)
+            {
+                hud.HelperInput("Pickup " + ItemDrop.ItemToPickUp.item.Name, "F", 0.1f);
+
+                if (Vector3.Distance(transform.position, ItemDrop.ItemToPickUp.transform.position) < 2)
+                {
+                    if (Input.GetButtonDown("Interact") && !hud.HUDFocus)
+                    {
+                        if (!FirstItem)
+                        {
+                            FirstItem = true;
+                            hud.HelperMessage("You just picked up your first item, Press (I) to open up the inventory and crafting screens. Pick up more items to find new crafting recipes.", 10, 3);
+                        }
+                        Inventory.AddToInventory(ItemDrop.ItemToPickUp.item.name, ItemDrop.ItemToPickUp.ItemStack, ItemDrop.ItemToPickUp.ItemCharges);
+                        ItemManager.RemoveDropFromWorld(ItemDrop.ItemToPickUp.DropID);
+                    }
+                }
+                else
+                {
+                    ItemDrop.ItemToPickUp = null;
+                }
+            }
+
+            if (Input.GetButtonDown("Inventory") && !hud.ShowChat)
+            {
+                hud.ToggleInventory();
+            }
+            if (Input.GetButtonDown("Start") && hud.ShowChat)
+            {
+                hud.ToggleChat();
+
+            }
+            else if (Input.GetButtonDown("Start") && hud.ShowInventory)
+            {
+                hud.ToggleInventory();
+            }
+            else if (Input.GetButtonDown("Start"))
+            {
+                hud.ToggleMenu();
+            }
+
+            if (Input.GetKeyDown(KeyCode.L))
+                hud.DebugToggle();
+
+            if (Input.GetKeyDown(KeyCode.Tab))
+                hud.PlayerListToggle();
+        }
+    }
+
 	// Update is called once per frame
 	void FixedUpdate () {
+        if (dead)
+            return;
 		UpdateMovement ();
 
 		if (networkView.isMine)
@@ -76,21 +174,16 @@ public class PlayerController : EntityController {
 			if(!FirstMovement)
 			{
 				FirstMovement = true;
-				HUD.HelperMessage ("Welcome to Instincts " + PlayerName + ". Use the WASD keys to move your character.", 10, 3);
+				hud.HelperMessage ("Welcome to Instincts " + PlayerName + ". Use the WASD keys to move your character.", 10, 3);
 			}
 
 			UpdateInput ();
 			
-			if(!HUD.HUDFocus && Inventory != null && !(Inventory.SelectedIndex < 0 || Inventory.SelectedIndex > 5) )
+			if(!hud.HUDFocus && Inventory != null && !(Inventory.SelectedIndex < 0 || Inventory.SelectedIndex > 5) )
 			{
 				Item item = Inventory.Equipment[Inventory.SelectedIndex];
 				if(item != null)
 				{
-					if(Input.GetButtonDown("UseItem"))
-					{
-						//item.UseItem(this);
-					}
-
 					if(Input.GetButton("UseItem"))
 					{
 						item.UseItem(this,Input.GetButtonDown("UseItem"));
@@ -108,55 +201,8 @@ public class PlayerController : EntityController {
 				}
 
 			}
-			
-			if(ItemDrop.ItemToPickUp != null)
-			{
-				HUD.HelperInput("Pickup " + ItemDrop.ItemToPickUp.item.Name,"F",0.1f);
-				
-				if(Vector3.Distance(transform.position, ItemDrop.ItemToPickUp.transform.position) < 2)
-				{
-					if(Input.GetButtonDown("Interact") && !HUD.HUDFocus)
-					{
-						if(!FirstItem)
-						{
-							FirstItem = true;
-							HUD.HelperMessage("You just picked up your first item, Press (I) to open up the inventory and crafting screens. Pick up more items to find new crafting recipes.", 10,3);
-						}
-						Inventory.AddToInventory(ItemDrop.ItemToPickUp.item.name, ItemDrop.ItemToPickUp.ItemStack, ItemDrop.ItemToPickUp.ItemCharges);
-						ItemManager.RemoveDropFromWorld(ItemDrop.ItemToPickUp.DropID);
-						//ItemDrop.ItemToPickUp.GetComponent<ItemDrop>().RemoveFromWorld(); //Old code Pre Item Update
-					}
-				}
-				else
-				{
-					ItemDrop.ItemToPickUp = null;
-				}
-			}
-			
-			if(Input.GetButtonDown("Inventory") && !HUD.ShowChat)
-			{
-				HUD.ToggleInventory();
-			}
-			
-			if(Input.GetButtonDown("MovementToggle"))
-			{
-				//absolute = !absolute;
-			}
-			
-			if(Input.GetButtonDown("Start") && HUD.ShowChat)
-			{
-				HUD.ToggleChat();
-				
-			}
-			else if(Input.GetButtonDown("Start") && HUD.ShowInventory)
-			{
-				HUD.ToggleInventory();
-			}
-			else if(Input.GetButtonDown("Start"))
-			{
-				HUD.ToggleMenu();
-			}
-			
+
+            IsRunning = Input.GetButton("Run");
 		}
 		else
 		{
@@ -173,9 +219,28 @@ public class PlayerController : EntityController {
 			lastFootstep = Time.time;
 		}
 
+        if (Equipped != null)
+            Equipped.transform.position = EquipPosition.position;
+
+        //Vector3 v = rigidbody2D.velocity;
+        //float feetAngle = Mathf.Atan2(-v.x, v.y);
+
+        //Feet.transform.rotation = Quaternion.Euler(new Vector3(0, 0, feetAngle));
+
 		if (Network.isServer)
 			Inventory.VerifyItems ();
 	}
+
+    public void SetTopColor(Color color)
+    {
+        foreach (GameObject go in Arms)
+        {
+            SpriteRenderer r = go.GetComponent<SpriteRenderer>();
+            r.color = color;
+        }
+    }
+
+    #region Equipped Item
 
 	[RPC]
 	public void SetEquipped(string name)
@@ -186,13 +251,9 @@ public class PlayerController : EntityController {
 		if (obj == null)
 						return;
 
-		obj.transform.position = EquipPosition.position;
+        obj.transform.parent = transform;
+        obj.transform.position = EquipPosition.position;
 		obj.transform.rotation = transform.rotation;
-		obj.transform.parent = transform;
-
-		ItemMeleeEquipped m = obj.GetComponent<ItemMeleeEquipped> ();
-		if (m != null)
-			m.Owner = gameObject;
 
 		Equipped = obj;
 	}
@@ -209,12 +270,20 @@ public class PlayerController : EntityController {
 		
 		if (obj == null)
 			return;
-		
-		obj.transform.position = EquipPosition.position;
-		obj.transform.rotation = transform.rotation;
-		obj.transform.parent = transform;
+
+        obj.transform.parent = transform;
+        obj.transform.position = EquipPosition.position;
+        obj.transform.rotation = transform.rotation;
+
 		if(obj.networkView != null)
 			obj.networkView.viewID = netID;
+
+        ItemMeleeEquipped m = obj.GetComponent<ItemMeleeEquipped>();
+        if (m != null)
+            m.Owner = gameObject;
+        ItemRangedEquip r = obj.GetComponent<ItemRangedEquip>();
+        if (r != null)
+            r.Owner = gameObject;
 		
 		Equipped = obj;
 	}
@@ -233,6 +302,59 @@ public class PlayerController : EntityController {
 		}
 	}
 
+    public void HitEquipped(Vector3 aim)
+    {
+        if (!Network.isServer)
+            networkView.RPC("HitEquippedRPC", RPCMode.Server, aim);
+        else
+            HitEquippedRPC(aim);
+    }
+
+    [RPC]
+    void HitEquippedRPC(Vector3 aim)
+    {
+        if (!Network.isServer)
+            return;
+
+        ItemRangedEquip r = Equipped.GetComponent<ItemRangedEquip>();
+        if (r != null)
+        {
+            r.Fire(aim.x, aim.y);
+        }
+        ItemMeleeEquipped m = Equipped.GetComponent<ItemMeleeEquipped>();
+        if (m != null)
+        {
+            m.Use(aim);
+        }
+    }
+
+    public void EquippedSetDamage(string t, int d, int ad)
+    {
+        if (!Network.isServer)
+            networkView.RPC("EquippedSetDamageRPC", RPCMode.Server, t, d, ad);
+        else
+            EquippedSetDamageRPC(t, d, ad);
+            
+    }
+
+    [RPC]
+    public void EquippedSetDamageRPC(string t, int d, int ad)
+    {
+        if (!Network.isServer)
+            return;
+
+        ItemRangedEquip r = Equipped.GetComponent<ItemRangedEquip>();
+        if (r != null)
+        {
+            r.SetDamage(t, d, ad);
+        }
+        ItemMeleeEquipped m = Equipped.GetComponent<ItemMeleeEquipped>();
+        if (m != null)
+        {
+            m.SetDamage(t, d, ad);
+        }
+    }
+
 	[RPC]
 	public void UseEquipped()
 	{
@@ -242,11 +364,9 @@ public class PlayerController : EntityController {
 			NetworkManager.SendRPC(networkView, networkView.owner, "UseEquipped");
 			//return;
 		}
-		/*
-		 * TODO
-		 * Refactring needed / Placeholder mostly
-		 */
 
+        if (Equipped == null)
+            return;
 		ItemRangedEquip r = Equipped.GetComponent<ItemRangedEquip>();
 		if(r != null)
 		{
@@ -258,8 +378,9 @@ public class PlayerController : EntityController {
 			m.UseEffects();
 		}
 	}
-	
-	private void UpdateInput()
+    #endregion
+
+    private void UpdateInput()
 	{
 
 		//Handle Movement Input
@@ -281,32 +402,65 @@ public class PlayerController : EntityController {
 			
 			//Camera.main.transform.position = new Vector3 (transform.position.x, transform.position.y, Camera.main.transform.position.z);
 			
-			Vector3 worldMouse = Camera.main.ScreenToWorldPoint (Input.mousePosition) - transform.position;
+			Vector2 worldMouse = Camera.main.ScreenToWorldPoint (Input.mousePosition) - transform.position;
 			
-			float angle = Mathf.Atan2 (-worldMouse.x, worldMouse.y) * Mathf.Rad2Deg;
+            float angle = transform.eulerAngles.z;
+
+            if (new Vector2(hori,vert) != Vector2.zero)
+                angle = Mathf.Atan2(-hori, vert) * Mathf.Rad2Deg;
+
+            if(Inventory.SelectedIndex != -1)
+                angle = Mathf.Atan2(-worldMouse.x, worldMouse.y) * Mathf.Rad2Deg;
 
 			Rotate (angle);
 		}
 	}
+
+    private void Respawn()
+    {
+        //Respawn player
+        NetworkManager.Respawn();
+    }
 	
 	[RPC]
-	void DeathRespawn ()
+	void DeathPlayer ()
 	{
+        if (dead)
+            return;
+        dead = true;
+        deadTime = Time.time + 2;
+        respawned = false;
+
 		if(networkView.isMine)
 		{
-			Debug.Log("DeathRespawn: Respawning");
+            hud.SetDead(true);
+
+            UnsetEquipped();
+
 			//Drop player items;
 			Inventory.DropAll();
-			
-			//Respawn player
-			NetworkManager.Respawn();
+            
 		}
 		else if(Network.isServer)
 		{
-			Debug.Log ("DeathRespawn: Server");
-			networkView.RPC("DeathRespawn", networkView.owner);
+			networkView.RPC("DeathPlayer", networkView.owner);
+            NetworkManager.PlayerDied(networkView.owner);
 		}
 	}
+
+    [RPC]
+    public void PlayerRespawn(Vector3 position)
+    {
+        respawned = true;
+        dead = false;
+        transform.position = position;
+        cameraController.Set(position);
+        Health.Respawn();
+        hud.SetDead(false);
+
+        if (Network.isServer)
+            networkView.RPC("PlayerRespawn", RPCMode.Others, position);
+    }
 	
 	//GUI
 	public Texture2D BloodScreen;
@@ -327,12 +481,14 @@ public class PlayerController : EntityController {
 	{
 		if (networkView.isMine)
 		{
-			if(true)
+			if(false)
 			{
 				GUI.Label(new Rect(10,10,200,30), "Rotation: " + transform.rotation.eulerAngles.z.ToString());
-				GUI.Label(new Rect(10,40,200,30), "Position: " + transform.position.ToString());
-				GUI.Label(new Rect(10,70,200,30), "Health: " + Health.Health + " / " + Health.HealthMax);
-				GUI.Label(new Rect(10,100,200,30), "Hunger: " + Health.Hunger + " / " + Health.HungerMax);
+				GUI.Label(new Rect(10,35,200,30), "Position: " + transform.position.ToString());
+				GUI.Label(new Rect(10,60,200,30), "Health: " + Health.Health + " / " + Health.HealthMax);
+                GUI.Label(new Rect(10, 85, 200, 30), "Hunger: " + Health.Hunger + " / " + Health.HungerMax);
+                GUI.Label(new Rect(10, 110, 200, 30), "Stamina: " + (int)Health.Stamina + " / " + (int)Health.StaminaMax);
+                GUI.Label(new Rect(10, 135, 200, 30), "Velocity: " + rigidbody2D.velocity.ToString());
 			}
 			Color guiColor = Color.white;
 
@@ -379,14 +535,12 @@ public class PlayerController : EntityController {
 			//GUI.Label(new Rect(Screen.width-hungerSize-100,Screen.height-20,100,20), HealthSystem.Hunger.ToString() + "/" + hungerSize.ToString() + "/" + hungerPercent.ToString());
 			
 			float crosshairSize = Screen.width *0.01f;
-			if(Crosshair != null && !HUD.HUDFocus)
+			if(Crosshair != null && !hud.HUDFocus)
 				GUI.DrawTexture(new Rect(Input.mousePosition.x-12,Screen.height-Input.mousePosition.y-12,24,24), Crosshair);
 			
 			//Draw Stats
 			//GUI.Label(KillsPlayerRect, KillsPlayer.ToString());
 			//GUI.Label(KillsAlienRect, KillsAliens.ToString());
-			
-			//GUI.Label(new Rect(Screen.width-100,Screen.height-20,100,20), Menu.VERSION, Menu.LabelRight);
 			
 		}
 		else
@@ -410,10 +564,10 @@ public class PlayerController : EntityController {
 		{
 			networkView.RPC("SetAnimIdle", RPCMode.Others, idle);
 		}
-		if(ArmsAnimator !=null)
-			ArmsAnimator.SetBool ("Idle", idle);
-		if(FeetAnimator != null)
-			FeetAnimator.SetBool ("Idle", idle);
+
+        if (Animator != null)
+            Animator.SetBool("Idle", idle);
+
 		idleWalk = idle;
 	}
 	
@@ -424,8 +578,8 @@ public class PlayerController : EntityController {
 		{
 			networkView.RPC("SetAnimEquipped", RPCMode.Others, equip);
 		}
-		if(ArmsAnimator != null)
-			ArmsAnimator.SetBool ("Equipped", equip);
+		if(Animator != null)
+			Animator.SetBool ("Equipped", equip);
 	}
 
 	public void SetPlayerState(PlayerState state)

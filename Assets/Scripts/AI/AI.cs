@@ -31,6 +31,7 @@ public class AI : MonoBehaviour {
 	public AIBehaviourType AIType = AIBehaviourType.Melee;
 
 	public GameObject Target;
+    private float angleToTarget = 180;
 	public List<AIAction> Actions = new List<AIAction>();
 	public AIAbility[] Abilities;
 
@@ -197,7 +198,11 @@ public class AI : MonoBehaviour {
 		if (Time.time < GlobalAttackCooldownUntil)
 			return;
 
+        if (angleToTarget > 20)
+            return;
+
 		AIAbility use = null;
+        int abilityID = -1;
 
 		for(int i = 0; i < Abilities.Length; i++)
 		{
@@ -208,13 +213,23 @@ public class AI : MonoBehaviour {
 			{
 				//Debug.Log("Setting Ability");
 				use = Abilities[i];
+                
 			}
+
+            if(use != null)
+                abilityID = i;
 		}
 
 		if (use != null && use.Use (target))
 		{
 			//Debug.Log("Using Ability");
 			GlobalAttackCooldownUntil = Time.time + use.GlobalCooldown;
+
+            if (abilityID > -1)
+            {
+                this.SetAbilityAnimRPC(abilityID);
+                networkView.RPC("SetAbilityAnimRPC", RPCMode.Others, abilityID);
+            }
 		}
 
 	}
@@ -259,8 +274,11 @@ public class AI : MonoBehaviour {
 
 	void OnDestroy()
 	{
-        AIManager.Instance.RemoveEnemy(this);
-		seeker.pathCallback -= OnPathComplete;
+        if (Network.isServer)
+        {
+            AIManager.Instance.RemoveEnemy(this);
+            seeker.pathCallback -= OnPathComplete;
+        }
 	}
 
 	public void FireProjecitle(Vector3 src, string eff)
@@ -275,14 +293,12 @@ public class AI : MonoBehaviour {
 
 	public void FireProjectile(Vector3 src, string eff, Quaternion rotation, DamageType damage)
 	{
-		Debug.Log ("AI Projectile: Firing");
 		if (Network.isServer)
 			networkView.RPC ("FireProjectileRPC", RPCMode.Others, src, eff, rotation);
 		
 		GameObject proj = EffectManager.CreateLocal (src, eff, rotation);
 		if(proj != null)
 		{
-			Debug.Log ("AI Projectile: Gameobject Created");
 			Projectile p = proj.GetComponent<Projectile>();
 			p.Source = gameObject;
 			p.Damage = damage;
@@ -385,29 +401,18 @@ public class AI : MonoBehaviour {
 
 		Vector3 dir = (currentWaypointPos - transform.position).normalized;
 		Rotate (dir);
-		
-		if(move)
-		{
-			float currentAngle = transform.rotation.eulerAngles.z;
-			float destAngle = calculateAngle (dir) * Mathf.Rad2Deg;
-			
-			float difference = destAngle - currentAngle;
-			
-			if(difference > 180)
-				difference -= 360;
-			if(difference < -180)
-				difference += 360;
-			
-			if(difference<0)
-				difference *= -1;
-			
-			if(difference<45)
-			{
-				rigidbody2D.transform.position = transform.position += transform.up*Speed*Time.deltaTime;
 
-				//TODO: Set Animation To Moving.
-			}
+        float currentAngle = transform.rotation.eulerAngles.z;
+        float destAngle = calculateAngle(dir) * Mathf.Rad2Deg;
+
+        angleToTarget = AngleDifferenceFixed(currentAngle, destAngle);
+	
+        //If able to move and facing the correct direction
+		if(move && angleToTarget<45)
+		{
+			rigidbody2D.transform.position = transform.position += transform.up*Speed*Time.deltaTime;
 		}
+
 
 		SetMove (move);
 		
@@ -463,7 +468,7 @@ public class AI : MonoBehaviour {
 		return n;
 	}
 
-	public float AngleDifference (float from, float to)
+	public static float AngleDifference (float from, float to)
 	{
 		float difference = to - from;
 		
@@ -474,6 +479,16 @@ public class AI : MonoBehaviour {
 
 		return difference;
 	}
+
+    public static float AngleDifferenceFixed(float from, float to)
+    {
+        float dif = AngleDifference(from, to);
+
+        if (dif < 0)
+            dif *= -1;
+
+        return dif;
+    }
 
 	public void OnPathComplete(Path p)
 	{
@@ -526,8 +541,12 @@ public class AI : MonoBehaviour {
 	[RPC]
 	private void SetAbilityAnimRPC(int ability)
 	{
-		if(Animator != null)
-			Animator.SetInteger ("Ability", ability);
+        if (Animator != null)
+        {
+            Debug.Log("AI Using Ability: " + ability);
+            Animator.SetInteger("Ability", ability);
+            Animator.SetTrigger("AbilityUse");
+        }
 	}
 
 	/*****************************

@@ -58,8 +58,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 4b027ec9ef6562143aeeaee346db3030, type: 2}
   - {fileID: 11400000, guid: 92d168fd9cd23a14bb6068a9e9e6c3cf, type: 2}
   - {fileID: 11400000, guid: 4531434089b49a54f846ab47aa3e3235, type: 2}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 11400000, guid: e8f1942636b692f468cd1ea14e921d33, type: 2}
+  - {fileID: 11400000, guid: aa7f1cebdf59491499614b58843f3264, type: 2}
   - {fileID: 0}
   ItemDropPrefab: {fileID: 100000, guid: 729c0de82c53f244aba345e6973ea462, type: 2}
 --- !u!148 &14800000

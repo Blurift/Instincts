@@ -4,6 +4,8 @@ using System.Collections;
 [AddComponentMenu ("EffectsSystem/Enviroment")]
 public class Effect : MonoBehaviour {
 
+    private static int OrderInLayer = 0;
+
 	public bool RandomAngle = false;
 	public bool Permanent = false;
 
@@ -21,6 +23,14 @@ public class Effect : MonoBehaviour {
 
 			transform.rotation = Quaternion.AngleAxis(randAngle, Vector3.forward);
 		}
+
+        SpriteRenderer s = GetComponent<SpriteRenderer>();
+
+        if(s != null)
+        {
+            s.sortingOrder = OrderInLayer;
+            OrderInLayer++;
+        }
 	}
 	
 	// Update is called once per frame

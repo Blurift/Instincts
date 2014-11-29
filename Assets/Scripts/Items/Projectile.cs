@@ -25,57 +25,28 @@ public class Projectile : MonoBehaviour {
 
 	void OnCollisionEnter2D(Collision2D collision)
 	{
-		if(collision.gameObject == Source)
-			return;
-		if(Network.isServer)
-		{
-			if(collision.gameObject.tag == "Player" || collision.gameObject.tag == "Enemy")
-			{
-				HealthSystem health = collision.gameObject.GetComponent<HealthSystem>();
-
-				if(health != null)
-				{
-					health.TakeDamage(Damage, Source);
-				}
-
-
-			}
-		}
-
-		if(collisionEffect != null && collisionEffect != "")
-		{
-			EffectManager.CreateEffect(transform.position, collisionEffect);
-		}
-
-		if(ItemDrop != "" && Network.isServer)
-		{
-			if(Random.Range(1,100) > DropPercent)
-			{
-				ItemManager.SpawnItem(ItemDrop, gameObject.transform.position);
-			}
-		}
-
-		Destroy(gameObject);
+        Collide(collision.gameObject);
 	}
 
 	void OnTriggerEnter2D(Collider2D other)
 	{
-		Collide (other);
+		Collide (other.gameObject);
 	}
 
-	private void Collide(Collider2D other)
+	private void Collide(GameObject other)
 	{
 		if(other.gameObject == Source)
 			return;
-		if(Network.isServer)
-		{
-			HealthSystem health = other.gameObject.GetComponent<HealthSystem>();
-				
-			if(health != null)
-			{
-				health.TakeDamage(Damage, Source);
-			}
-		}
+        if (Network.isServer)
+        {
+            HealthSystem health = other.GetComponent<HealthSystem>();
+
+            if (health != null)
+            {
+                Debug.Log("Projecitle hit for " + Damage.Damage);
+                health.TakeDamage(Damage, Source);
+            }
+        }
 		
 		if(collisionEffect != null && collisionEffect != "")
 		{

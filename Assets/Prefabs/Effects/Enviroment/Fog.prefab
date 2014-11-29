@@ -11,6 +11,7 @@ GameObject:
   - 198: {fileID: 19800000}
   - 199: {fileID: 19900000}
   - 114: {fileID: 11400000}
+  - 114: {fileID: 11400002}
   m_Layer: 0
   m_Name: Fog
   m_TagString: Untagged
@@ -25,10 +26,11 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 100000}
   m_LocalRotation: {x: 0, y: 1, z: 0, w: -4.37113883e-08}
-  m_LocalPosition: {x: 123.010201, y: 143.282913, z: 0}
+  m_LocalPosition: {x: -.498793364, y: -.69669342, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
+  m_RootOrder: 0
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -41,7 +43,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   FadeTime: 0
+  LightPosition: 1
   SortLayer: EffectsTop
+  StopEmmitingOnNoParent: 0
+--- !u!114 &11400002
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6fac4c3b6ed4a8b40a983bf21824a70b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Z: .449999988
 --- !u!198 &19800000
 ParticleSystem:
   m_ObjectHideFlags: 1
@@ -250,7 +266,7 @@ ParticleSystem:
   ShapeModule:
     serializedVersion: 2
     enabled: 1
-    type: 2
+    type: 0
     radius: 15
     angle: 25
     length: 5
@@ -374,13 +390,13 @@ ParticleSystem:
           rgba: 10461087
         key1:
           serializedVersion: 2
-          rgba: 765962151
+          rgba: 2762450855
         key2:
           serializedVersion: 2
-          rgba: 67108864
+          rgba: 1375731712
         key3:
           serializedVersion: 2
-          rgba: 1509949440
+          rgba: 2952790016
         key4:
           serializedVersion: 2
           rgba: 0
@@ -713,7 +729,7 @@ ParticleSystem:
   ClampVelocityModule:
     enabled: 1
     x:
-      scalar: 1
+      scalar: .400000006
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -746,7 +762,7 @@ ParticleSystem:
         m_PostInfinity: 2
       minMaxState: 0
     y:
-      scalar: 1
+      scalar: .400000006
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -1062,9 +1078,8 @@ ParticleSystemRenderer:
   m_UseLightProbes: 0
   m_LightProbeAnchor: {fileID: 0}
   m_ScaleInLightmap: 1
-  m_SortingLayer: 0
-  m_SortingOrder: 0
   m_SortingLayerID: 0
+  m_SortingOrder: 0
   m_RenderMode: 0
   m_MaxParticleSize: .5
   m_CameraVelocityScale: 0

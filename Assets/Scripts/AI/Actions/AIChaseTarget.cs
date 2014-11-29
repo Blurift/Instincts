@@ -24,7 +24,7 @@ public class AIChaseTarget : AIAction {
 
 		if(Time.time - lastSync > 0.5)
 		{
-			float distance = Helper.DistanceFloatFromTarget (ParentAI.Target.transform.position, ParentAI.transform.position);
+			float distance = Vector2.Distance(ParentAI.Target.transform.position, ParentAI.transform.position);
 
 			if(distance < ParentAI.VisionRange)
 			{

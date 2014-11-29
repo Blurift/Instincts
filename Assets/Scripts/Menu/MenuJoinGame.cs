@@ -4,6 +4,10 @@ using System.Collections.Generic;
 
 public class MenuJoinGame {
 
+    //Size
+    float width = 0;
+    float height = 0;
+
 	public string hostListStatus;
 	private string LanIP = "";
 	private string LanPort = "";
@@ -16,29 +20,70 @@ public class MenuJoinGame {
 	private Color scrollItemColorAlt = new Color(0.2f,0.2f,0.2f);
 	private Color scrollItemFocus = new Color(0.7f,0.4f,0.4f);
 	private Color scrollItemFocusAlt = new Color(0.6f,0.2f,0.2f);
+
+    //GUI Measurements
+    float buttonWidth;
+    float buttonHeight;
+    float buttonMargin;
+    float buttonSizeW;
+    float buttonSizeH;
+
+    //Server list
+    private GUIStyle serverLineStyle;
+
+    private Rect serverListRect;
 	
 	private Vector2 serverScrollPosition = Vector2.zero;
-	private int scrollItemHeight = 22;
+
+    private float serverListInnerWidth;
+	private float serverLineHeight = 25;
+
 	private int selectedServer = -1;
 	private int buttonI = 0;
+
+    float scrollItemNameWidth;
+    float scrollItemPlayersWidth;
+    float scrollItemPingWidth;
 
 	public MenuJoinGame()
 	{
 		selectedServer = -1;
-
 		RefreshHostList ();
 	}
 
+    private void Resize()
+    {
+        height = Screen.height;
+        width = Screen.width;
 
+        //GUI Measurements
+        buttonWidth = width * 0.18f;
+        buttonHeight = buttonWidth * 0.2f;
+        buttonMargin = width * 0.01f;
+        buttonSizeW = width * 0.2f;
+        buttonSizeH = buttonHeight + buttonMargin * 2;
+
+        float serverListY = buttonHeight + buttonMargin * 2;
+
+        serverListRect = new Rect(0, serverListY, width, height - serverListY - buttonSizeH);
+        serverLineHeight = serverListRect.height / 20;
+        serverLineStyle = Blurift.BluStyle.CustomStyle(GUI.skin.label, serverLineHeight * 0.8f);
+
+        serverListInnerWidth = serverListRect.width - 20;
+
+        scrollItemNameWidth = serverListInnerWidth * 0.6f;
+        scrollItemPlayersWidth = serverListInnerWidth * 0.2f;
+        scrollItemPingWidth = serverListInnerWidth * 0.2f;
+    }
 
 	public void Draw()
 	{
-		//GUI Measurements
-		float buttonWidth = Screen.width*0.18f;
-		float buttonHeight = buttonWidth*0.2f;
-		float buttonMargin = Screen.width*0.01f;
-		float buttonSizeW = Screen.width*0.2f;
-		float buttonSizeH = buttonHeight + buttonMargin*2;
+        if(Screen.height != height || Screen.width != width)
+        {
+            Resize();
+        }
+
+		
 
 		float screenY = buttonSizeH + buttonMargin * 2;
 		
@@ -89,76 +134,77 @@ public class MenuJoinGame {
 
 		if(networkSearchType == NetworkSearchType.Internet)
 		{
-			//Server List gui measurements
-			Rect ServerListRect = new Rect(0,screenY,Screen.width,Screen.height - screenY - buttonSizeH);
+            /* Test list */
+            hostList = new HostData[25];
+            for (int i = 0; i < hostList.Length; i++ )
+            {
+                hostList[i] = new HostData();
+                hostList[i].gameName = "Game" + i;
+                hostList[i].playerLimit = 4;
+                hostList[i].connectedPlayers = 2;
+            }/**/
 			
 			
-			hostList = MasterServer.PollHostList();
+			//hostList = MasterServer.PollHostList();
 			float serverListHeight = 200;
-			if(hostList != null) serverListHeight = hostList.Length * buttonHeight;
+			if(hostList != null) serverListHeight = hostList.Length * (serverLineHeight+2);
 			
 			//If rect is too short it will not display properly in the scrollview. make it the scroll view height.
-			if(serverListHeight < ServerListRect.height) serverListHeight = ServerListRect.height;
+			if(serverListHeight < serverListRect.height) serverListHeight = serverListRect.height;
 			
-			Rect ServerListInside = new Rect(0,0,ServerListRect.width-20,serverListHeight);
+			Rect ServerListInside = new Rect(0,0,serverListInnerWidth,serverListHeight);
 			
-			serverScrollPosition = GUI.BeginScrollView(ServerListRect, serverScrollPosition, ServerListInside, false, true);
+			serverScrollPosition = GUI.BeginScrollView(serverListRect, serverScrollPosition, ServerListInside, false, true);
 
 			if(hostList != null && hostList.Length > 0)
-			{
-				float scrollItemNameWidth = ServerListInside.width*0.6f;
-				float scrollItemPlayersWidth = ServerListInside.width*0.2f;
-				float scrollItemPingWidth = ServerListInside.width*0.2f;
-				
+			{				
 				int iMeasure = 0;
 				for(int i = 0; i < hostList.Length; i++)
 				{
-					if(true)
+
+                    Rect scrollItem = new Rect(0, iMeasure * (serverLineHeight + 2), ServerListInside.width, serverLineHeight);
+                    Rect scrollItemName = new Rect(serverLineHeight, scrollItem.y, scrollItemNameWidth - 2 - serverLineHeight, serverLineHeight);
+                    Rect scrollItemPlayers = new Rect(scrollItemNameWidth, scrollItem.y, scrollItemPlayersWidth - 2, serverLineHeight);
+                    Rect scrollItemPing = new Rect(scrollItemNameWidth + scrollItemPlayersWidth, scrollItem.y, scrollItemPingWidth, serverLineHeight);
+						
+					//Draw Server name
+					Color boxColor = scrollItemColor;
+					if(selectedServer == i)
+						boxColor = scrollItemFocus;
+					GUI.color = boxColor;
+					GUI.DrawTexture(scrollItemName, Menu.Instance.filler);
+					GUI.DrawTexture(scrollItemPing, Menu.Instance.filler);
+					boxColor = scrollItemColorAlt;
+					if(selectedServer == i)
+						boxColor = scrollItemFocusAlt;
+					GUI.color = boxColor;
+					GUI.DrawTexture(scrollItemPlayers, Menu.Instance.filler);
+						
+						
+					GUI.color = Color.white;
+						
+					GUI.Label(scrollItemName, hostList[i].gameName, serverLineStyle);
+                    GUI.Label(scrollItemPlayers, hostList[i].connectedPlayers + " / " + hostList[i].playerLimit, serverLineStyle);
+						
+					Ping ping;
+						
+					if(hostPings.ContainsKey(hostList[i].gameName))
 					{
-						
-						Rect scrollItem = new Rect(0,iMeasure*(scrollItemHeight+2), ServerListInside.width,scrollItemHeight);
-						Rect scrollItemName = new Rect(0,scrollItem.y,scrollItemNameWidth-2,scrollItemHeight);
-						Rect scrollItemPlayers = new Rect(scrollItemNameWidth, scrollItem.y, scrollItemPlayersWidth-2, scrollItemHeight);
-						Rect scrollItemPing = new Rect(scrollItemNameWidth + scrollItemPlayersWidth, scrollItem.y, scrollItemPingWidth, scrollItemHeight);
-						
-						//Draw Server name
-						Color boxColor = scrollItemColor;
-						if(selectedServer == i)
-							boxColor = scrollItemFocus;
-						GUI.color = boxColor;
-						GUI.DrawTexture(scrollItemName, Menu.Instance.filler);
-						GUI.DrawTexture(scrollItemPing, Menu.Instance.filler);
-						boxColor = scrollItemColorAlt;
-						if(selectedServer == i)
-							boxColor = scrollItemFocusAlt;
-						GUI.color = boxColor;
-						GUI.DrawTexture(scrollItemPlayers, Menu.Instance.filler);
-						
-						
-						GUI.color = Color.white;
-						
-						GUI.Label(scrollItemName, hostList[i].gameName);
-						GUI.Label(scrollItemPlayers, hostList[i].connectedPlayers + " / " + hostList[i].playerLimit);
-						
-						Ping ping;
-						
-						if(hostPings.ContainsKey(hostList[i].gameName))
-						{
-							ping  = hostPings[hostList[i].gameName];
-							if(ping != null && hostPings[hostList[i].gameName].isDone)
-								GUI.Label(scrollItemPing, ping.time.ToString());
-						}
-						else
-							GUI.Label(scrollItemPing, "--");
-						
-						if(Input.GetMouseButtonDown(0) && scrollItem.Contains(Event.current.mousePosition))
-						{
-							selectedServer = i;
-							LanIP = "";
-						}
-						
-						iMeasure++;
+						ping  = hostPings[hostList[i].gameName];
+						if(ping != null && hostPings[hostList[i].gameName].isDone)
+							GUI.Label(scrollItemPing, ping.time.ToString());
 					}
+					else
+						GUI.Label(scrollItemPing, "--");
+						
+					if(Input.GetMouseButtonDown(0) && scrollItem.Contains(Event.current.mousePosition))
+					{
+						selectedServer = i;
+						LanIP = "";
+					}
+						
+					iMeasure++;
+
 				}
 			}
 			else
@@ -204,7 +250,7 @@ public class MenuJoinGame {
 			Rect portRect = new Rect(buttonMargin+((buttonWidth+buttonMargin)*ir), screenY, buttonWidth, buttonHeight);
 			ir++;
 
-			GUIStyle custom = Menu.GetCustomStyleFont(GUI.skin.textField, 0.03f);
+			GUIStyle custom = Blurift.BluStyle.CustomStyle(GUI.skin.textField, 0.03f);
 
 			GUI.Label(ipLabel, "IP Address", Menu.LabelLeft);
 			GUI.Label(portLabel, "Port", Menu.LabelLeft);
@@ -219,121 +265,11 @@ public class MenuJoinGame {
 				Menu.Instance.SwitchScreen(ScreenType.Connecting);
 			}
 		}
-
-		/*
-
-		
-		if(hostList != null)
-		{
-			float scrollItemNameWidth = ServerListInside.width*0.6f;
-			float scrollItemPlayersWidth = ServerListInside.width*0.2f;
-			float scrollItemPingWidth = ServerListInside.width*0.2f;
-			
-			int iMeasure = 0;
-			for(int i = 0; i < hostList.Length; i++)
-			{
-				//if(hostPings[i].isDone)
-				if(true)
-				{
-					
-					Rect scrollItem = new Rect(0,iMeasure*(scrollItemHeight+2), ServerListInside.width,scrollItemHeight);
-					Rect scrollItemName = new Rect(0,scrollItem.y,scrollItemNameWidth-2,scrollItemHeight);
-					Rect scrollItemPlayers = new Rect(scrollItemNameWidth, scrollItem.y, scrollItemPlayersWidth-2, scrollItemHeight);
-					Rect scrollItemPing = new Rect(scrollItemNameWidth + scrollItemPlayersWidth, scrollItem.y, scrollItemPingWidth, scrollItemHeight);
-					
-					//Draw Server name
-					Color boxColor = scrollItemColor;
-					if(selectedServer == i)
-						boxColor = scrollItemFocus;
-					GUI.color = boxColor;
-					GUI.DrawTexture(scrollItemName, Menu.Instance.filler);
-					GUI.DrawTexture(scrollItemPing, Menu.Instance.filler);
-					boxColor = scrollItemColorAlt;
-					if(selectedServer == i)
-						boxColor = scrollItemFocusAlt;
-					GUI.color = boxColor;
-					GUI.DrawTexture(scrollItemPlayers, Menu.Instance.filler);
-					
-					
-					GUI.color = Color.white;
-					
-					GUI.Label(scrollItemName, hostList[i].gameName);
-					GUI.Label(scrollItemPlayers, hostList[i].connectedPlayers + " / " + hostList[i].playerLimit);
-					
-					Ping ping;
-					
-					if(hostPings.ContainsKey(hostList[i].gameName))
-					{
-						ping  = hostPings[hostList[i].gameName];
-						if(ping != null && hostPings[hostList[i].gameName].isDone)
-							GUI.Label(scrollItemPing, ping.time.ToString());
-					}
-					else
-						GUI.Label(scrollItemPing, "--");
-					
-					if(Input.GetMouseButtonDown(0) && scrollItem.Contains(Event.current.mousePosition))
-					{
-						selectedServer = i;
-						LanIP = "";
-					}
-					
-					iMeasure++;
-				}
-			}
-		}
-		
-		GUI.EndScrollView(true);
-		
-		buttonI = 0;
-		
-		if(GUI.Button(new Rect(buttonMargin,buttonMargin + (buttonI*buttonSizeH), buttonWidth,buttonHeight), "Join Game"))
-		{				
-			Network.isMessageQueueRunning = false;
-			
-			switch(networkSearchType)
-			{
-			case NetworkSearchType.Internet:
-				Network.Connect(hostList[selectedServer]);
-				Menu.Instance.SwitchScreen(ScreenType.Connecting);
-				break;
-			case NetworkSearchType.LAN:
-				break;
-			case NetworkSearchType.Direct:
-				Network.Connect(LanIP, int.Parse(LanPort));
-				Menu.Instance.SwitchScreen(ScreenType.Connecting);
-				break;
-			}
-		}
-		
-		
-		
-		buttonI++;
-		
-		if(GUI.Button(new Rect(buttonMargin,buttonMargin + (buttonI*buttonSizeH), buttonWidth,buttonHeight), "Refresh"))
-		{
-			MasterServer.ClearHostList();
-			hostListStatus = "Refreshing... ";
-			RefreshHostList();
-		}
-		buttonI++;
-		
-		GUI.Label(new Rect(buttonMargin,buttonMargin + (buttonI*buttonSizeH), buttonWidth,buttonHeight/2), "Direct Connect");
-		LanIP = GUI.TextArea(new Rect(buttonMargin,buttonMargin + (buttonI*buttonSizeH) + buttonHeight/2, buttonWidth,buttonHeight/2), LanIP);
-		LanPort = GUI.TextArea(new Rect(buttonMargin,buttonMargin + (buttonI*buttonSizeH) + (buttonHeight/2)*2, buttonWidth,buttonHeight/2), LanPort);
-		buttonI+=2;
-		
-		if(GUI.Button(new Rect(buttonMargin,buttonMargin + (buttonI*buttonSizeH), buttonWidth,buttonHeight), "Back"))
-		{
-			Menu.Instance.SwitchScreen(ScreenType.MainMenu);
-		}
-
-*/
-
 	}
 
 	private void RefreshHostList()
 	{
-		MasterServer.RequestHostList (Menu.TypeName);
+		MasterServer.RequestHostList (Game.TypeName);
 		hostPings = new Dictionary<string, Ping> ();
 		hostListStatus = "Searching...";
 	}

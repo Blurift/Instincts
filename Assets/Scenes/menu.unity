@@ -174,6 +174,7 @@ GameObject:
   - 198: {fileID: 350489602}
   - 199: {fileID: 350489601}
   - 114: {fileID: 350489600}
+  - 114: {fileID: 350489604}
   m_Layer: 0
   m_Name: Fog
   m_TagString: Untagged
@@ -196,6 +197,7 @@ MonoBehaviour:
   FadeTime: 0
   LightPosition: 1
   SortLayer: EffectsTop
+  StopEmmitingOnNoParent: 0
 --- !u!199 &350489601
 ParticleSystemRenderer:
   m_ObjectHideFlags: 0
@@ -438,7 +440,7 @@ ParticleSystem:
   ShapeModule:
     serializedVersion: 2
     enabled: 1
-    type: 2
+    type: 0
     radius: 15
     angle: 25
     length: 5
@@ -562,13 +564,13 @@ ParticleSystem:
           rgba: 10461087
         key1:
           serializedVersion: 2
-          rgba: 765962151
+          rgba: 2762450855
         key2:
           serializedVersion: 2
-          rgba: 67108864
+          rgba: 1375731712
         key3:
           serializedVersion: 2
-          rgba: 1509949440
+          rgba: 2952790016
         key4:
           serializedVersion: 2
           rgba: 0
@@ -901,7 +903,7 @@ ParticleSystem:
   ClampVelocityModule:
     enabled: 1
     x:
-      scalar: 1
+      scalar: .400000006
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -934,7 +936,7 @@ ParticleSystem:
         m_PostInfinity: 2
       minMaxState: 0
     y:
-      scalar: 1
+      scalar: .400000006
       maxCurve:
         serializedVersion: 2
         m_Curve:
@@ -1244,6 +1246,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 1
+--- !u!114 &350489604
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 11400002, guid: 884f4a25145f0994793e65052ccc7ea4,
+    type: 2}
+  m_PrefabInternal: {fileID: 1976629353}
+  m_GameObject: {fileID: 350489599}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6fac4c3b6ed4a8b40a983bf21824a70b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Z: .449999988
 --- !u!1 &350879200
 GameObject:
   m_ObjectHideFlags: 0
@@ -1303,6 +1318,7 @@ Animator:
   m_UpdateMode: 0
   m_ApplyRootMotion: 1
   m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
 --- !u!108 &350879203
 Light:
   m_ObjectHideFlags: 0
@@ -2420,7 +2436,7 @@ AudioSource:
   m_PlayOnAwake: 1
   m_Volume: 1
   m_Pitch: 1
-  Loop: 0
+  Loop: 1
   Mute: 0
   Priority: 128
   DopplerLevel: 1
@@ -2534,9 +2550,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MenuSkin: {fileID: 11400000, guid: bcea0cf6634ef924eb96139ff829befc, type: 2}
+  BackgroundImage: {fileID: 0}
   filler: {fileID: 2800000, guid: 3edaa191f6e1e2b4481d95e741cce494, type: 3}
   logo: {fileID: 2800000, guid: b888585ed4209a841acc81b395adc6b9, type: 3}
   build: {fileID: 2800000, guid: ab9165d40747c2f4c977a30d08de5c50, type: 3}
+  HairStylesLocal:
+  - {fileID: 21300000, guid: 35b33e0ff4e259147a9abe7cb1773b0f, type: 3}
+  - {fileID: 21300002, guid: 35b33e0ff4e259147a9abe7cb1773b0f, type: 3}
+  CharHead: {fileID: 21300000, guid: ce74ae10fb6d5234e8efab431a6a20f2, type: 3}
+  CharArms: {fileID: 21300000, guid: c6bc9c687b98ecc4da1267461e320cfe, type: 3}
 --- !u!4 &602628775
 Transform:
   m_ObjectHideFlags: 0
@@ -2548,7 +2570,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 5
 --- !u!1001 &832006440
 Prefab:
   m_ObjectHideFlags: 0
@@ -2783,7 +2805,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 5
+  m_RootOrder: 6
 --- !u!1 &1696462086
 GameObject:
   m_ObjectHideFlags: 0
@@ -2857,7 +2879,7 @@ Transform:
   m_LocalScale: {x: 400, y: 400, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 6
+  m_RootOrder: 3
 --- !u!114 &1696462091
 MonoBehaviour:
   m_ObjectHideFlags: 0

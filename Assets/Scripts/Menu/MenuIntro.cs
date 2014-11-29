@@ -14,7 +14,7 @@ public class MenuIntro : MonoBehaviour {
 	private Vector2 termsScroll = Vector2.zero;
 
 	private string title = "<b>INSTINCTS</b>\n" +
-				"VERSION: " + Menu.VERSION;
+				"VERSION: " + Game.VERSION;
 
 	private string terms = 
 		"<b>INSTINCTS TERMS AND CONDITIONS</b>\n\n\n" +
@@ -26,19 +26,11 @@ public class MenuIntro : MonoBehaviour {
 			"Thank you for playing!"
 			;
 
-	// Use this for initialization
-	void Start () {
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
+    private GUIStyle buttonStyle;
 
 	void OnGUI()
 	{
 		GUI.skin = MenuSkin;
-		Menu.SetFontSize (GUI.skin);
 
 		/****DRAW Black BACKGROUND */
 		GUI.color = Color.black;
@@ -77,12 +69,17 @@ public class MenuIntro : MonoBehaviour {
 
 		GUI.EndScrollView (true);
 
-		if(GUI.Button(new Rect(Screen.width/2 - termsWidth/2, Screen.height-Screen.height*0.24f, termsButton, termsButton*0.35f), "I DISAGREE"))
+        float buttonY = Screen.height-Screen.height*0.24f;
+        float buttonHeight = termsButton * 0.35f;
+        if(buttonStyle == null)
+            buttonStyle = Blurift.BluStyle.CustomStyle(GUI.skin.button, buttonHeight*0.35f);
+
+		if(GUI.Button(new Rect(Screen.width/2 - termsWidth/2, buttonY, termsButton, buttonHeight), "I DISAGREE",buttonStyle))
 		{
 			Application.Quit();
 		}
 
-		if(GUI.Button(new Rect(Screen.width/2 + termsWidth/2 - termsButton, Screen.height-Screen.height*0.24f, termsButton, termsButton*0.35f), "I AGREE"))
+		if(GUI.Button(new Rect(Screen.width/2 + termsWidth/2 - termsButton, buttonY, termsButton, buttonHeight), "I AGREE",buttonStyle))
 		{
 			Application.LoadLevel(LevelLoader.LEVEL_MENU);
 		}

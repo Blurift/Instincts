@@ -25,18 +25,6 @@ public class Inventory : MonoBehaviour {
 
 		Player = GetComponent<PlayerController> ();
 
-		/*
-		for (int i = 0; i < ItemsToEquip.Count; i++)
-		{
-			if(i < Equipment.Length)
-				Equipment[i] = ItemsToEquip[i];
-		}
-
-		ItemsToEquip = null;
-		*/
-
-		//GameManager.WriteMessage ("Inventory Init: " + Equipment.Length);
-
 		if(networkView.isMine)
 			GameManager.ControllingInventory = this;
 	}
@@ -76,9 +64,13 @@ public class Inventory : MonoBehaviour {
 		{
 			if(item == Items[i])
 			{
+                if (Network.isServer)
+                    DropItemRPC(i, "I");
+                else
+                    networkView.RPC("DropItemRPC", RPCMode.Server, i, "I");
 				Items.RemoveAt(i);
 				Destroy(item);
-				networkView.RPC("DropItemRPC", RPCMode.Server, i, "I");
+                
 			}
 		}
 
@@ -86,10 +78,12 @@ public class Inventory : MonoBehaviour {
 		{
 			if(item == Equipment[i])
 			{
-
+                if (Network.isServer)
+                    DropItemRPC(i, "E");
+                else
+                    networkView.RPC("DropItemRPC", RPCMode.Server, i, "E");
 				Equipment[i] = null;
 				Destroy(item);
-				networkView.RPC("DropItemRPC", RPCMode.Server, i, "E");
 			}
 		}
 	}
@@ -322,17 +316,12 @@ public class Inventory : MonoBehaviour {
 
 		if(type == "E")
 		{
-			Debug.Log("Equipment item, " + Equipment.Length);
 			for(int i = 0; i < Equipment.Length; i ++)
 			{
 				if(Equipment[i] == null)
 				{
 					Equipment[i] = item;
 					return;
-				}
-				else
-				{
-					Debug.Log("Equipment is not empty, " + i);
 				}
 			}
 

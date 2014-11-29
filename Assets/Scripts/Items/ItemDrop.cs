@@ -57,18 +57,23 @@ public class ItemDrop : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if ((!Network.isServer && !Network.isClient) || GameManager.ControllingInventory == false)
+		if ((!Network.isServer && !Network.isClient) || GameManager.ControllingInventory == null)
 			return;
 
 
-		if(ready && !HUD.Instance.HUDFocus)
-		{
-			//Check distance to player;
-			if(Vector2.Distance(gameObject.transform.position, Camera.main.transform.position) < 2)
-			{
-				ItemToPickUp = this;
-			}
-		}
+        //Debug.Log("ItemDrop: " + ready + " - " + !HUD.Instance.HUDFocus);
+        if (ready && !HUD.Instance.HUDFocus)
+        {
+            //Debug.Log("ItemDrop: Testing setup");
+            Vector2 p = HUD.Instance.transform.position;
+            //Check distance to player;
+            if (Vector2.Distance(gameObject.transform.position, p) < 2)
+            {
+                //Debug.Log("Near Item");
+                ItemToPickUp = this;
+            }
+        }
+
 
 		if (Time.time > DespawnTime && Network.isServer)
 		{

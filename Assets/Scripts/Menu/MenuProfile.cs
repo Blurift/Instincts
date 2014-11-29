@@ -71,8 +71,8 @@ public class MenuProfile {
 	{
 		GUI.Box (createBounds, "");
 
-		GUIStyle customFont = Menu.GetCustomStyleFont(Menu.LabelCenter, 0.08f);
-		Menu.GetCustomStyleFont(customFont, 0.4f);
+		GUIStyle customFont = Blurift.BluStyle.CustomStyle(Menu.LabelCenter, 0.08f);
+		//Menu.GetCustomStyleFont(customFont, 0.4f);
 
 		GUI.Label (createTitle, "Create a profile", customFont);
 		createName = GUI.TextField (createNameInput, createName);
@@ -114,15 +114,29 @@ public class MenuProfile {
 		Rect selectInner = new Rect (0, 0, selectBox.width - 11, selectInnerHeight);
 		selectPosition = GUI.BeginScrollView (selectBox, selectPosition, selectInner);
 		{
+            int delProfile = -1;
 			for (int i = 0; i < profiles.Count; i++) {
 				bool oldEnabled = GUI.enabled;
 
 				GUI.enabled = oldEnabled && selectedProfile != i;
-				if(GUI.Button(new Rect(0,selectButtonHeight*i,selectInner.width,selectButtonHeight-2), profiles[i].Name))
+				if(GUI.Button(new Rect(0,selectButtonHeight*i,selectInner.width*0.8f,selectButtonHeight-2), profiles[i].Name))
 					selectedProfile = i;
+                if (GUI.Button(new Rect(selectInner.width * 0.81f, selectButtonHeight * i, selectInner.width * 0.19f, selectButtonHeight - 2), "-"))
+                {
+                    delProfile = i;
+
+                }
 
 				GUI.enabled = oldEnabled;
 			}
+
+            if(delProfile != -1)
+            {
+                string profileFile = Path.Combine(GameManager.ProfilePath(), profiles[delProfile].UID + ".pro");
+                if (File.Exists(profileFile))
+                    File.Delete(profileFile);
+                profiles.RemoveAt(delProfile);
+            }
 		}
 		GUI.EndScrollView (true);
 
@@ -152,4 +166,12 @@ public class MenuProfile {
 	{
 		return GameManager.ProfilePath () + uid + ".pro";
 	}
+
+    public Profile GetProfile(int i)
+    {
+        if(i < 0 || i >= profiles.Count)
+            return null;
+
+        return profiles[i];
+    }
 }

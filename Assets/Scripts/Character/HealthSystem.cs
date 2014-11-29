@@ -41,6 +41,9 @@ public class HealthSystem : MonoBehaviour {
 	public GameObject[] HitEffects;
 	public GameObject[] HitDropEffects;
 
+    private float useStaminaUntil = 0;
+    private bool exhausted = false;
+
 	#endregion
 
 	#region Properties
@@ -72,17 +75,8 @@ public class HealthSystem : MonoBehaviour {
 			hunger = value;
 			if(hunger > HungerMax)
 				hunger = HungerMax;
-			if(Network.isServer)
-			{
-				if(networkView != null)
-					networkView.RPC("ChangeHunger", RPCMode.Others, hunger);
-				if(hunger < 0)
-					hunger = 0;
-			}
-			else
-			{
-				networkView.RPC("ChangeHunger", RPCMode.Server, hunger);
-			}
+			if(hunger < 0)
+				hunger = 0;
 		}
 	}
 
@@ -91,13 +85,15 @@ public class HealthSystem : MonoBehaviour {
 		get { return stamina; }
 		set
 		{
-			stamina = value;
-			if(Network.isServer && networkView != null)
-				networkView.RPC("ChangeStamina", RPCMode.Others, stamina);
+			stamina = value;			
 			if(stamina > staminaMax)
 				stamina = staminaMax;
-			if(stamina < 0)
+			else if(stamina < 0)
 				stamina = 0;
+            if (stamina < 10)
+                exhausted = true;
+            else if (stamina > 25)
+                exhausted = false;
 		}
 	}
 
@@ -136,17 +132,32 @@ public class HealthSystem : MonoBehaviour {
 
 	private List<HealthEffect> healthEffects = new List<HealthEffect>();
 
+    void Awake()
+    {
+        Health = HealthMax;
+        Hunger = HungerMax;
+        Stamina = staminaMax;
+    }
+
 	void Start()
 	{
-		Health = HealthMax;
-		Hunger = HungerMax;
-		Stamina = staminaMax;
+		
 	}
+
+    public void Respawn()
+    {
+        Health = HealthMax;
+        Hunger = HungerMax;
+        Stamina = staminaMax;
+        healthEffects = new List<HealthEffect>();
+    }
+
 
 	public void TakeDamage(DamageType damage, GameObject source)
 	{
 
-		int convertedDamage = damage.Damage;
+		int convertedDamage = damage.Damage + UnityEngine.Random.Range(0,damage.AltDamage);
+
 
 		//If the even is not null raise the hit event with the converted Damage received
 		if (Hit != null)
@@ -197,21 +208,23 @@ public class HealthSystem : MonoBehaviour {
 				}
 			}
 
-			if(Time.time - lastHungerSync > 3f && HungerEnabled)
+			if(Time.time - lastHungerSync > 2.5f && HungerEnabled)
 			{
-				Hunger--;
+                ChangeHunger(Hunger - 1);
 
-				if(Hunger <= 0)
-				{
-					Health--;
-				}
+                if (Hunger <= 0)
+                    Health--;
 
 				lastHungerSync = Time.time;
 			}
 
 			if(Time.time - lastStaminaSync > 1 && StaminaEnabled)
 			{
-				Stamina++;
+
+                if (useStaminaUntil > Time.time)
+                    ChangeStamina(Stamina -8);
+                else
+                    ChangeStamina(Stamina+1);
 
 				lastStaminaSync = Time.time;
 			}
@@ -229,17 +242,60 @@ public class HealthSystem : MonoBehaviour {
 		Health = health;
 	}
 
-	[RPC]
-	void ChangeHunger(int hunger)
+	public void ChangeHunger(int hunger)
 	{
-		Hunger = hunger;
+        if (Network.isServer)
+        {
+            networkView.RPC("ChangeHungerRPC", RPCMode.Others, hunger);
+            ChangeHungerRPC(hunger);
+        }
+        else
+            networkView.RPC("ChangeHungerRPC", RPCMode.Server, hunger);
 	}
 
-	[RPC]
-	void ChangeStamina(int stamina)
+    [RPC]
+    void ChangeHungerRPC(int hunger)
+    {
+        Hunger = hunger;
+    }
+
+	public void ChangeStamina(int stamina)
 	{
-		Stamina = stamina;
+        if (Network.isClient)
+            networkView.RPC("ChangeStaminaRPC", RPCMode.Server, stamina);
+        else
+        {
+            networkView.RPC("ChangeStaminaRPC", RPCMode.Others, stamina);
+            ChangeStaminaRPC(stamina);
+        }
 	}
+
+    [RPC]
+    void ChangeStaminaRPC(int stamina)
+    {
+        Stamina = stamina;
+    }
+
+    [RPC]
+    public void UseStamina()
+    {
+        if (Network.isClient)
+            networkView.RPC("UseStamina", RPCMode.Server);
+        useStaminaUntil = Time.time + 1f;
+    }
+
+    public void ChangeBleeding(bool bleed)
+    {
+        if (Network.isServer)
+            BleedingRPC(bleed);
+        else
+            networkView.RPC("BleedingRPC", RPCMode.Server, bleed);
+    }
+
+    public bool Exhausted()
+    {
+        return exhausted;
+    }
 
 	[RPC]
 	public void BleedingRPC(bool bleed)

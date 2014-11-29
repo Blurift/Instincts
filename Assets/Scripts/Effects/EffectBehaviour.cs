@@ -1,7 +1,7 @@
 ﻿/* Name: Test
  * Desc: Used to test other game objects without needing to go through the whole game
  * Author: Keirron Stach
- * Version: 0.5
+ * Version: 0.6
  * Created: 1/04/2014
  * Edited: 20/04/2014
  */ 
@@ -9,7 +9,7 @@
 using UnityEngine;
 using System.Collections;
 
-[AddComponentMenu("EffectSystem/BehaviourAll")]
+[AddComponentMenu("EffectsSystem/BehaviourAll")]
 public class EffectBehaviour : MonoBehaviour {
 
 	public float FadeTime;
@@ -19,6 +19,11 @@ public class EffectBehaviour : MonoBehaviour {
 	private float startIntensity;
 
 	public string SortLayer = "";
+
+    public bool StopEmmitingOnNoParent = false;
+
+    //private Light light;
+    //private ParticleSystem particleSystem;
 
 	// Use this for initialization                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
 	void Start () {
@@ -40,6 +45,14 @@ public class EffectBehaviour : MonoBehaviour {
 
 		if(particleSystem != null)
 		{
+            if(StopEmmitingOnNoParent)
+            {
+                if(transform.parent == null)
+                {
+                    //particleSystem.enableEmission = false;
+                    particleSystem.Stop();
+                }
+            }
 			if(particleSystem.isPlaying)
 				stop = false;
 		}

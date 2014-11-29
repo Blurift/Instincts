@@ -19,6 +19,8 @@ public class AIMove : AIAction {
 	
 	public override void Update ()
 	{
+        Debug.Log("Needs fixing");
+        /*
 		Vector3 dest = new Vector3(Destination.x,Destination.y,0);
 		Vector2 move = Helper.DirectionVector (dest, ParentAIGameObject.transform.position);
 
@@ -38,6 +40,6 @@ public class AIMove : AIAction {
 		}
 		else
 			End();
-
+        */
 	}
 }

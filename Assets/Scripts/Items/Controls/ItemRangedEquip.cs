@@ -7,7 +7,7 @@ public class ItemRangedEquip : MonoBehaviour {
 	public LayerMask Layers;
 	public DamageType Damage;
 
-	public GameObject Source;
+	public GameObject Owner;
 	public GameObject EffectAnimation;
 	public GameObject EffectSound;
 	public GameObject EffectProjectile;
@@ -18,22 +18,15 @@ public class ItemRangedEquip : MonoBehaviour {
 
 	public void Fire(float x, float y)
 	{
-		if(networkView.isMine)
-		{
-			RangedFireEffects();
-			if(Network.isServer)
-				FireRPC(x,y);
-			else
-				networkView.RPC("FireRPC", RPCMode.Server, x,y);
-		}
+		if(Network.isServer)
+			FireRPC(x,y);
 	}
 
-	[RPC]
 	public void FireRPC(float x, float y)
 	{
 		if(Network.isServer)
 		{
-
+            Debug.Log("Ranged: Shooting");
 			Vector2 origin = new Vector2(ProjectileSource.position.x,ProjectileSource.position.y);
 			
 			Vector3 point = new Vector2(x,y) - origin;
@@ -50,12 +43,12 @@ public class ItemRangedEquip : MonoBehaviour {
 
 					while(i < hit.Length)
 					{
-						if(hit[i].collider != Source && hit[i].collider != gameObject)
+						if(hit[i].collider != Owner && hit[i].collider != gameObject)
 						{
 							HealthSystem health = hit[i].collider.GetComponent<HealthSystem>();
 
 							if(health != null)
-								health.TakeDamage(Damage, Source);
+								health.TakeDamage(Damage, Owner);
 
 							i = hit.Length;
 						}
@@ -68,12 +61,10 @@ public class ItemRangedEquip : MonoBehaviour {
 			{
 				GameObject p = (GameObject)Instantiate(EffectProjectile, ProjectileSource.position, transform.rotation);
 
-				//GameObject goProj = 
-				//Projectile proj = goProj.GetComponent<Projectile>();
-
-				/* TODO: make source of projectile the orginal player
-				 * 
-				 */
+				EffectProjectile proj = p.GetComponent<EffectProjectile>();
+                proj.Source = Owner;
+                proj.Damage = this.Damage;
+                Debug.Log("Ranged Damage = " + proj.Damage.Damage);
 			}
 		}
 	}
@@ -96,13 +87,12 @@ public class ItemRangedEquip : MonoBehaviour {
 			Instantiate(EffectSound, p, transform.rotation);
 		}
 
-		if(EffectProjectile != null)
+		if(EffectProjectile != null && !(Network.isServer && !RaycastProjectile))
 		{
 			Instantiate(EffectProjectile, p, transform.rotation);
 		}
 	}
 
-	[RPC]
 	public void SetDamage(string t, int d, int ad)
 	{
 		DamageEffect effect = DamageEffect.None;
@@ -113,8 +103,6 @@ public class ItemRangedEquip : MonoBehaviour {
 			
 		}
 		Damage = new DamageType (effect, d, ad);
-		if (!Network.isServer)
-			networkView.RPC ("SetDamage", RPCMode.Server, t, d, ad);
 	}
 
 }

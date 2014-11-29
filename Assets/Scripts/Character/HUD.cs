@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -41,15 +42,15 @@ public class HUD : MonoBehaviour {
 	private bool showMenu = false;
 
 	//GUI variables
+    float width = 0;
+    float height = 0;
+
 	private Rect inventoryWindow = new Rect(0,0,216,300);
-	private Rect inventoryScrollView = new Rect(8,88,200,204);
-	private Vector2 inventoryScrollPosition = Vector2.zero;
-	
+
 	private Rect craftWindow = new Rect(Screen.width-200,0,200,300);
 	private Rect craftScrollRect = new Rect (8, 28, 200, 237);
 	private Vector2 craftScrollPosition = Vector2.zero;
 	private int craftIndex = -1;
-
 
 	public float ChatWidthPercent = 0.25f;
 
@@ -62,8 +63,22 @@ public class HUD : MonoBehaviour {
 	private Color boxStandard = new Color(0.3f,0.3f,0.3f);
 	private Color boxHover = new Color(0.5f,0.5f,0.5f);
 	
-	private GUIStyle invStackStyle;
+	
+    private GUIStyle invDescStyle;
 	public GUISkin InvSkin;
+
+    //Inventory Window
+    float invScrollViewWidth = 0;
+    float invButtonSize = 0;
+    float invButtonMargin = 0;
+    float invButtonInner = 0;
+    float invScrollViewHeight = 0;
+
+    private Rect invScrollView;
+    private Rect invScrollInner;
+    private Vector2 inventoryScrollPosition = Vector2.zero;
+
+    private GUIStyle invStackStyle;
 
 	//Chat Variables
 	private float chatOpacity = 0;
@@ -102,14 +117,14 @@ public class HUD : MonoBehaviour {
 
     void Awake()
     {
-        if (networkView.isMine)
-            Instance = this;
+        Controller = GetComponent<PlayerController>();
     }
 
     // Use this for initialization
 	void Start () {
 		if (networkView.isMine)
 		{
+            Instance = this;
 			MenuSetup();
 			EquipmentSetup();
 
@@ -131,6 +146,51 @@ public class HUD : MonoBehaviour {
 		mousePosition = new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y);
 	}
 
+    void Resize()
+    {
+        #region Inventory Window
+        {
+            invScrollView = new Rect(8, 88, 200, 204);
+            invScrollViewWidth = invScrollView.width - 12;
+
+            invButtonSize = invScrollViewWidth / 6;
+            invButtonMargin = invButtonSize * 0.1f;
+            invButtonInner = invButtonSize - invButtonMargin * 2;
+            invScrollViewHeight = invButtonSize * Inventory.Items.Count;
+
+            if (invScrollViewHeight < invScrollView.height)
+                invScrollViewHeight = invScrollView.height;
+            invScrollInner = new Rect(0, 0, invScrollViewWidth, invScrollViewHeight);
+
+            invStackStyle = Blurift.BluStyle.CustomStyle(GUI.skin.label, invButtonSize / 2);
+            invStackStyle.alignment = TextAnchor.LowerLeft;
+
+        }
+        #endregion
+        
+        #region Equipment Bar
+        {
+
+        }
+        #endregion
+
+        #region Crafting Window
+        {
+
+        }
+        #endregion
+
+        #region Chatwindow
+        {
+
+        }
+        #endregion
+
+        DebugResize();
+        PlayerListResize();
+        DeadResize();
+    }
+
 	private void MouseCapture()
 	{
 		if(Input.GetMouseButtonDown(0))
@@ -150,8 +210,25 @@ public class HUD : MonoBehaviour {
 
 	void OnGUI()
 	{
+        
+
 		if(networkView.isMine)
 		{
+            GUI.skin = InvSkin;
+
+            if (width != Screen.width && height != Screen.height)
+            {
+                width = Screen.width;
+                height = Screen.height;
+                Resize();
+            }
+
+            if (isDead)
+            {
+                deadDraw();
+                return;
+            }
+
 
 			if(Event.current.keyCode == KeyCode.Return && Event.current.type == EventType.KeyDown)
 			{
@@ -164,16 +241,7 @@ public class HUD : MonoBehaviour {
 				ToggleChat();
 			}
 
-			GUI.skin = InvSkin;
-			Menu.SetFontSize(GUI.skin);
-			if(invStackStyle == null)
-			{
-				invStackStyle = new GUIStyle(GUI.skin.GetStyle("Label"));
-				invStackStyle.alignment = TextAnchor.LowerLeft;
-			}
 			
-			float sWidth = (float)Screen.width;
-			float sHeight = (float)Screen.height;
 
 			//Get some variables from the inventory.
 			GUI.tooltip = "";
@@ -218,11 +286,11 @@ public class HUD : MonoBehaviour {
 				chatColor.a = chatOpacity;
 				GUI.color = chatColor;
 
-				float chatWidth = sWidth * ChatWidthPercent;
+				float chatWidth = width * ChatWidthPercent;
 				float chatHeight = chatWidth * 0.8f;
-				float chatY = sHeight - chatHeight;
+				float chatY = height - chatHeight;
 				float chatTextHeight = chatHeight * 0.2f;
-				float chatTextY = sHeight - chatTextHeight;
+				float chatTextY = height - chatTextHeight;
 				chatScrollHeight = chatHeight * 0.8f;
 				chatScrollInnerH = chatFont.CalcHeight(new GUIContent(chatFull), chatWidth-12);
 				if(chatScrollInnerH < chatScrollHeight) chatScrollInnerH = chatScrollHeight;
@@ -259,6 +327,9 @@ public class HUD : MonoBehaviour {
 			if(showInventory)
 				Overlay(false);
 			craftingHover = -1;
+
+            PlayerListDraw();
+            DebugDraw();
 		}
 	}
 
@@ -266,21 +337,12 @@ public class HUD : MonoBehaviour {
 	{
 		if(windowID == windowInv)
 		{
-			//Measurements
-			float scrollViewWidth = inventoryScrollView.width-12;
 			
-			float invButtonSize = scrollViewWidth/6;
-			float invButtonMargin = invButtonSize * 0.1f;
-			float invButtonInner = invButtonSize - invButtonMargin * 2;
 			
-			float viewHeight = invButtonSize * Inventory.Items.Count;
-			if (viewHeight < inventoryScrollView.height)
-				viewHeight = inventoryScrollView.height;
-			Rect scrollRect = new Rect (0, 0, scrollViewWidth, viewHeight);
-			
+
 			
 			//If Item dropped into Inventory
-			if(inventoryScrollView.Contains(Event.current.mousePosition) && Input.GetMouseButtonUp(0) && dragSource==1)
+			if(invScrollView.Contains(Event.current.mousePosition) && Input.GetMouseButtonUp(0) && dragSource==1)
 			{
 				Debug.Log("Inventory Contains Mouse: " + dragIndex.ToString() + " : " + dragSource.ToString() + " : " + (dragIcon != null).ToString());
 				if(dragIndex > -1)
@@ -312,7 +374,7 @@ public class HUD : MonoBehaviour {
 			
 			
 			
-			inventoryScrollPosition = GUI.BeginScrollView (inventoryScrollView,inventoryScrollPosition, scrollRect, false, true);
+			inventoryScrollPosition = GUI.BeginScrollView (invScrollView,inventoryScrollPosition, invScrollInner, false, true);
 			{
 				//Inventory Slots
 				int y = 0;
@@ -634,11 +696,11 @@ public class HUD : MonoBehaviour {
 	/// <param name="text">Text.</param>
 	/// <param name="input">Input.</param>
 	/// <param name="time">Time.</param>
-	public static void HelperInput(string text, string input, float time)
+	public void HelperInput(string text, string input, float time)
 	{
-		Instance.helperInputText = text;
-		Instance.helperInputCommand = input;
-		Instance.helperInputTime = Time.time + time;
+		helperInputText = text;
+		helperInputCommand = input;
+		helperInputTime = Time.time + time;
 	}
 
 	/// <summary>
@@ -647,11 +709,11 @@ public class HUD : MonoBehaviour {
 	/// <param name="text">Text.</param>
 	/// <param name="time">Time.</param>
 	/// <param name="fade">Fade.</param>
-	public static void HelperMessage(string text, float time, float fade)
+	public void HelperMessage(string text, float time, float fade)
 	{
-		Instance.helperMessageText = text;
-		Instance.helperMessageTime = Time.time + time;
-		Instance.helperMessageFade = Time.time + time + fade;
+		helperMessageText = text;
+		helperMessageTime = Time.time + time;
+		helperMessageFade = Time.time + time + fade;
 	}
 
 	/// -- On Screen equipment Functions --
@@ -804,4 +866,197 @@ public class HUD : MonoBehaviour {
 			NetworkManager.Disconnect();
 		}
 	}
+
+    #region Debug
+
+    /// --- Debug Screen ---
+    /// 
+    /// Display debug stuff
+
+    private bool debugOn = false;
+
+    private float debugLineMargin = 0;
+    private float debugLineSize = 0;
+    private Rect debugRect;
+    private GUIStyle debugLabelStyle;
+
+    public void DebugToggle()
+    {
+        debugOn = !debugOn;
+    }
+
+    private void DebugResize()
+    {
+        float w = Screen.width * 0.2f;
+        float lh = w * 0.04f;
+        debugLineSize = lh * 1.5f;
+        debugLineMargin = lh * 0.1f;
+
+        debugRect = new Rect(0, 0, w, debugLineSize * 8);
+        debugLabelStyle = Blurift.BluStyle.CustomStyle(GUI.skin.label, lh);
+
+    }
+
+    private void DebugDraw()
+    {
+        if(debugOn)
+        {
+            GUI.color = Color.black;
+            GUI.DrawTexture(debugRect, Filler);
+            GUI.color = Color.white;
+
+            int hLock = 0;
+
+            //Draw Debug Text;
+            GUI.Label(new Rect(10, (debugLineSize * hLock) + debugLineMargin, debugRect.width, debugLineSize), "Rotation: " + transform.rotation.eulerAngles.z.ToString(), debugLabelStyle); hLock++;
+            GUI.Label(new Rect(10, (debugLineSize * hLock) + debugLineMargin, debugRect.width, debugLineSize), "Position: " + transform.position.ToString(), debugLabelStyle); hLock++;
+            GUI.Label(new Rect(10, (debugLineSize * hLock) + debugLineMargin, debugRect.width, debugLineSize), "Health: " + Controller.Health.Health + " / " + Controller.Health.HealthMax, debugLabelStyle); hLock++;
+            GUI.Label(new Rect(10, (debugLineSize * hLock) + debugLineMargin, debugRect.width, debugLineSize), "Hunger: " + Controller.Health.Hunger + " / " + Controller.Health.HungerMax, debugLabelStyle); hLock++;
+            GUI.Label(new Rect(10, (debugLineSize * hLock) + debugLineMargin, debugRect.width, debugLineSize), "Stamina: " + (int)Controller.Health.Stamina + " / " + (int)Controller.Health.StaminaMax, debugLabelStyle); hLock++;
+            GUI.Label(new Rect(10, (debugLineSize * hLock) + debugLineMargin, debugRect.width, debugLineSize), "Velocity: " + rigidbody2D.velocity.ToString(), debugLabelStyle); hLock++;
+            GUI.Label(new Rect(10, (debugLineSize * hLock) + debugLineMargin, debugRect.width, debugLineSize), "Ping: " + NetworkManager.Instance.PlayerStates[Network.player].Ping, debugLabelStyle); hLock++;
+            GUI.Label(new Rect(10, (debugLineSize * hLock) + debugLineMargin, debugRect.width, debugLineSize), "FPS: " + (1.0f / Time.deltaTime), debugLabelStyle);
+        }
+        else
+        {
+            GUI.Label(new Rect(10, debugLineMargin, debugRect.width, debugLineSize), "Press (L) to show debug", debugLabelStyle);
+        }
+    }
+    #endregion
+
+    #region Player List
+
+    private bool playerListOn = false;
+
+    private int playerListCount = 0;
+    private int playerListIndex = 0;
+    private float playerListLineHeight;
+    private float playerListLeftMargin;
+    private float playerListLineMargin;
+    private float playerListLineMax = 0;
+    private float playerListPingX = 0;
+    private float playerListPingWidth = 0;
+    private float playerListLineWidth = 0;
+
+    private Rect playerListRect;
+    private Rect playerListInner;
+    private GUIStyle playerListLabel;
+    private GUIStyle playerListTitle;
+
+    private Color playerListColor = new Color(0.2f, 0.2f, 0.2f);
+
+    private void PlayerListResize()
+    {
+        float width = Screen.width * 0.4f;
+        float height = Screen.height * 0.5f;
+
+
+
+        playerListRect = new Rect(width*0.1f, Screen.height * 0.125f, width, height);
+        playerListInner = new Rect(playerListRect.x + playerListRect.width * 0.1f, playerListRect.y + playerListRect.height * 0.3f, playerListRect.width * 0.8f, playerListRect.height * 0.6f);
+
+        playerListLineMax = playerListInner.height * 0.125f;
+
+        playerListPingX = playerListInner.width * 0.71f + playerListInner.x;
+        playerListPingWidth = playerListInner.width * 0.27f;
+        playerListLineWidth = playerListInner.width * 0.67f;
+        playerListLeftMargin = playerListInner.x + playerListRect.width*0.05f;
+    }
+
+    private void PlayerListDraw()
+    {
+
+        if (!playerListOn)
+            return;
+        GUI.Box(playerListRect, GUIContent.none);
+        GUI.color = playerListColor;
+        GUI.DrawTexture(playerListInner, Filler);
+        GUI.color = Color.white;
+
+        if (playerListCount != NetworkManager.PlayerCount())
+        {
+            playerListCount = NetworkManager.PlayerCount();
+
+            playerListLineHeight = playerListInner.height / NetworkManager.PlayerCount();
+            if (playerListLineHeight > playerListLineMax)
+                playerListLineHeight = playerListLineMax;
+
+            playerListLabel = Blurift.BluStyle.CustomStyle(GUI.skin.label, playerListLineHeight * 0.8f);
+            playerListLineMargin = playerListLineHeight * 0.1f;
+
+
+        }
+
+        playerListIndex = 0;
+        //PlayerListDrawLine(Network.player, "ME");
+        //playerListIndex++;
+        foreach(KeyValuePair<NetworkPlayer, NetworkManager.NetworkPlayerState> p in NetworkManager.Instance.PlayerStates)
+        {
+            PlayerListDrawLine(p.Value.Ping, p.Value.Name);
+            playerListIndex++;
+        }
+
+    }
+
+    private void PlayerListDrawLine(int ping, string name)
+    {
+        GUI.Label(new Rect(playerListLeftMargin, playerListInner.y + (playerListIndex * playerListLineHeight) + playerListLineMargin, playerListLineWidth, playerListLineHeight), name, playerListLabel);
+        Rect pingRect = new Rect(playerListPingX, playerListInner.y + (playerListIndex * playerListLineHeight) + playerListLineMargin, playerListPingWidth, playerListLineHeight);
+        PlayerListDrawPing(pingRect, ping);
+    }
+
+    private void PlayerListDrawPing(Rect rect, int ping)
+    {
+        Color original = GUI.color;
+        if (ping > 200)
+            GUI.color = new Color(1,0.3f, 0.3f);
+        else if (ping > 100)
+            GUI.color = new Color(1,0.5f, 0.5f);
+        else
+            GUI.color = new Color(0,1, 0.3f);
+        GUI.Label(rect, ping.ToString(), playerListLabel);
+
+        GUI.color = original;
+    }
+
+    public void PlayerListToggle()
+    {
+        playerListOn = !playerListOn;
+    }
+
+    #endregion
+
+    #region Player Dead
+
+    private bool isDead;
+
+    public void SetDead(bool d)
+    {
+        isDead = d;
+
+    }
+
+    private Rect deadRect;
+
+    private GUIStyle deadStyle;
+
+    private Color deadColor;
+
+    private void DeadResize()
+    {
+        deadRect = new Rect(width * 0.25f, height * 0.42f, width * 0.5f, height * 0.16f);
+        deadStyle = Blurift.BluStyle.CustomStyle(GUI.skin.label, deadRect.height * 0.65f);
+        deadStyle.alignment = TextAnchor.MiddleCenter;
+
+        deadColor = Color.red;
+    }
+
+    private void deadDraw()
+    {
+        GUI.color = deadColor;
+        GUI.Label(deadRect, "You are dead.", deadStyle);
+        GUI.color = Color.white;
+    }
+
+    #endregion
 }

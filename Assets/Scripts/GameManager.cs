@@ -8,6 +8,8 @@ public class GameManager : MonoBehaviour {
 	public static GameManager Instance;
 	public static Inventory ControllingInventory;
 
+    public static List<Sprite> HairStyles;
+
 	public static Vector3 MousePosition = Vector3.zero;
 
 	void Start()
@@ -16,8 +18,8 @@ public class GameManager : MonoBehaviour {
 
 		if(Debug.isDebugBuild)
 		{
-			Debug.Log("Logger: " + Application.dataPath);
-			Debug.Log("Logger: " + Application.persistentDataPath);
+			//Debug.Log("Logger: " + Application.dataPath);
+			//Debug.Log("Logger: " + Application.persistentDataPath);
 		}
 
 	}

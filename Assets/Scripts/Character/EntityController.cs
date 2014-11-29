@@ -7,8 +7,9 @@ public class EntityController : MonoBehaviour {
 	#region Fields
 
 	//Movement
-	private float speed = 5;
+	public float Speed = 20;
 	private float maxRotation = 360;
+    private bool run = false;
 
 	//Network syncs
 	private float lastSynchronationTime = 0f;
@@ -28,6 +29,12 @@ public class EntityController : MonoBehaviour {
 	{
 		get { return health; }
 	}
+
+    public bool IsRunning
+    {
+        get { return run; }
+        set { this.run = value;}
+    }
 
 	#endregion
 
@@ -71,8 +78,23 @@ public class EntityController : MonoBehaviour {
 		if(target != Vector3.zero)
 			target.Normalize();
 
-		transform.position += target * Time.deltaTime * speed;
+        float stam = health.Stamina;
+
+        Vector3 move = target * Speed;// * Time.deltaTime * speed;
+        if (run && !health.Exhausted())
+        {
+            float bonus = (stam / 100) * 0.3f;
+
+            move *= 1 + bonus;
+
+            health.UseStamina();
+        }
+        else if (health.Exhausted())
+            move *= 0.7f;
+        
+		//transform.position += move;
         //rigidbody2D.MovePosition(transform.position + target * Time.deltaTime * speed);
+        rigidbody2D.AddForce(move);
 	}
 
 	/// <summary>
@@ -85,19 +107,25 @@ public class EntityController : MonoBehaviour {
 		float max = maxRotation * Time.deltaTime;
 
 		float difference = angle - current;
-		float neg = 1;
 
-		if(difference < 0)
-		{
-			difference *= -1;
-			neg = -1;
-		}
+		if(difference < -180)
+            difference += 360;
 		if(difference > 180)
 			difference -= 360;
 
-		difference = Mathf.Min (difference, max);
+        if (difference < 0)
+        {
+            max *= -1;
+            if (difference < max)
+                difference = max;
+        }
+        else
+        {
+            if (difference > max)
+                difference = max;
+        }
 
-		transform.Rotate (Vector3.forward, difference * neg);
+		transform.Rotate (Vector3.forward, difference);
 	}
 
 	private void SyncedMovement()

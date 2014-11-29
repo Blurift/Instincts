@@ -45,7 +45,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 100000}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 238.676804, y: 155.159653, z: 0}
+  m_LocalPosition: {x: 3.2576623, y: 1.04746056, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 400002}
@@ -58,7 +58,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 100002}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: .834716797, z: 0}
+  m_LocalPosition: {x: 0, y: .195879459, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 400000}
@@ -120,7 +120,7 @@ MonoBehaviour:
   seeker: {fileID: 0}
   Speed: 1.25
   BaseSpeed: 1.25
-  MaxRotation: 200
+  MaxRotation: 250
   ChaseModifier: 2
   PatrolPath: {fileID: 0}
   PatrolPathIndex: 0
@@ -136,18 +136,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   health: 0
-  healthMax: 100
+  healthMax: 50
   hunger: 0
   hungerMax: 500
   stamina: 0
   staminaMax: 100
-  HungerEnabled: 1
-  StaminaEnabled: 1
+  HungerEnabled: 0
+  StaminaEnabled: 0
   HealthRegenerates: 1
   HitEffects:
-  - {fileID: 0}
-  HitDropEffects:
-  - {fileID: 0}
+  - {fileID: 100000, guid: ecfd816de157f834cb04ae1e1cfe3434, type: 2}
+  HitDropEffects: []
   RegenDelay: 10
 --- !u!114 &11400004
 MonoBehaviour:
@@ -238,7 +237,7 @@ SpriteRenderer:
   m_ScaleInLightmap: 1
   m_SortingLayerID: 1074530123
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 3391aa3155828b841b5ce44100fe975c, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 9dcb657750ac3c9458e5d971b9aadc59, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
 --- !u!1001 &100100000
 Prefab:

@@ -27,7 +27,7 @@ public class AILookForPlayer : AIAction {
 
 			for(int i = 0; i < players.Length; i++)
 			{
-				float currentPDistance = Helper.DistanceFloatFromTarget(players[i].transform.position, pos);
+				float currentPDistance = Vector2.Distance(players[i].transform.position, pos);
 				if(currentPDistance < playerDistance)
 				{
 					RaycastHit2D hit = Physics2D.Raycast(ParentAI.transform.position, players[i].transform.position, currentPDistance, ParentAI.Avoid);

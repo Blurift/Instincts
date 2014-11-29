@@ -90,17 +90,16 @@ public class World : MonoBehaviour, GameEventListener
     {
         if(spawnLast + SpawnMinWait < Time.time)
         {
-            Debug.Log("World: Min spawn time reached");
             if(AIManager.Instance.Enemies.Count < EnemyThreshold -5)
             {
-                Debug.Log("World: Spawn Points " + SpawnPoints.Count);
+                //Debug.Log("World: Spawn Points " + SpawnPoints.Count);
                 Vector3 loc = Vector3.zero;
                 if(SpawnPoints.Count > 0)
                     loc = SpawnPoints[Random.Range(0,SpawnPoints.Count)];
 
                 if (loc != Vector3.zero)
                 {
-                    Debug.Log("World: Spawn Enemies");
+                    //Debug.Log("World: Spawn Enemies");
                     SpawnMeteoriteRPC(loc);
                     spawnLast = Time.time;
                     //int spawnAmount = Mathf.Min(SpawnLimit, EnemyThreshold - AIManager.Instance.Enemies.Count);

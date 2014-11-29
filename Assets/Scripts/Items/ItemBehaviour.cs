@@ -50,13 +50,15 @@ public class ItemBehaviour {
 			if(IsRangedWeapon)
 			{
 				ItemRangedEquip e = (ItemRangedEquip)currentEquip.GetComponent(typeof(ItemRangedEquip));
-				e.SetDamage(Damage.Effect.ToString(), Damage.Damage, Damage.AltDamage);
+				//e.SetDamage(Damage.Effect.ToString(), Damage.Damage, Damage.AltDamage);
+                controller.EquippedSetDamage(Damage.Effect.ToString(), Damage.Damage, Damage.AltDamage);
 			}
 
 			if(IsMeleeWeapon)
 			{
 				ItemMeleeEquipped e = (ItemMeleeEquipped)currentEquip.GetComponent(typeof(ItemMeleeEquipped));
-				e.SetDamage(Damage.Effect.ToString(), Damage.Damage, Damage.AltDamage);
+				//e.SetDamage(Damage.Effect.ToString(), Damage.Damage, Damage.AltDamage);
+                controller.EquippedSetDamage(Damage.Effect.ToString(), Damage.Damage, Damage.AltDamage);
 			}
 		}
 
@@ -81,54 +83,38 @@ public class ItemBehaviour {
 
 	public virtual void UseItem(PlayerController controller, Item item)
 	{
-		if(IsRangedWeapon)
-		{
-			if(Charges > 0)
-			{
-				if(!Network.isServer)
-					controller.networkView.RPC("UseEquipped", RPCMode.Server);
-				else
-					controller.UseEquipped();
+        //Use Effects
+        if (!Network.isServer)
+            controller.networkView.RPC("UseEquipped", RPCMode.Server);
+        controller.UseEquipped();
 
-				//Get the vector position the gun is aiming at.
-				Vector3 aim3 = Camera.main.ScreenToWorldPoint (Input.mousePosition);
-				Vector2 aim = new Vector2 (aim3.x, aim3.y);
+		if((IsRangedWeapon && Charges > 0) || IsMeleeWeapon)
+		{
+			//Get the vector position the gun is aiming at.
+			Vector3 aim = Camera.main.ScreenToWorldPoint (Input.mousePosition);
 				
-				if(currentEquip != null)
-				{
-					//if(Projectile != null && Projectile != "")
-					//{
-					//	//EffectManager.CreateProjectile(controller.EquipPosition.position, Projectile, controller.transform.rotation, Vector3.Distance(aim3,transform.position));
-					//}
-					
-					ItemRangedEquip ranged = (ItemRangedEquip)currentEquip.GetComponent(typeof(ItemRangedEquip));
-					ranged.Fire(aim.x,aim.y);
-					Charges--;
-				}
-			}
-			controller.Inventory.ChangeAtts(item);
-		}
-
-		if(IsMeleeWeapon)
-		{
-			Vector3 aim3 = Camera.main.ScreenToWorldPoint (Input.mousePosition);
-			Vector3 aim = new Vector3 (aim3.x, aim3.y,0);
-			
 			if(currentEquip != null)
 			{
-				controller.networkView.RPC("UseEquipped", RPCMode.Server);
-				ItemMeleeEquipped ranged = (ItemMeleeEquipped)currentEquip.GetComponent(typeof(ItemMeleeEquipped));
-				ranged.Use(controller.transform.position, aim);
-				controller.UseEquipped();
+
+                controller.HitEquipped(aim);
+
+                if (IsRangedWeapon)
+                {
+                    Charges--;
+                    controller.Inventory.ChangeAtts(item);
+                }
 			}
+			
+			
 		}
 
+        //Cure Bleeding Status
 		if(CuresBleeding)
 		{
 			HealthSystem health = (HealthSystem)controller.GetComponent (typeof(HealthSystem));
 			if (health.ContainsHealthEffect(typeof(HealthBleeding)))
 			{
-				health.networkView.RPC("BleedingRPC", RPCMode.Server, false);
+                health.ChangeBleeding(false);
 				item.TakeFromStack(1);
 			}
 		}
@@ -140,7 +126,7 @@ public class ItemBehaviour {
 		if(RestoresHunger)
 		{
 			HealthSystem health = (HealthSystem)controller.GetComponent (typeof(HealthSystem));
-			health.Hunger = health.Hunger + HungerToRestore;
+            health.ChangeHunger(health.Hunger + HungerToRestore);
 			//health.networkView.RPC ("ChangeHunger", RPCMode.Server, health.Hunger + HungerToRestore);
 			item.TakeFromStack(1);
 		}

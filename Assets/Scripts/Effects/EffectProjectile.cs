@@ -43,14 +43,17 @@ public class EffectProjectile : MonoBehaviour {
 
 	void OnCollisionEnter2D(Collision2D collision)
 	{
-		if(collision.gameObject != Source)
-			Destroy (gameObject);
+        if (collision.gameObject == Source)
+            return;
+        
+        Destroy (gameObject);
 
 		HealthSystem h = collision.gameObject.GetComponent<HealthSystem> ();
 
 		if(h != null)
 		{
 			h.TakeDamage(Damage, Source);
+            Debug.Log("Projecitle hit for " + Damage.Damage);
 		}
 	}
 }

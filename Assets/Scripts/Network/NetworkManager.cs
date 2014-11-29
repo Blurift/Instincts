@@ -11,7 +11,7 @@ public class NetworkManager : MonoBehaviour {
 	public static NetworkManager Instance = null;
 
 	//Static info
-	private const string typeName = Menu.TypeName;
+	private const string typeName = Game.TypeName;
 
 	public static ServerSettings Settings;
 	private string serverSysFile = "";
@@ -23,10 +23,7 @@ public class NetworkManager : MonoBehaviour {
 	public GameObject[] PlayerPrefabList;
 
 	//Players
-	//private Dictionary<NetworkPlayer,GameObject> Players;
-	//private Dictionary<NetworkPlayer, string> PlayerNames;
-	//private Dictionary<NetworkPlayer, string> PlayerUIDs;
-	private Dictionary<NetworkPlayer, NetworkPlayerState> PlayerStates;
+	public Dictionary<NetworkPlayer, NetworkPlayerState> PlayerStates;
 
 	//StateSave
 	private float stateLastSync = 0;
@@ -69,6 +66,11 @@ public class NetworkManager : MonoBehaviour {
 		return null;
 	}
 
+    public static int PlayerCount()
+    {
+        return Instance.PlayerStates.Count;
+    }
+
 	void OnMasterServerEvent(MasterServerEvent msEvent)
 	{
 		if(msEvent == MasterServerEvent.RegistrationFailedGameName)
@@ -79,11 +81,13 @@ public class NetworkManager : MonoBehaviour {
 			GameManager.WriteMessage("Server Registration Failed: Server not running");
 		if(msEvent == MasterServerEvent.RegistrationSucceeded)
 			GameManager.WriteMessage("Server Registraion Suceeded");
+        
 	}
 
 	// Use this for initialization
 	void Start () {
 		Instance = this;
+        PlayerStates = new Dictionary<NetworkPlayer, NetworkPlayerState>();
 
 		GameManager.WriteMessage("Deciding between host or client.");
 		if(Server)
@@ -109,6 +113,8 @@ public class NetworkManager : MonoBehaviour {
 				SaveState ();
 				stateLastSync = Time.time;
 			}
+
+            SetPlayersPing();
 		}
 	}
 
@@ -132,7 +138,6 @@ public class NetworkManager : MonoBehaviour {
 		Instance.PlayerStates = new Dictionary<NetworkPlayer, NetworkPlayerState> ();
 
 		ServerSettings settings = Settings;
-		bool setup = false;
 		
 		if(settings == null)
 		{
@@ -169,7 +174,7 @@ public class NetworkManager : MonoBehaviour {
 	{
 		//Debug.Log(Instance.networkView.viewID.ToString ());
 		//Debug.Log ("Logging to server " + user + " : " + pass + " : " + Network.player.ToString ());
-		Instance.networkView.RPC ("LoginToServer", RPCMode.Server, user, pass, Network.player, Network.AllocateViewID ());
+		Instance.networkView.RPC ("LoginToServer", RPCMode.Server, user, pass, Network.player, Network.AllocateViewID (), Menu.HairColor, Menu.HairStyle, Menu.TopColor);
 	}
 
 	private void KillServer()
@@ -196,7 +201,7 @@ public class NetworkManager : MonoBehaviour {
 		GameManager.WriteMessage ("Server Started");
 		//TODO
 		//Check if dedicated server
-		LoginToServer (Menu.MainProfile.Name, Menu.MainProfile.UID, Network.player, Network.AllocateViewID ());
+        LoginToServer(Menu.MainProfile.Name, Menu.MainProfile.UID, Network.player, Network.AllocateViewID(), Menu.HairColor, Menu.HairStyle, Menu.TopColor);
 	}
 
 	void OnPlayerConnected(NetworkPlayer player)
@@ -212,30 +217,45 @@ public class NetworkManager : MonoBehaviour {
 	}
 
 	[RPC]
-	void LoginToServer(string user, string uid, NetworkPlayer player, NetworkViewID id)
+    void LoginToServer(string user, string uid, NetworkPlayer player, NetworkViewID id, Vector3 hair, int hairStyle, Vector3 top)
 	{
 		if(Network.isServer)
 		{
 			GameManager.NetMessage(user + " joined the game");
 			//Logger.Write("Player " + player.ToString() + " : " + user + " - " +player.ipAddress + " trying to log in");
-			
+
+            networkView.RPC("RegisterPlayer", RPCMode.Others, player, user);
+
 			//Loop through all connected players and send details.
 			//networkView.RPC("RandomMessage", player, "Sending players through");
 			foreach(KeyValuePair<NetworkPlayer, NetworkPlayerState> pair in PlayerStates)
 			{
+                networkView.RPC("RegisterPlayer", player, pair.Key, pair.Value.Name);
 				if(pair.Key != player)
 				{
+                    Color hC = pair.Value.HairColor;
+                    Vector3 hV = new Vector3(hC.r, hC.g, hC.b);
+
+                    Color tC = pair.Value.TopColor;
+                    Vector3 tV = new Vector3(tC.r, tC.g, tC.b);
+
 					Debug.Log("Sending player data : " + pair.Value.ToString() + " to " + player.ToString() + " : " + id.ToString());
-                    networkView.RPC("SpawnPlayer", player, pair.Value.GameObject.networkView.viewID, pair.Value.GameObject.transform.position, PlayerStates[pair.Key].Name);
-					//networkView.RPC("RandomMessage", player, pair.Value.networkView.viewID.ToString() + "being sent through");
+                    networkView.RPC("SpawnPlayer", player, pair.Value.GameObject.networkView.viewID, pair.Value.GameObject.transform.position, PlayerStates[pair.Key].Name,
+                        hV, pair.Value.HairStyle, tV);
+
+
 					pair.Value.GameObject.networkView.SetScope(player, true);
-					pair.Value.GameObject.networkView.RPC("ResetNetworkView", pair.Key);
+					//pair.Value.GameObject.networkView.RPC("ResetNetworkView", pair.Key);
 				}
 			}
 
+            //Set Up player state;
 			NetworkPlayerState playerState = new NetworkPlayerState();
 			playerState.Name =user;
 			playerState.UID = uid;
+            playerState.HairColor = new Color(hair.x,hair.y,hair.z);
+            playerState.TopColor = new Color(top.x,top.y,top.z);
+            playerState.HairStyle = hairStyle;
 
 			PlayerStates[player] = playerState;
 
@@ -246,13 +266,13 @@ public class NetworkManager : MonoBehaviour {
 			PlayerController.PlayerState state = LoadPlayerState(id,player);
 			if(state == null)
 			{
-				SpawnPlayer(id, GetSpawnLocation(), user);
+				SpawnPlayer(id, GetSpawnLocation(), user, hair,hairStyle,top);
 				PlayerStates[player].GameObject.GetComponent<Inventory>().AddToInventory("WoodStick",1,-1,"E");
 				PlayerStates[player].GameObject.GetComponent<Inventory>().AddToInventory("Cloth",1);
 			}
 			else
 			{
-				SpawnPlayer(id, state.Position, user);
+				SpawnPlayer(id, state.Position, user, hair, hairStyle, top);
 				PlayerStates[player].GameObject.GetComponent<PlayerController>().SetPlayerState(state);
 			}
 
@@ -275,62 +295,128 @@ public class NetworkManager : MonoBehaviour {
 		}
 	}
 
-	[RPC]
-	void SpawnPlayer(NetworkViewID id, Vector3 pos, string name)
+    #region Player State system
+
+    [RPC]
+    void RegisterPlayer(NetworkPlayer player, string name)
+    {
+        NetworkPlayerState state = new NetworkPlayerState();
+        state.Name = name;
+
+        PlayerStates.Add(player, state);
+    }
+
+    [RPC]
+    void DeregisterPlayer(NetworkPlayer player)
+    {
+        if (PlayerStates.ContainsKey(player))
+            PlayerStates.Remove(player);
+    }
+
+    float pingNext = 0;
+
+    void SetPlayersPing()
+    {
+        if (pingNext > Time.time)
+            return;
+
+        foreach(KeyValuePair<NetworkPlayer, NetworkPlayerState> p in PlayerStates)
+        {
+            p.Value.Ping = Network.GetAveragePing(p.Key);
+            networkView.RPC("SetPlayersPingRPC", RPCMode.Others, p.Key, p.Value.Ping);
+        }
+
+        pingNext = Time.time + 1;
+    }
+
+    [RPC]
+    void SetPlayersPingRPC(NetworkPlayer player, int ping)
+    {
+        if (PlayerStates.ContainsKey(player))
+            PlayerStates[player].Ping = ping;
+    }
+
+    #endregion
+
+    [RPC]
+    void SpawnPlayer(NetworkViewID id, Vector3 pos, string name, Vector3 hair, int hairStyle, Vector3 top)
 	{
 		Debug.Log ("Spawning Player " + pos.ToString());
 
-		if(Network.isServer)
-		{
-			if(PlayerPrefab != null)
-			{
-				//Respawn player
-				GameObject newPlayer = (GameObject)GameObject.Instantiate(PlayerPrefab, pos, Quaternion.identity);
-				
-				newPlayer.networkView.viewID = id;
-				newPlayer.name = name;
-				PlayerController p = newPlayer.GetComponent<PlayerController>();
-				p.PlayerName = name;
-				
-				//Players[id.owner] = newPlayer;
-				PlayerStates[id.owner].GameObject = newPlayer;
-				
-				networkView.RPC("SpawnPlayer", RPCMode.Others, id, pos, name);
-			}
-		}
-		else if(Network.isClient)
-		{
-			GameObject newPlayer = (GameObject)GameObject.Instantiate(PlayerPrefab, pos, Quaternion.identity);
+		
 
-			PlayerController p = newPlayer.GetComponent<PlayerController>();
-			p.PlayerName = name;
-			p.name = name;
 
-			newPlayer.networkView.viewID = id;
-			//GameManager.WriteMessage("Spawned as " + pos.ToString());
-		}
+        GameObject newPlayer = (GameObject)GameObject.Instantiate(PlayerPrefab, pos, Quaternion.identity);
+        newPlayer.networkView.viewID = id;
+        newPlayer.name = name;
 
+        PlayerController p = newPlayer.GetComponent<PlayerController>();
+        p.PlayerName = name;
+        p.name = name;
+        p.Hair.color = new Color(hair.x, hair.y, hair.z);
+        p.Hair.sprite = Menu.HairStyles[hairStyle];
+        p.SetTopColor(new Color(top.x, top.y, top.z));
+
+        if (Network.isServer)
+        {
+            PlayerStates[id.owner].GameObject = newPlayer;
+            networkView.RPC("SpawnPlayer", RPCMode.Others, id, pos, name, hair, hairStyle, top);
+        }
+
+        newPlayer.SetActive(true);
 
 	}
 
+    public static void PlayerDied(NetworkPlayer player)
+    {
+        if (Network.isServer)
+            Instance.PlayerDiedRPC(player);
+    }
+
+    [RPC]
+    void PlayerDiedRPC(NetworkPlayer player)
+    {
+        GameManager.ServerMessage(PlayerStates[player].Name + " has been killed");
+    }
+
+    public static void Respawn()
+    {
+        //if (Network.isServer)
+        //    Instance.RespawnPlayer(Network.player, Network.AllocateViewID());
+        //else
+        //    Instance.networkView.RPC("RespawnPlayer", RPCMode.Server, Network.player, Network.AllocateViewID());
+
+        if (Network.isServer)
+            Instance.RespawnPlayer(Network.player);
+        else
+            Instance.networkView.RPC("RespawnPlayer", RPCMode.Server, Network.player);
+    }
+
 	[RPC]
-	void RespawnPlayer(NetworkPlayer player, NetworkViewID id)
+	void RespawnPlayer(NetworkPlayer player)
 	{
 		if(Network.isServer)
 		{
 			Debug.Log("Respawning player");
-			DeletePlayerState(player);
+			//DeletePlayerState(player);
 
-			Network.Destroy (PlayerStates[player].GameObject);
+			//Network.Destroy (PlayerStates[player].GameObject);
 
-			SpawnPlayer (id, GetSpawnLocation (), PlayerStates[player].Name);
+            //Vector3 hairColor = new Vector3(PlayerStates[player].HairColor.r, PlayerStates[player].HairColor.g, PlayerStates[player].HairColor.b);
+            //Vector3 topColor = new Vector3(PlayerStates[player].TopColor.r, PlayerStates[player].TopColor.g, PlayerStates[player].TopColor.b);
+
+            //SpawnPlayer(id, GetSpawnLocation(), PlayerStates[player].Name, hairColor, PlayerStates[player].HairStyle, topColor);
+
+            Vector3 l = GetSpawnLocation();
+            PlayerController p = PlayerStates[player].GameObject.GetComponent<PlayerController>();
+
+            p.PlayerRespawn(l);
 
 			//Give player default weapon.
-			//Players[player].GetComponent<Inventory>().AddToInventory("WoodStick",1);
 			PlayerStates[player].GameObject.GetComponent<Inventory>().AddToInventory("WoodStick",1,-1,"E");
 			PlayerStates[player].GameObject.GetComponent<Inventory>().AddToInventory("Cloth",1);
 
-			GameManager.ServerMessage(PlayerStates[player].Name + " has been killed");
+			
 		}
 	}
 
@@ -346,6 +432,7 @@ public class NetworkManager : MonoBehaviour {
 
 	void OnPlayerDisconnected(NetworkPlayer player)
 	{
+        networkView.RPC("DeregisterPlayer", RPCMode.Others, player);
 		SavePlayerState (player);
 		GameManager.ServerMessage(PlayerStates[player].Name + " left the game");
 		//Logger.Write ("Player " + player.ToString () + " has left or been disconnected.");
@@ -373,14 +460,6 @@ public class NetworkManager : MonoBehaviour {
 	public static void RemoveNetworkBuffer(NetworkViewID viewID)
 	{
 		Instance.RemoveNetworkBufferedRPC(viewID);
-	}
-
-	public static void Respawn()
-	{
-		if(Network.isServer)
-			Instance.RespawnPlayer(Network.player, Network.AllocateViewID());
-		else
-			Instance.networkView.RPC ("RespawnPlayer", RPCMode.Server, Network.player, Network.AllocateViewID());
 	}
 
 	[RPC]
@@ -473,12 +552,16 @@ public class NetworkManager : MonoBehaviour {
 		return null;
 	}
 
-	private class NetworkPlayerState
+	public class NetworkPlayerState
 	{
 		public string Name;
 		public GameObject GameObject;
 		public string UID;
+        public Color HairColor;
+        public Color TopColor;
+        public int HairStyle;
 		public bool Ready = false;
+        public int Ping = 0;
 	}
 }
 

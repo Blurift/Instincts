@@ -44,8 +44,8 @@ public class MenuHost {
 		float textFieldHeight = textFieldWidth * 0.15f;
 		float textMargin = Screen.width * 0.015f;
 
-		GUIStyle textField = Menu.GetCustomStyleFont (GUI.skin.textField, 0.03f);
-		GUIStyle labelFont = Menu.GetCustomStyleFont (Menu.LabelLeft, 1);
+		GUIStyle textField = Blurift.BluStyle.CustomStyle (GUI.skin.textField, 0.03f);
+        GUIStyle labelFont = Blurift.BluStyle.CustomStyle (Menu.LabelLeft, 1);
 
 		StyleHelper.SetFontSize (textField, textFieldHeight * 0.4f);
 		StyleHelper.SetFontSize (labelFont, textFieldHeight * 0.7f);
