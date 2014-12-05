@@ -41,8 +41,13 @@ public class HealthSystem : MonoBehaviour {
 	public GameObject[] HitEffects;
 	public GameObject[] HitDropEffects;
 
+    public GameObject DeathEffectPrefab;
+    public GameObject DeathRemainsPrefab;
+
     private float useStaminaUntil = 0;
     private bool exhausted = false;
+
+    private bool isDead = false;
 
 	#endregion
 
@@ -313,7 +318,18 @@ public class HealthSystem : MonoBehaviour {
 	{
 		if(Network.isServer)
 		{
-			//Debug.Log("Player " + networkView.owner.ToString() + " died.");
+            if (!isDead)
+            {
+                if (DeathEffectPrefab != null)
+                {
+                    EffectManager.CreateNetworkEffect(transform.position, DeathEffectPrefab.name);
+                }
+
+                if (DeathRemainsPrefab != null)
+                {
+                    EffectManager.CreateNetworkEffect(transform.position, DeathRemainsPrefab.name, transform.rotation);
+                }
+            }
 
 			if(Death == null)
 			{
@@ -324,6 +340,8 @@ public class HealthSystem : MonoBehaviour {
 			{
 				Death();
 			}
+
+            isDead = true;
 		}
 	}
 

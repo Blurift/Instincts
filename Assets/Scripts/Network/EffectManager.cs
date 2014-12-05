@@ -98,7 +98,7 @@ public class EffectManager : MonoBehaviour {
 	void CreateEffectRPC(Vector3 pos, string effect, Quaternion rotation)
 	{
         if (EffectDictionary.ContainsKey(effect))
-		{
+        {
             GameObject g = (GameObject)Instantiate(EffectDictionary[effect].Effect, pos, rotation);
 
             if (EffectDictionary[effect].Type == EffectType.Static)
@@ -106,12 +106,16 @@ public class EffectManager : MonoBehaviour {
                 Effect e = new Effect(g, EffectDictionary[effect].Time, rotation);
                 staticEffects.Add(e);
             }
-		}
+        }
+        else
+            Debug.LogError("Effect (" + effect + ") does no exist.");
 	}
 
 	public static void CreateNetworkEffect(Vector3 pos, string effect, Quaternion rotation)
 	{
-		Instance.networkView.RPC ("CreateEffectRPC", RPCMode.All, pos, effect, rotation);
+
+        Instance.CreateEffectRPC(pos, effect, rotation);
+        Instance.networkView.RPC("CreateEffectRPC", RPCMode.Others, pos, effect, rotation);
 	}
 
 	public static void CreateNetworkEffect(Vector3 pos, string effect)

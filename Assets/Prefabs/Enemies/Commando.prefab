@@ -147,6 +147,8 @@ MonoBehaviour:
   HitEffects:
   - {fileID: 100000, guid: ecfd816de157f834cb04ae1e1cfe3434, type: 2}
   HitDropEffects: []
+  DeathEffectPrefab: {fileID: 0}
+  DeathRemainsPrefab: {fileID: 100008, guid: 39a69f2f6cf41e24f87516926fe6513f, type: 2}
   RegenDelay: 10
 --- !u!114 &11400004
 MonoBehaviour:

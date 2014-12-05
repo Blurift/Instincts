@@ -24,7 +24,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 100000}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -13.4407806, y: .568422318, z: -.037109375}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -60,7 +60,7 @@ MonoBehaviour:
   - {fileID: 100000, guid: 00fd1437ca723a44ea64e974fc526478, type: 2}
   - {fileID: 100000, guid: 7c8740760caf1bd4c8df6aed29d71ddb, type: 2}
   - {fileID: 100000, guid: 4af3432d3f5e4d04f8823157a774b12b, type: 2}
-  - {fileID: 0}
+  - {fileID: 100008, guid: 35097fa3b77c36948a9bb46c7e9bda6a, type: 2}
   EffectListings:
   - Type: 0
     Effect: {fileID: 100000, guid: 0232009edfd045b4db3c5d2b23d7b5cb, type: 2}
@@ -120,7 +120,7 @@ MonoBehaviour:
     Effect: {fileID: 100000, guid: 4af3432d3f5e4d04f8823157a774b12b, type: 2}
     Time: 300
   - Type: 0
-    Effect: {fileID: 0}
+    Effect: {fileID: 100008, guid: 35097fa3b77c36948a9bb46c7e9bda6a, type: 2}
     Time: 300
 --- !u!148 &14800000
 NetworkView:

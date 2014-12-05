@@ -134,7 +134,7 @@ public class MenuJoinGame {
 
 		if(networkSearchType == NetworkSearchType.Internet)
 		{
-            /* Test list */
+            /* Test list 
             hostList = new HostData[25];
             for (int i = 0; i < hostList.Length; i++ )
             {
@@ -142,7 +142,7 @@ public class MenuJoinGame {
                 hostList[i].gameName = "Game" + i;
                 hostList[i].playerLimit = 4;
                 hostList[i].connectedPlayers = 2;
-            }/**/
+            }*/
 			
 			
 			//hostList = MasterServer.PollHostList();

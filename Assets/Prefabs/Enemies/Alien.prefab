@@ -11,6 +11,7 @@ GameObject:
   - 50: {fileID: 5000000}
   - 114: {fileID: 11400000}
   - 58: {fileID: 5800000}
+  - 58: {fileID: 5800002}
   - 148: {fileID: 14800000}
   - 114: {fileID: 11400002}
   - 114: {fileID: 11400004}
@@ -655,7 +656,6 @@ GameObject:
   - 4: {fileID: 400080}
   - 212: {fileID: 21200036}
   - 114: {fileID: 11400044}
-  - 58: {fileID: 5800002}
   m_Layer: 13
   m_Name: Head
   m_TagString: Untagged
@@ -688,7 +688,6 @@ GameObject:
   - 4: {fileID: 400084}
   - 212: {fileID: 21200038}
   - 114: {fileID: 11400046}
-  - 58: {fileID: 5800004}
   m_Layer: 13
   m_Name: Body_000
   m_TagString: Untagged
@@ -718,7 +717,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 100000}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 266.55304, y: 121.229736, z: 0}
+  m_LocalPosition: {x: 139.780823, y: 176.488159, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 400004}
@@ -1303,33 +1302,22 @@ CircleCollider2D:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 100000}
-  m_Enabled: 0
+  m_Enabled: 1
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_Radius: .5
+  m_Radius: .449999988
   m_Center: {x: 0, y: 0}
 --- !u!58 &5800002
 CircleCollider2D:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 100080}
+  m_GameObject: {fileID: 100000}
   m_Enabled: 1
   m_Material: {fileID: 0}
   m_IsTrigger: 0
-  m_Radius: .230000108
-  m_Center: {x: 0, y: -1.52587891e-05}
---- !u!58 &5800004
-CircleCollider2D:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 100084}
-  m_Enabled: 1
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Radius: .280000001
-  m_Center: {x: 0, y: -.0250000004}
+  m_Radius: .300000012
+  m_Center: {x: 0, y: .649999976}
 --- !u!95 &9500000
 Animator:
   serializedVersion: 3
@@ -1426,7 +1414,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e5b02cbf938d00c409d9059f3466bd0e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  health: 0
+  health: 20
   healthMax: 20
   hunger: 0
   hungerMax: 500
@@ -1438,6 +1426,8 @@ MonoBehaviour:
   HitEffects:
   - {fileID: 100000, guid: ecfd816de157f834cb04ae1e1cfe3434, type: 2}
   HitDropEffects: []
+  DeathEffectPrefab: {fileID: 0}
+  DeathRemainsPrefab: {fileID: 100008, guid: 35097fa3b77c36948a9bb46c7e9bda6a, type: 2}
   RegenDelay: 10
 --- !u!114 &11400004
 MonoBehaviour:

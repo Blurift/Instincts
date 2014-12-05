@@ -2,77 +2,55 @@
 using System.Collections;
 
 public class AmbientLight : MonoBehaviour {
+   
+    public Gradient Colors;
+    public float MinutesPerDay = 10;
 
-	private bool setting = false;
-
-	public float timeSync = 0.15f;
-	private float lastTime = 0;
-	private float lightValue = 0.9f;
+    private Light light;
+    private float startTime;
+    private float endTime;
+    private float duration;
 
 	// Use this for initialization
 	void Start () {
-	
+        light = GetComponent<Light>();
+        Restart();
 	}
+
+    private void Restart()
+    {
+        startTime = Time.time;
+        duration = MinutesPerDay * 60;
+        endTime = startTime + duration;
+    }
+
+    private void Calculate()
+    {
+        if (!Network.isServer)
+            return;
+
+        if (Time.time > endTime)
+            Restart();
+
+        float frac = (Time.time - startTime) / duration;
+        light.color = Colors.Evaluate(frac);
+
+        networkView.RPC("ChangeColor", RPCMode.Others, light.color.r, light.color.g, light.color.b);
+    }
+
 	
 	// Update is called once per frame
 	void Update () {
-		if (Time.time - lastTime > timeSync && Network.isServer)
-		{
-			float timeLapse = 0;
-
-			if(lightValue <= 0.2f || lightValue >= 0.8f)
-			{
-				timeLapse = 0.0003f;
-			}
-			else if((lightValue > 0.2f && lightValue <= 0.4f) || (lightValue >= 0.6f && lightValue <= 0.8f))
-			{
-				timeLapse = 0.002f;
-			}
-			else
-			{
-				timeLapse = 0.004f;
-			}
-
-			if(setting)
-			{
-				lightValue -= timeLapse;
-			}
-			else
-			{
-				lightValue += timeLapse;
-			}
-
-			if(lightValue < 0 || lightValue > 1) setting = !setting;
-
-			light.color = new Color(lightValue,lightValue,lightValue,1);
-
-			networkView.RPC("ChangeColor", RPCMode.All, lightValue);
-
-			lastTime = Time.time;
-		}
+        Calculate();
+        return;
 	}
 
 	[RPC]
-	void ChangeColor(float color)
+	void ChangeColor(float r, float g, float b)
 	{
-		lightValue = color;
-		light.color = new Color(lightValue,lightValue,lightValue,1);
+		light.color = new Color(r,g,b);
 	}
 
-	void OnSerializeNetworkView(BitStream stream, NetworkMessageInfo info)
-	{
-		float syncLight = lightValue;
-		if(stream.isWriting)
-		{
-			stream.Serialize(ref syncLight);
-		}
-		else
-		{
-			stream.Serialize(ref syncLight);
-			lightValue = syncLight;
-			light.color = new Color(lightValue,lightValue,lightValue,1);
-		}
-	}
 
 
 }

@@ -12,6 +12,8 @@ public class GameManager : MonoBehaviour {
 
 	public static Vector3 MousePosition = Vector3.zero;
 
+    public static Random Random = new Random();
+
 	void Start()
 	{
 		Instance = this;
