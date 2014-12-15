@@ -265,6 +265,67 @@ public class Inventory : MonoBehaviour {
 		return amount;
 	}
 
+    /// <summary>
+    /// Moves an item in the equipment bar to the inventory
+    /// </summary>
+    /// <param name="source">The index of the equipment bar to move item from.</param>
+    public void MoveToInventory(int source)
+    {
+        if (Network.isServer)
+            networkView.RPC("MoveToInventoryRPC", networkView.owner, source);
+        else
+            networkView.RPC("MoveToInventoryRPC", RPCMode.Server, source);
+        MoveToInventoryRPC(source);
+    }
+
+    [RPC]
+    public void MoveToInventoryRPC(int source)
+    {
+        if (source < 0 || source >= Equipment.Length)
+            return;
+
+        if(Equipment[source] != null)
+        {
+            Items.Add(Equipment[source]);
+            Equipment[source] = null;
+        }
+    }
+
+    /// <summary>
+    /// Moves an item in the inventory to the equipment bar.
+    /// </summary>
+    /// <param name="source">The index of the inventory to move item from.</param>
+    /// <param name="destination">The index of the equipment bar to move item to.</param>
+    public void MoveToEquipment(int source, int destination)
+    {
+        if (Network.isServer)
+            networkView.RPC("MoveToEquipmentRPC", networkView.owner, source, destination);
+        else
+            networkView.RPC("MoveToEquipmentRPC", RPCMode.Server, source, destination);
+        MoveToEquipmentRPC(source, destination);
+    }
+
+    [RPC]
+    public void MoveToEquipmentRPC(int source, int destination)
+    {
+        if (source < 0 || source >= Items.Count || destination < 0 || destination >= Equipment.Length)
+            return;
+
+        //If item already equipped in this slot move it.
+        if (Equipment[destination] != null)
+        {
+            if(SelectedIndex == destination)
+            {
+                Unequip(destination);
+            }
+            Items.Add(Equipment[destination]);
+            Equipment[destination] = null;
+        }
+
+        Equipment[destination] = Items[source];
+        Items.RemoveAt(source);
+    }
+
 	public void RemoveFromInventory(int i, string t)
 	{
 		RemoveFromInventoryRPC (i,t);
@@ -379,6 +440,11 @@ public class Inventory : MonoBehaviour {
 		Items.Add (item);
 	}
 
+    /// <summary>
+    /// Change the amount in a stack of an inventory item
+    /// </summary>
+    /// <param name="i">Index</param>
+    /// <param name="a">Amount to change to</param>
 	public void ChangeStack(int i, int a)
 	{
 		ChangeStackRPC (i, a);

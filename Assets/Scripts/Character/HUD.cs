@@ -337,28 +337,19 @@ public class HUD : MonoBehaviour {
 	{
 		if(windowID == windowInv)
 		{
-			
-			
-
-			
-			//If Item dropped into Inventory
+			//If Item dropped into Inventory from equipment bar
 			if(invScrollView.Contains(Event.current.mousePosition) && Input.GetMouseButtonUp(0) && dragSource==1)
 			{
-				Debug.Log("Inventory Contains Mouse: " + dragIndex.ToString() + " : " + dragSource.ToString() + " : " + (dragIcon != null).ToString());
-				if(dragIndex > -1)
+				//Debug.Log("Inventory Contains Mouse: " + dragIndex.ToString() + " : " + dragSource.ToString() + " : " + (dragIcon != null).ToString());
+				if(dragIndex > -1 && dragItem != null)
 				{
-					if(Inventory.Equipment[dragIndex] != null && dragItem != null)
-					{
-						Inventory.Items.Add(dragItem);
-						if(Inventory.SelectedIndex == dragIndex)
-							Inventory.Unequip(dragIndex);
-						Inventory.Equipment[dragIndex] = null;
-						
-						MouseCapture();
-					}
+                    Inventory.MoveToInventory(dragIndex);
+                    MouseCapture();
 				}
 			}
 			
+            //TODO - Fix bound of drop
+
 			Rect dropRect = new Rect (inventoryWindow.width-53, 38, 45, 45);
 			
 			if(dropRect.Contains(Event.current.mousePosition) && Input.GetMouseButtonUp(0))
@@ -815,11 +806,10 @@ public class HUD : MonoBehaviour {
 				}
 			}
 			
+            //Check to see if item is being dragged from inventory to equipment bar.
 			if(equipBar.Contains(Event.current.mousePosition) && Input.GetMouseButtonUp(0) && Inventory.Equipment[i] == null && dragItem != null && dragSource == 0)
 			{
-				Inventory.Equipment[i] = dragItem;
-				
-				Inventory.Items.RemoveAt(dragIndex);
+                Inventory.MoveToEquipment(dragIndex, i);
 				
 				MouseCapture();
 			}
