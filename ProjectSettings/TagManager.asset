@@ -32,8 +32,8 @@ TagManager:
   User Layer 18: 
   User Layer 19: Enviroment
   User Layer 20: EnviromentDestructable
-  User Layer 21: 
-  User Layer 22: 
+  User Layer 21: EnviromentLow
+  User Layer 22: Roof
   User Layer 23: 
   User Layer 24: 
   User Layer 25: 
@@ -64,6 +64,10 @@ TagManager:
     userID: 0
     uniqueID: 0
     locked: 0
+  - name: Walls
+    userID: 10
+    uniqueID: 3918240225
+    locked: 0
   - name: Entities
     userID: 3
     uniqueID: 1074530123
@@ -75,6 +79,10 @@ TagManager:
   - name: Effects
     userID: 2
     uniqueID: 672321423
+    locked: 0
+  - name: Roof
+    userID: 11
+    uniqueID: 802677971
     locked: 0
   - name: Above
     userID: 5

@@ -271,9 +271,10 @@ public class Inventory : MonoBehaviour {
     /// <param name="source">The index of the equipment bar to move item from.</param>
     public void MoveToInventory(int source)
     {
-        if (Network.isServer)
+
+        if (Network.isServer && !networkView.isMine)
             networkView.RPC("MoveToInventoryRPC", networkView.owner, source);
-        else
+        else if(!Network.isServer && networkView.isMine)
             networkView.RPC("MoveToInventoryRPC", RPCMode.Server, source);
         MoveToInventoryRPC(source);
     }

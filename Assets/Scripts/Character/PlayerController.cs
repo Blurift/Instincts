@@ -42,7 +42,7 @@ public class PlayerController : EntityController {
 	//public Animator FeetAnimator;
 
     public SpriteRenderer Hair;
-    private CameraController cameraController;
+    public CameraController cameraController;
     private HUD hud;
     public Inventory Inventory;
 
@@ -103,17 +103,20 @@ public class PlayerController : EntityController {
 	
     void Update ()
     {
-        if (dead)
-        {
-            if(deadTime < Time.time && respawned == false)
-            {
-                Respawn();
-                respawned = true;
-            }
-            return;
-        }
+        //Make sure only the player that owns the object can control it.
         if(networkView.isMine)
         {
+            //Check if player is dead, and check if enough time has passed to respawn.
+            if (dead)
+            {
+                if (deadTime < Time.time && respawned == false)
+                {
+                    Respawn();
+                    respawned = true;
+                }
+                return;
+            }
+
             if (ItemDrop.ItemToPickUp != null)
             {
                 hud.HelperInput("Pickup " + ItemDrop.ItemToPickUp.item.Name, "F", 0.1f);
@@ -419,20 +422,26 @@ public class PlayerController : EntityController {
     private void Respawn()
     {
         //Respawn player
-        NetworkManager.Respawn();
+        if(networkView.isMine)
+            NetworkManager.Respawn();
     }
 	
 	[RPC]
 	void DeathPlayer ()
 	{
+        //Here we check if the method has been called, if it hasn't we start the delay timer which 
+        //will becheck for in the update method of this class and respawn the player after a certain amount of time.
         if (dead)
             return;
         dead = true;
-        deadTime = Time.time + 2;
-        respawned = false;
 
 		if(networkView.isMine)
 		{
+            deadTime = Time.time + 2;
+            respawned = false;
+
+            //TODO: Make a dead body here, hide the alive one.
+
             hud.SetDead(true);
 
             UnsetEquipped();
@@ -454,15 +463,50 @@ public class PlayerController : EntityController {
         respawned = true;
         dead = false;
         transform.position = position;
-        cameraController.Set(position);
         Health.Respawn();
-        hud.SetDead(false);
+
+        if (networkView.isMine)
+        {
+            cameraController.Set(position);
+            hud.SetDead(false);
+        }
 
         if (Network.isServer)
             networkView.RPC("PlayerRespawn", RPCMode.Others, position);
     }
-	
-	//GUI
+
+    #region Collision
+
+    #endregion
+
+    #region Triggers
+
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        if(other.gameObject.layer == LayerMask.NameToLayer("Roof") && networkView.isMine)
+        {
+            ObjectHider oh = other.GetComponent<ObjectHider>();
+            if (oh != null)
+                oh.Set(false);
+        }
+    }
+
+    void OnTriggerExit2D(Collider2D other)
+    {
+        if (other.gameObject.layer == LayerMask.NameToLayer("Roof") && networkView.isMine)
+        {
+            ObjectHider oh = other.GetComponent<ObjectHider>();
+            if (oh != null)
+                oh.Set(true);
+        }
+    }
+
+    #endregion
+
+    //TODO: Move to HUD
+    #region GUI
+
+    //GUI
 	public Texture2D BloodScreen;
 	public Texture2D HungerIcon;
 	private float bloodOpacity = 0;
@@ -556,8 +600,11 @@ public class PlayerController : EntityController {
 			}
 		}
 	}
-	
-	[RPC]
+
+    #endregion
+
+    #region Animation
+    [RPC]
 	void SetAnimIdle(bool idle)
 	{
 		if(networkView.isMine)
@@ -581,8 +628,9 @@ public class PlayerController : EntityController {
 		if(Animator != null)
 			Animator.SetBool ("Equipped", equip);
 	}
+    #endregion
 
-	public void SetPlayerState(PlayerState state)
+    public void SetPlayerState(PlayerState state)
 	{
 		transform.position = state.Position;
 		Health.SetHealthState (state.Health);

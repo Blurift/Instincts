@@ -66,6 +66,9 @@ public class NetworkManager : MonoBehaviour {
 		return null;
 	}
 
+    /// <summary>
+    /// Return integer value of the amount of players.
+    /// </summary>
     public static int PlayerCount()
     {
         return Instance.PlayerStates.Count;
@@ -102,6 +105,7 @@ public class NetworkManager : MonoBehaviour {
 	void Update () {
 		if(Network.isServer)
 		{
+            //Dedicated testing.
 			/*Vector3 move = ((Input.GetAxis ("Vertical") * transform.up) + (Input.GetAxis ("Horizontal") * transform.right)).normalized;
 			
 			move*= 15*Time.deltaTime;
@@ -132,9 +136,6 @@ public class NetworkManager : MonoBehaviour {
 		Debug.Log ("Server starting");
 		GameManager.WriteMessage("Attempting to start server");
 
-		//Instance.Players = new Dictionary<NetworkPlayer, GameObject> ();
-		//Instance.PlayerNames = new Dictionary<NetworkPlayer, string> ();
-		//Instance.PlayerUIDs = new Dictionary<NetworkPlayer, string> ();
 		Instance.PlayerStates = new Dictionary<NetworkPlayer, NetworkPlayerState> ();
 
 		ServerSettings settings = Settings;
@@ -167,13 +168,11 @@ public class NetworkManager : MonoBehaviour {
 		if(settings.Dedicated)
 			GameManager.WriteMessage ("Starting server with " + settings.MaxPlayers + " max players on port " + settings.Port);
 		else
-			GameManager.WriteMessage ("Starting server with " + (settings.MaxPlayers+1) + " max players on port " + settings.Port);
+			GameManager.WriteMessage ("Starting server with " + (settings.MaxPlayers) + " max players on port " + settings.Port);
 	}
 
 	public static void JoinServer(string user, string pass)
 	{
-		//Debug.Log(Instance.networkView.viewID.ToString ());
-		//Debug.Log ("Logging to server " + user + " : " + pass + " : " + Network.player.ToString ());
 		Instance.networkView.RPC ("LoginToServer", RPCMode.Server, user, pass, Network.player, Network.AllocateViewID (), Menu.HairColor, Menu.HairStyle, Menu.TopColor);
 	}
 
@@ -221,6 +220,7 @@ public class NetworkManager : MonoBehaviour {
 	{
 		if(Network.isServer)
 		{
+            //user = id.ToString() + ": " + user; //Testing to identify against self
 			GameManager.NetMessage(user + " joined the game");
 			//Logger.Write("Player " + player.ToString() + " : " + user + " - " +player.ipAddress + " trying to log in");
 
@@ -230,7 +230,9 @@ public class NetworkManager : MonoBehaviour {
 			//networkView.RPC("RandomMessage", player, "Sending players through");
 			foreach(KeyValuePair<NetworkPlayer, NetworkPlayerState> pair in PlayerStates)
 			{
-                networkView.RPC("RegisterPlayer", player, pair.Key, pair.Value.Name);
+                //Check the server is not sending information to itself.
+                if(player != Network.player)
+                    networkView.RPC("RegisterPlayer", player, pair.Key, pair.Value.Name);
 				if(pair.Key != player)
 				{
                     Color hC = pair.Value.HairColor;
@@ -381,11 +383,6 @@ public class NetworkManager : MonoBehaviour {
 
     public static void Respawn()
     {
-        //if (Network.isServer)
-        //    Instance.RespawnPlayer(Network.player, Network.AllocateViewID());
-        //else
-        //    Instance.networkView.RPC("RespawnPlayer", RPCMode.Server, Network.player, Network.AllocateViewID());
-
         if (Network.isServer)
             Instance.RespawnPlayer(Network.player);
         else
@@ -397,18 +394,12 @@ public class NetworkManager : MonoBehaviour {
 	{
 		if(Network.isServer)
 		{
-			Debug.Log("Respawning player");
-			//DeletePlayerState(player);
-
-			//Network.Destroy (PlayerStates[player].GameObject);
-
-            //Vector3 hairColor = new Vector3(PlayerStates[player].HairColor.r, PlayerStates[player].HairColor.g, PlayerStates[player].HairColor.b);
-            //Vector3 topColor = new Vector3(PlayerStates[player].TopColor.r, PlayerStates[player].TopColor.g, PlayerStates[player].TopColor.b);
-
-            //SpawnPlayer(id, GetSpawnLocation(), PlayerStates[player].Name, hairColor, PlayerStates[player].HairStyle, topColor);
+			
 
             Vector3 l = GetSpawnLocation();
             PlayerController p = PlayerStates[player].GameObject.GetComponent<PlayerController>();
+
+            Debug.Log("Respawning player " + p.name);
 
             p.PlayerRespawn(l);
 
