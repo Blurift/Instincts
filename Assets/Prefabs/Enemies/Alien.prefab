@@ -1400,7 +1400,7 @@ MonoBehaviour:
   Speed: 1.25
   BaseSpeed: 1.29999995
   MaxRotation: 120
-  ChaseModifier: 4
+  ChaseModifier: 5
   PatrolPath: {fileID: 0}
   PatrolPathIndex: 0
 --- !u!114 &11400002

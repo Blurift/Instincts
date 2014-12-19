@@ -79,20 +79,40 @@ public class GameManager : MonoBehaviour {
 		return path;
 	}
 
-	private static string ServerPlayerPathFormat(string server)
-	{
-		return Application.persistentDataPath + "/" + server + "/Players/";
-	}
+    private static string ServerPath()
+    {
+        string path = Application.persistentDataPath + "/Servers/";
 
-	public static string ServerPlayerPath()
+        if (!Directory.Exists(path))
+            Directory.CreateDirectory(path);
+
+        return path;
+    }
+
+	private static string ServerPathFormat(string server)
 	{
-		return ServerPlayerPathFormat ("def");
+        string path = ServerPath() +server;
+
+        if (!Directory.Exists(path))
+            Directory.CreateDirectory(path);
+
+		return path;
 	}
 
 	public static string ServerPlayerPath(string serverName)
 	{
-		return ServerPlayerPathFormat (serverName);
+		return ServerPathFormat (serverName) + "/Players/";
 	}
+
+    public static string ServerStatePath(string serverName)
+    {
+        return ServerPathFormat(serverName) + "/States/";
+    }
+
+    public static string[] Servers()
+    {
+        return Directory.GetDirectories(ServerPath());
+    }
 
 	[RPC]
 	void Message(string message)

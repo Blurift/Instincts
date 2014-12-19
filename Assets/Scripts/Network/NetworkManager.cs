@@ -487,9 +487,9 @@ public class NetworkManager : MonoBehaviour {
 
 	//Player states
 
-	private string GetStatePath()
+	private string GetPlayerPath()
 	{
-		string path = GameManager.ServerPlayerPath() + "/States";
+		string path = GameManager.ServerPlayerPath(Settings.ServerName);
 
 		if(!Directory.Exists(path))
 			Directory.CreateDirectory(path);
@@ -499,14 +499,14 @@ public class NetworkManager : MonoBehaviour {
 
 	private void DeletePlayerState(NetworkPlayer player)
 	{
-		string file = GetStatePath() + "/" + PlayerStates[player].UID + ".pla";
+		string file = GetPlayerPath() + "/" + PlayerStates[player].UID + ".pla";
 		if(File.Exists(file))
 			File.Delete(file);
 	}
 
 	private void SavePlayerState(NetworkPlayer player)
 	{
-        string file = GetStatePath() + "/" + PlayerStates[player].UID + ".pla";
+        string file = GetPlayerPath() + "/" + PlayerStates[player].UID + ".pla";
 		if(File.Exists(file))
 			File.Delete(file);
 
@@ -524,7 +524,7 @@ public class NetworkManager : MonoBehaviour {
 
 	private PlayerController.PlayerState LoadPlayerState(NetworkViewID id, NetworkPlayer player)
 	{
-        string file = GetStatePath() + "/" + PlayerStates[player].UID + ".pla";
+        string file = GetPlayerPath() + "/" + PlayerStates[player].UID + ".pla";
 
 		PlayerController.PlayerState state;
 

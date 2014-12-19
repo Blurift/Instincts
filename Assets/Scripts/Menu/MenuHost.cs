@@ -8,6 +8,9 @@ public class MenuHost {
 	private Rect backButton;
 	private Rect startButton;
 
+    private Rect serverListRect;
+    private float serverListFontSize = 15;
+
 	public MenuHost()
 	{
 		if (PlayerPrefs.HasKey ("ServerName"))
@@ -16,16 +19,14 @@ public class MenuHost {
 			settings.Port = PlayerPrefs.GetInt ("ServerPort");
 		if (PlayerPrefs.HasKey ("ServerPlayers"))
 			settings.MaxPlayers = PlayerPrefs.GetInt ("ServerPlayers");
+
+        serverListRect = new Rect(Screen.width * 0.55f, Screen.height * 0.1f, Screen.width * 0.4f, Screen.height * 0.8f);
+        serverListFontSize = serverListRect.height * 0.1f;
 	}
 
 	private void Setup()
 	{
-		//GUI Measurements
-		float buttonWidth = Screen.width*0.18f;
-		float buttonHeight = buttonWidth*0.2f;
-		float buttonMargin = Screen.width*0.01f;
-		float buttonSizeW = Screen.width*0.2f;
-		float buttonSizeH = buttonHeight + buttonMargin*2;
+
 	}
 
 	public void Draw()
@@ -65,7 +66,20 @@ public class MenuHost {
 		GUI.Label (serverPortLabel, "Port:", labelFont);
 		GUI.Label (serverMaxLabel, "Max Players: " + settings.MaxPlayers, labelFont);
 
-		settings.ServerName = GUI.TextField (serverNameRect, settings.ServerName, textField);
+        #region ServerList
+        {
+            string[] servers = GameManager.Servers();
+            string serversFormatted = "";
+            for(int i = 0; i < servers.Length; i++)
+            {
+                serversFormatted += servers[i] + "\n";
+            }
+
+            GUI.Label(serverListRect, serversFormatted == "" ? "No Servers" : serversFormatted);
+        }
+        #endregion
+
+        settings.ServerName = GUI.TextField (serverNameRect, settings.ServerName, textField);
 		string port = GUI.TextField (serverPortRect, settings.Port.ToString(), textField);
 		//string max = GUI.TextField (serverMaxRect, settings.MaxPlayers.ToString(), textField);
 		settings.MaxPlayers = (int)GUI.Slider(serverMaxRect, settings.MaxPlayers, 1, 1,17, GUI.skin.horizontalSlider, GUI.skin.horizontalSliderThumb, true, 0);
