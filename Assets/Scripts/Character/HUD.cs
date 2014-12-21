@@ -421,7 +421,8 @@ public class HUD : MonoBehaviour {
 							}
 						}
 					}
-					itemHover = hoverIndex;
+                    if(hoverIndex > -1)
+                        itemHover = hoverIndex;
 					y++;
 				}
 			}
@@ -807,7 +808,7 @@ public class HUD : MonoBehaviour {
 			}
 			
             //Check to see if item is being dragged from inventory to equipment bar.
-			if(equipBar.Contains(Event.current.mousePosition) && Input.GetMouseButtonUp(0) && Inventory.Equipment[i] == null && dragItem != null && dragSource == 0)
+			if(equipBar.Contains(Event.current.mousePosition) && Input.GetMouseButtonUp(0) && dragItem != null && dragSource == 0)
 			{
                 Inventory.MoveToEquipment(dragIndex, i);
 				
