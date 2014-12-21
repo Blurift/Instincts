@@ -614,7 +614,8 @@ public class HUD : MonoBehaviour {
 		chatScrollPosition = new Vector2(0,chatScrollInnerH - chatScrollHeight);
 	}
 
-	/// -- On Screen Helper Functions --
+    #region Helper Popups
+    /// -- On Screen Helper Functions --
 	/// 
 	/// Will allow different systems to display a
 	/// helpful message or reminder on teh screen
@@ -707,8 +708,9 @@ public class HUD : MonoBehaviour {
 		helperMessageTime = Time.time + time;
 		helperMessageFade = Time.time + time + fade;
 	}
+    #endregion
 
-	/// -- On Screen equipment Functions --
+    /// -- On Screen equipment Functions --
 	/// 
 	/// Will show each equipped item and what is currently
 	/// equipped and quantites
