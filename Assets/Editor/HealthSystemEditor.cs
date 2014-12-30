@@ -14,122 +14,269 @@ using System.Collections.Generic;
 [CustomEditor(typeof(HealthSystem))]
 public class HealthSystemEditor : Editor {
 
-	private bool hitEffectsToggle = false;
+    private const string hostiles_data = "hostiles.Array.data[{0}]";
+    private const string hitData = "HitEffects.Array.data[{0}]";
+    private const string hitDropData = "HitDropEffects.Array.data[{0}]";
+
+    private SerializedObject m_object;
+
+    private SerializedProperty m_health;
+    private SerializedProperty m_healthMax;
+    private SerializedProperty m_healthRegen;
+
+    private SerializedProperty m_stamina;
+    private SerializedProperty m_staminaMax;
+    private SerializedProperty m_staminaOn;
+
+    private SerializedProperty m_hunger;
+    private SerializedProperty m_hungerMax;
+    private SerializedProperty m_hungerOn;
+    
+    private SerializedProperty m_category;
+
+    private SerializedProperty m_hostiles_size;
+    private SerializedProperty m_hitDropSize;
+    private SerializedProperty m_hitSize;
+
+    
+
+    private SerializedProperty m_remains;
+    private SerializedProperty m_death;
+
+
+
+	private bool hitEffectToggle = false;
 	private bool hitDropToggle = false;
+    private bool factionToggle = false;
+
+    public void OnEnable()
+    {
+        m_object = new SerializedObject(target);
+
+        m_health = m_object.FindProperty("health");
+        m_healthMax = m_object.FindProperty("healthMax");
+        m_healthRegen = m_object.FindProperty("healthRegenerates");
+
+        m_stamina = m_object.FindProperty("stamina");
+        m_staminaMax = m_object.FindProperty("staminaMax");
+        m_staminaOn = m_object.FindProperty("staminaEnabled");
+
+        m_hunger = m_object.FindProperty("hunger");
+        m_hungerMax = m_object.FindProperty("hungerMax");
+        m_hungerOn = m_object.FindProperty("hungerEnabled");
+
+        m_category = m_object.FindProperty("entityCategory");
+        m_hostiles_size = m_object.FindProperty("hostiles.Array.size");
+        m_hitSize = m_object.FindProperty("HitEffects.Array.size");
+        m_hitDropSize = m_object.FindProperty("HitDropEffects.Array.size");
+
+        m_remains = m_object.FindProperty("DeathRemainsPrefab");
+        m_death = m_object.FindProperty("DeathEffectPrefab");
+    }
 
 	public override void OnInspectorGUI ()
     {
-        HealthSystem script = (HealthSystem)target;
+        m_object.Update();
 
-        //bool dirty = false;
+        EditorGUILayout.PropertyField(m_healthMax, new GUIContent("Max"));
+        EditorGUILayout.PropertyField(m_healthRegen);
 
-
-
-        //Health Values
-        EditorGUILayout.LabelField("Health");
-        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.PropertyField(m_hungerOn);
+        if (m_hungerOn.boolValue)
         {
-            script.Health = EditorGUILayout.IntField(script.Health);
-            script.HealthMax = EditorGUILayout.IntField(script.HealthMax);
-        }
-        EditorGUILayout.EndHorizontal();
-        script.HealthRegenerates = EditorGUILayout.Toggle("Health Regens? ", script.HealthRegenerates);
-
-        //Hunger
-        script.HungerEnabled = EditorGUILayout.Toggle("Hunger", script.HungerEnabled);
-        if (script.HungerEnabled)
-        {
-            EditorGUILayout.BeginHorizontal();
-            {
-                script.Hunger = EditorGUILayout.IntField(script.Hunger);
-                script.HungerMax = EditorGUILayout.IntField(script.HungerMax);
-            }
-            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.PropertyField(m_hungerMax);
         }
 
-        //Stamina
-        script.StaminaEnabled = EditorGUILayout.Toggle("Stamina Enabled", script.StaminaEnabled);
-        if (script.StaminaEnabled)
+        EditorGUILayout.PropertyField(m_staminaOn);
+        if (m_staminaOn.boolValue)
         {
-            EditorGUILayout.BeginHorizontal();
-            {
-                script.Stamina = EditorGUILayout.IntField(script.Stamina);
-                script.StaminaMax = EditorGUILayout.IntField(script.StaminaMax);
-            }
-            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.PropertyField(m_staminaMax);
         }
 
         EditorGUILayout.Separator();
-        hitEffectsToggle = EditorGUILayout.Foldout(hitEffectsToggle, "Hit Effects");
-        if (hitEffectsToggle)
+        factionToggle = EditorGUILayout.Foldout(factionToggle, new GUIContent("Faction Info"));
+        if(factionToggle)
         {
-            List<GameObject> hitEffects = new List<GameObject>();
-            hitEffects.AddRange(script.HitEffects);
-            int delete = -1;
+            //Set Category and hostile info
+            EditorGUILayout.PropertyField(m_category);
+            EditorGUILayout.LabelField("Hostile Categories");
 
-            for (int i = 0; i < hitEffects.Count; i++)
+            int[] hostiles = GetHostiles();
+            int remove = -1;
+            for (int i = 0; i < hostiles.Length; i++)
             {
                 EditorGUILayout.BeginHorizontal();
-                hitEffects[i] = (GameObject)EditorGUILayout.ObjectField(hitEffects[i], typeof(GameObject), false);
-                if (GUILayout.Button("Remove"))
-                    delete = i;
-
-
+                int result = EditorGUILayout.IntField(hostiles[i]);
+                if(GUILayout.Button(new GUIContent("Remove")))
+                {
+                    remove = i;
+                }
                 EditorGUILayout.EndHorizontal();
+
+                if (GUI.changed)
+                    SetHostile(i, result);
             }
-            if (delete > -1)
-                hitEffects.RemoveAt(delete);
-
-
-            if (GUILayout.Button("Add"))
+            if(remove > -1)
+                RemoveHostile(remove, hostiles);
+            if(GUILayout.Button(new GUIContent("Add Hostile")))
             {
-                hitEffects.Add(null);
+                m_hostiles_size.intValue++;
+                SetHostile(m_hostiles_size.intValue - 1, 0);
             }
-
-            script.HitEffects = hitEffects.ToArray();
         }
 
         EditorGUILayout.Separator();
-        hitDropToggle = EditorGUILayout.Foldout(hitDropToggle, "Hit Drop Effects");
+        hitEffectToggle = EditorGUILayout.Foldout(hitEffectToggle, new GUIContent("Hit Effects"));
+        if (hitEffectToggle)
+        {
+            GameObject[] effects = GetHitEffects();
+            int remove = -1;
+            for (int i = 0; i < effects.Length; i++)
+            {
+                EditorGUILayout.BeginHorizontal();
+                GameObject result = (GameObject)EditorGUILayout.ObjectField(effects[i], typeof(GameObject));
+                if (GUILayout.Button(new GUIContent("Remove")))
+                {
+                    remove = i;
+                }
+                EditorGUILayout.EndHorizontal();
+
+                if (GUI.changed)
+                    SetHitEffect(i, result);
+            }
+            if (remove > -1)
+                RemoveHitEffect(remove, effects);
+            if (GUILayout.Button(new GUIContent("Add Effect")))
+            {
+                m_hitSize.intValue++;
+                SetHitEffect(m_hitSize.intValue - 1, null);
+            }
+        }
+
+        EditorGUILayout.Separator();
+        hitDropToggle = EditorGUILayout.Foldout(hitDropToggle, new GUIContent("Hit Drop Effects"));
         if (hitDropToggle)
         {
-            List<GameObject> hitDrops = new List<GameObject>(script.HitDropEffects);
-            int delete = -1;
-
-            for (int i = 0; i < hitDrops.Count; i++)
+            GameObject[] effects = GetHitDropEffects();
+            int remove = -1;
+            for (int i = 0; i < effects.Length; i++)
             {
                 EditorGUILayout.BeginHorizontal();
-                hitDrops[i] = (GameObject)EditorGUILayout.ObjectField(hitDrops[i], typeof(GameObject), false);
-                if (GUILayout.Button("Remove"))
-                    delete = i;
-
-
+                GameObject result = (GameObject)EditorGUILayout.ObjectField(effects[i], typeof(GameObject));
+                if (GUILayout.Button(new GUIContent("Remove")))
+                {
+                    remove = i;
+                }
                 EditorGUILayout.EndHorizontal();
+
+                if (GUI.changed)
+                    SetHitDropEffect(i, result);
             }
-            if (delete > -1)
-                hitDrops.RemoveAt(delete);
-
-
-            if (GUILayout.Button("Add"))
+            if (remove > -1)
+                RemoveHitDropEffect(remove, effects);
+            if (GUILayout.Button(new GUIContent("Add Effect")))
             {
-                hitDrops.Add(null);
+                m_hitDropSize.intValue++;
+                SetHitDropEffect(m_hitSize.intValue - 1, null);
             }
-
-            script.HitDropEffects = hitDrops.ToArray();
         }
-
-        EditorGUILayout.BeginHorizontal();
-        {
-            EditorGUILayout.LabelField("Remains Prefab");
-            script.DeathRemainsPrefab = (GameObject)EditorGUILayout.ObjectField(script.DeathRemainsPrefab, typeof(GameObject), false);
-        }
-        EditorGUILayout.EndHorizontal();
 
         EditorGUILayout.Separator();
+        EditorGUILayout.PropertyField(m_remains);
+        EditorGUILayout.PropertyField(m_death);
 
-        if (GUILayout.Button("Save"))
-        {
-            EditorUtility.SetDirty(script);
-        }
+
+        m_object.ApplyModifiedProperties();
+
+        return;
     }
+
+    #region Hostile List Management
+
+    private int[] GetHostiles()
+    {
+        int size = m_hostiles_size.intValue;
+        int[] hostiles = new int[size];
+
+        for (int i = 0; i < size; i++)
+        {
+            hostiles[i] = m_object.FindProperty(string.Format(hostiles_data, i)).intValue;
+        }
+
+        return hostiles;
+    }
+
+    private void SetHostile(int index, int value)
+    {
+        m_object.FindProperty(string.Format(hostiles_data, index)).intValue = value;
+    }
+
+    private void RemoveHostile(int index, int[] values)
+    {
+        for (int i = index; i < m_hostiles_size.intValue - 1; i++)
+        {
+            SetHostile(i, values[i + 1]);
+        }
+        m_hostiles_size.intValue--;
+    }
+
+    #endregion
+
+    #region Hostile List Management
+
+    private GameObject[] GetHitEffects()
+    {
+        int size = m_hitSize.intValue;
+        GameObject[] effects = new GameObject[size];
+
+        for (int i = 0; i < size; i++)
+        {
+            effects[i] = m_object.FindProperty(string.Format(hitData, i)).objectReferenceValue as GameObject;
+        }
+
+        return effects;
+    }
+
+    private void SetHitEffect(int index, GameObject value)
+    {
+        m_object.FindProperty(string.Format(hitData, index)).objectReferenceValue = value;
+    }
+
+    private void RemoveHitEffect(int index, GameObject[] values)
+    {
+        for (int i = index; i < m_hitSize.intValue - 1; i++)
+        {
+            SetHitEffect(i, values[i + 1]);
+        }
+        m_hitSize.intValue--;
+    }
+
+    private GameObject[] GetHitDropEffects()
+    {
+        int size = m_hitDropSize.intValue;
+        GameObject[] effects = new GameObject[size];
+
+        for (int i = 0; i < size; i++)
+        {
+            effects[i] = m_object.FindProperty(string.Format(hitDropData, i)).objectReferenceValue as GameObject;
+        }
+
+        return effects;
+    }
+
+    private void SetHitDropEffect(int index, GameObject value)
+    {
+        m_object.FindProperty(string.Format(hitDropData, index)).objectReferenceValue = value;
+    }
+
+    private void RemoveHitDropEffect(int index, GameObject[] values)
+    {
+        for (int i = index; i < m_hitDropSize.intValue - 1; i++)
+        {
+            SetHitDropEffect(i, values[i + 1]);
+        }
+        m_hitDropSize.intValue--;
+    }
+
+    #endregion
 }

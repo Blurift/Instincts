@@ -11,12 +11,17 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
+/// <summary>
+/// This system keeps all the information for a living entity.
+/// </summary>
 [AddComponentMenu("Health System/Health Attributes")]
 public class HealthSystem : MonoBehaviour {
 
 	#region Fields
 
-	[SerializeField]
+    #region Stats
+    
+    [SerializeField]
 	private int health = 0;
 	[SerializeField]
 	private int healthMax = 100;
@@ -34,26 +39,45 @@ public class HealthSystem : MonoBehaviour {
 	private float lastHungerSync;
 	private float lastStaminaSync;
 
-	public bool HungerEnabled = true;
-	public bool StaminaEnabled = true;
-	public bool HealthRegenerates = true;
+    [SerializeField]
+	public bool hungerEnabled = true;
+    [SerializeField]
+	public bool staminaEnabled = true;
+    [SerializeField]
+	public bool healthRegenerates = true;
 
-	public GameObject[] HitEffects;
+    #endregion
+
+    #region Prefabs
+
+    public GameObject[] HitEffects;
 	public GameObject[] HitDropEffects;
 
     public GameObject DeathEffectPrefab;
     public GameObject DeathRemainsPrefab;
+
+    #endregion
 
     private float useStaminaUntil = 0;
     private bool exhausted = false;
 
     private bool isDead = false;
 
-	#endregion
+    #region Entity
 
-	#region Properties
+    [SerializeField]
+    private int entityCategory = 0;
 
-	public int Health
+    [SerializeField]
+    private int[] hostiles;
+
+    #endregion
+
+    #endregion
+
+    #region Properties
+
+    public int Health
 	{
 		get { return health; }
 		set
@@ -120,6 +144,11 @@ public class HealthSystem : MonoBehaviour {
 		set { staminaMax = value; }
 	}
 
+    public int EntityCategory
+    {
+        get { return entityCategory; }
+    }
+
 	#endregion
 
 	#region Events
@@ -137,6 +166,8 @@ public class HealthSystem : MonoBehaviour {
 
 	private List<HealthEffect> healthEffects = new List<HealthEffect>();
 
+    #region Initilization
+
     void Awake()
     {
         Health = HealthMax;
@@ -149,14 +180,7 @@ public class HealthSystem : MonoBehaviour {
 		
 	}
 
-    public void Respawn()
-    {
-        Health = HealthMax;
-        Hunger = HungerMax;
-        Stamina = staminaMax;
-        healthEffects = new List<HealthEffect>();
-    }
-
+    #endregion
 
 	public void TakeDamage(DamageType damage, GameObject source)
 	{
@@ -204,7 +228,7 @@ public class HealthSystem : MonoBehaviour {
 	{
 		if(Network.isServer)
 		{
-			if(Health < HealthMax && !ContainsHealthEffect(typeof(HealthBleeding)) && Hunger > HungerMax/2 && HealthRegenerates)
+			if(Health < HealthMax && !ContainsHealthEffect(typeof(HealthBleeding)) && Hunger > HungerMax/2 && healthRegenerates)
 			{
 				if(Time.time - lastDamage > RegenDelay && Time.time - lastHealthRegen > 0.5f)
 				{
@@ -213,7 +237,7 @@ public class HealthSystem : MonoBehaviour {
 				}
 			}
 
-			if(Time.time - lastHungerSync > 2.5f && HungerEnabled)
+			if(Time.time - lastHungerSync > 2.5f && hungerEnabled)
 			{
                 ChangeHunger(Hunger - 1);
 
@@ -223,7 +247,7 @@ public class HealthSystem : MonoBehaviour {
 				lastHungerSync = Time.time;
 			}
 
-			if(Time.time - lastStaminaSync > 1 && StaminaEnabled)
+			if(Time.time - lastStaminaSync > 1 && staminaEnabled)
 			{
 
                 if (useStaminaUntil > Time.time)
@@ -241,7 +265,9 @@ public class HealthSystem : MonoBehaviour {
 		}
 	}
 
-	[RPC]
+    #region Stat changes, Changes to stats and network management of this
+
+    [RPC]
 	void ChangeHealth(int health)
 	{
 		Health = health;
@@ -297,6 +323,8 @@ public class HealthSystem : MonoBehaviour {
             networkView.RPC("BleedingRPC", RPCMode.Server, bleed);
     }
 
+    #endregion
+
     public bool Exhausted()
     {
         return exhausted;
@@ -312,6 +340,16 @@ public class HealthSystem : MonoBehaviour {
 		else
 			RemoveHealthEffect(typeof(HealthBleeding));
 	}
+
+    #region Death and Respawning
+
+    public void Respawn()
+    {
+        Health = HealthMax;
+        Hunger = HungerMax;
+        Stamina = staminaMax;
+        healthEffects = new List<HealthEffect>();
+    }
 
 	[RPC]
 	void Die()
@@ -345,7 +383,9 @@ public class HealthSystem : MonoBehaviour {
 		}
 	}
 
-	public void RemoveHealthEffect(Type t)
+    #endregion
+
+    public void RemoveHealthEffect(Type t)
 	{
 		for (int i = 0; i < healthEffects.Count; i++)
 		{
@@ -373,7 +413,9 @@ public class HealthSystem : MonoBehaviour {
 		return false;
 	}
 
-	public void SetHealthState(HealthState state)
+    #region Health States (For Serializing to disk)
+
+    public void SetHealthState(HealthState state)
 	{
 		Health = state.Health;
 		Hunger = state.Hunger;
@@ -392,7 +434,8 @@ public class HealthSystem : MonoBehaviour {
 	{
 		public int Health;
 		public int Hunger;
-	}
+    }
+    #endregion
 }
 
 public enum DamageEffect

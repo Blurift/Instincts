@@ -11,7 +11,6 @@ public enum AIBehaviourType
 }
 
 [AddComponentMenu("AI/AI")]
-[RequireComponent(typeof(CircleCollider2D))]
 public class AI : MonoBehaviour {
 
 	private HealthSystem HealthSystem;
@@ -42,7 +41,7 @@ public class AI : MonoBehaviour {
 	//Pathfinding
 	public Path CurrentPath;
 	public bool CalculatingPath;
-	public Seeker seeker;
+	private Seeker seeker;
 	private int currentWaypoint = 0;
 	private Vector3 currentWaypointPos = Vector3.zero;
 
@@ -51,9 +50,6 @@ public class AI : MonoBehaviour {
 	public float BaseSpeed = 1f;
 	public float MaxRotation = 90f;
 	public float ChaseModifier = 1.5f;
-
-	public AIPatrolPath PatrolPath;
-	public int PatrolPathIndex = 0;
 
 	//Target profiling
 	private Dictionary<GameObject, int> targetDamages = new Dictionary<GameObject, int> ();
@@ -182,9 +178,9 @@ public class AI : MonoBehaviour {
 
 	private float GetDistance(GameObject player)
 	{
-		Vector3 distanceVector = player.transform.position - transform.position;
-		float distance = Mathf.Sqrt ((distanceVector.x * distanceVector.x) + (distanceVector.y * distanceVector.y));
-		return distance;
+		//Vector3 distanceVector = player.transform.position - transform.position;
+		//float distance = Mathf.Sqrt ((distanceVector.x * distanceVector.x) + (distanceVector.y * distanceVector.y));
+		return Vector2.Distance(player.transform.position, transform.position);
 	}
 
 
@@ -515,7 +511,13 @@ public class AI : MonoBehaviour {
 		StunnedUntil = Time.time + time;
 	}
 
-	/*****************************
+    #region Ability Control
+
+
+
+    #endregion
+
+    /*****************************
 	 * Animation
 	 ****************************/
 	bool isMoving = false;
