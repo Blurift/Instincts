@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 public class Inventory : MonoBehaviour {
 	
 	public Item[] Equipment = new Item[6];
-	public List<Item> Items = new List<Item>();
+	public Item[] Items = new Item[20];
 	public List<Item> ItemsToEquip = new List<Item> ();
 
 	public int SelectedIndex = -1;
@@ -18,6 +18,7 @@ public class Inventory : MonoBehaviour {
 	void Awake()
 	{
 		Equipment = new Item[6];
+        Items = new Item[20];
 	}
 
 	// Use this for initialization
@@ -60,7 +61,7 @@ public class Inventory : MonoBehaviour {
 
 	public void DropItem(Item item)
 	{
-		for(int i = 0; i < Items.Count; i++)
+		for(int i = 0; i < Items.Length; i++)
 		{
 			if(item == Items[i])
 			{
@@ -68,7 +69,7 @@ public class Inventory : MonoBehaviour {
                     DropItemRPC(i, "I");
                 else
                     networkView.RPC("DropItemRPC", RPCMode.Server, i, "I");
-				Items.RemoveAt(i);
+				Items[i] = null;
 				Destroy(item);
                 
 			}
@@ -93,11 +94,13 @@ public class Inventory : MonoBehaviour {
 	{
 		if(type == "I")
 		{
-			//ItemManager.SpawnItem(Items[i].name, transform.position);
-			ItemManager.SpawnItemFromItem(Items[i], transform.position);
-			Destroy (Items[i]);
-			Items.RemoveAt(i);
-
+            if (Items[i] != null)
+            {
+                //ItemManager.SpawnItem(Items[i].name, transform.position);
+                ItemManager.SpawnItemFromItem(Items[i], transform.position);
+                Destroy(Items[i]);
+                Items[i] = null;
+            }
 		}
 		if(type == "E")
 		{
@@ -122,13 +125,13 @@ public class Inventory : MonoBehaviour {
 			}
 		}
 
-		//If we are not the server tell teh server to drop all the items.
+		//If we are not the server tell the server to drop all the items.
 		if(!Network.isServer)
 		{
-			for(int i = Items.Count-1; i > -1; i--)
+            for (int i = Items.Length - 1; i > -1; i--)
 			{
 				Destroy (Items[i]);
-				Items.RemoveAt(i);
+                Items[i] = null;
 			}
 			
 			for(int i = 0; i < Equipment.Length; i++)
@@ -140,7 +143,7 @@ public class Inventory : MonoBehaviour {
 			return;
 		}
 
-		for(int i = Items.Count-1; i > -1; i--)
+        for (int i = Items.Length - 1; i > -1; i--)
 		{
 			DropItemRPC(i, "I");
 		}
@@ -155,7 +158,7 @@ public class Inventory : MonoBehaviour {
 	{
 		float weight = 0;
 
-		for (int i = 0; i < Items.Count; i++)
+        for (int i = 0; i < Items.Length; i++)
 		{
 			weight += Items[i].Weight;
 		}
@@ -212,9 +215,9 @@ public class Inventory : MonoBehaviour {
 
 	public Item SearchForItem(string name)
 	{
-		for(int i = 0; i < Items.Count; i++)
+        for (int i = 0; i < Items.Length; i++)
 		{
-			if(Items[i].name == name)
+            if (Items[i] != null && Items[i].name == name)
 			{
 				return Items[i];
 			}
@@ -226,9 +229,10 @@ public class Inventory : MonoBehaviour {
 	{
 		int amount = 0;
 
-		for (int i = 0; i < Items.Count; i++)
+        for (int i = 0; i < Items.Length; i++)
 		{
-			if(Items[i].name == name)
+            
+			if(Items[i] != null && Items[i].name == name)
 			{
 				amount += Items[i].StackAmount;
 
@@ -244,9 +248,9 @@ public class Inventory : MonoBehaviour {
 	{
 
 		int amount = 0;
-		for (int i = 0; i < Items.Count; i++)
+        for (int i = 0; i < Items.Length; i++)
 		{
-			if(Items[i].name == name && amount < need)
+            if (Items[i] != null && Items[i].name == name && amount < need)
 			{
 				amount += Items[i].TakeFromStack(need - amount);
 				if(Items[i].StackAmount > 0)
@@ -254,9 +258,9 @@ public class Inventory : MonoBehaviour {
 			}
 		}
 
-		for (int i = Items.Count-1; i >= 0; i--)
+        for (int i = Items.Length - 1; i >= 0; i--)
 		{
-			if(Items[i].StackAmount <= 0)
+            if (Items[i] != null && Items[i].StackAmount <= 0)
 			{
 				RemoveFromInventory(i, "I");
 			}
@@ -264,6 +268,72 @@ public class Inventory : MonoBehaviour {
 
 		return amount;
 	}
+
+    /// <summary>
+    /// Move item from one spot to another in the inventory.
+    /// </summary>
+    /// <param name="t"></param>
+    /// <param name="target"></param>
+    /// <param name="s"></param>
+    /// <param name="source"></param>
+    public void MoveItem(int t, string target, int s, string source)
+    {
+        if (Network.isServer && !networkView.isMine)
+            networkView.RPC("MoveItemRPC", networkView.owner, t, target, s,  source);
+        else if (!Network.isServer && networkView.isMine)
+            networkView.RPC("MoveItemRPC", RPCMode.Server, t, target, s, source);
+        MoveItemRPC(t, target, s, source);
+    }
+
+    [RPC]
+    public void MoveItemRPC(int t, string target, int s, string source)
+    {
+        //Get the item out of the old spot.
+        Item m = null;
+
+        if(source == "I")
+        {
+            m = Items[s];
+            Items[s] = null;
+        }
+        else if(source == "E")
+        {
+            m = Equipment[s];
+            Equipment[s] = null;
+        }
+
+        //Return is no item found.
+        if (m == null)
+            return;
+
+        //Check for item in target spot
+        Item mTarget = null;
+
+        if(target == "I")
+        {
+            mTarget = Items[t];
+            Items[t] = m;
+        }
+        else if(target == "E")
+        {
+            mTarget = Equipment[t];
+            Equipment[t] = m;
+        }
+
+        //Move Item back if there is one to move back.
+        if (mTarget == null)
+            return;
+
+        if(source == "I")
+        {
+            Items[s] = mTarget;
+        }
+        else if(source == "E")
+        {
+            Equipment[s] = mTarget;
+        }
+
+    }
 
     /// <summary>
     /// Moves an item in the equipment bar to the inventory
@@ -287,7 +357,7 @@ public class Inventory : MonoBehaviour {
 
         if(Equipment[source] != null)
         {
-            Items.Add(Equipment[source]);
+            //Items.Add(Equipment[source]);
             Equipment[source] = null;
         }
     }
@@ -309,7 +379,7 @@ public class Inventory : MonoBehaviour {
     [RPC]
     public void MoveToEquipmentRPC(int source, int destination)
     {
-        if (source < 0 || source >= Items.Count || destination < 0 || destination >= Equipment.Length)
+        if (source < 0 || source >= Items.Length || destination < 0 || destination >= Equipment.Length)
             return;
 
         //If item already equipped in this slot move it.
@@ -319,12 +389,12 @@ public class Inventory : MonoBehaviour {
             {
                 Unequip(destination);
             }
-            Items.Add(Equipment[destination]);
+            //Items.Add(Equipment[destination]);
             Equipment[destination] = null;
         }
 
         Equipment[destination] = Items[source];
-        Items.RemoveAt(source);
+        //Items.RemoveAt(source);
     }
 
 	public void RemoveFromInventory(int i, string t)
@@ -342,7 +412,7 @@ public class Inventory : MonoBehaviour {
 		if(t == "I")
 		{
 			Destroy (Items [i]);
-			Items.RemoveAt (i);
+			Items[i] = null;
 		}
 		if(t == "E")
 		{
@@ -354,9 +424,9 @@ public class Inventory : MonoBehaviour {
 		}
 	}
 
-	public void AddToInventory(string name, int stack, int charges, string type)
+	public void AddToInventory(string name, int stack, int charges, string type, int index)
 	{
-		AddToInventoryRPC (name, stack, charges, type);
+		AddToInventoryRPC (name, stack, charges, type, index);
 		
 		if(Network.isServer && !networkView.isMine)
 			networkView.RPC("AddToInventoryRPC", networkView.owner, name,stack,charges, type);
@@ -366,11 +436,11 @@ public class Inventory : MonoBehaviour {
 
 	public void AddToInventory(string name, int stack, int charges)
 	{
-		AddToInventory (name, stack, charges, "I");
+		AddToInventory (name, stack, charges, "I", -1);
 	}
 
 	[RPC]
-	void AddToInventoryRPC(string name, int stack, int charges, string type)
+	void AddToInventoryRPC(string name, int stack, int charges, string type, int index)
 	{
 		ScriptableObject s = ItemManager.CreateItem (name);
 		Item item = (Item)s;
@@ -378,6 +448,12 @@ public class Inventory : MonoBehaviour {
 
 		if(type == "E")
 		{
+            if (Equipment[index] != null)
+            {
+                Equipment[index] = item;
+                return;
+            }
+            /* Old
 			for(int i = 0; i < Equipment.Length; i ++)
 			{
 				if(Equipment[i] == null)
@@ -385,47 +461,51 @@ public class Inventory : MonoBehaviour {
 					Equipment[i] = item;
 					return;
 				}
-			}
+			}*/
 
 		}
 
-		if(!item.Stackable)
-		{
-			Items.Add (item);
-			return;
-		}
+        if (type == "I")
+        {
 
-		int stackLeft = stack;
+            if (!item.Stackable || index != -1)
+            {
+                Items[index] = item;
+                return;
+            }
 
-		for(int i = 0; i < Items.Count; i++)
-		{
-			Item itemC = Items[i];
-			if(itemC.Name == item.Name)
-			{
-				int stackSpace = itemC.StackMax - itemC.StackAmount;
-				
-				if(stackLeft <= stackSpace)
-				{
-					ChangeStack(i, itemC.StackAmount + stackLeft);
-					//itemC.StackAmount += stackLeft;
-					
-					stackLeft = 0;
-					Destroy (item);
-					break;
-				}
-				else
-				{
-					ChangeStack(i,itemC.StackMax);
-					stackLeft -= stackSpace;
-				}
-			}
-		}
-		
-		if(stackLeft > 0)
-		{
-			item.StackAmount = stackLeft;
-			Items.Add(item);			
-		}		
+            int stackLeft = stack;
+
+            for (int i = 0; i < Items.Length; i++)
+            {
+                Item itemC = Items[i];
+                if (itemC != null && itemC.Name == item.Name)
+                {
+                    int stackSpace = itemC.StackMax - itemC.StackAmount;
+
+                    if (stackLeft <= stackSpace)
+                    {
+                        ChangeStack(i, itemC.StackAmount + stackLeft);
+                        //itemC.StackAmount += stackLeft;
+
+                        stackLeft = 0;
+                        Destroy(item);
+                        break;
+                    }
+                    else
+                    {
+                        ChangeStack(i, itemC.StackMax);
+                        stackLeft -= stackSpace;
+                    }
+                }
+            }
+
+            if (stackLeft > 0)
+            {
+                item.StackAmount = stackLeft;
+                Items[FreeIndex()] = item;
+            }
+        }
 	}
 
 	[RPC]
@@ -433,13 +513,17 @@ public class Inventory : MonoBehaviour {
 	{
 		AddToInventory (name, amount, -1);
 		return;
-		ScriptableObject s = ItemManager.CreateItem (name);
-		Item item = (Item)s;
-		if(item.Stackable)
-			item.StackAmount = Mathf.Clamp (amount, 0, item.StackMax);
-
-		Items.Add (item);
 	}
+
+    public int FreeIndex()
+    {
+        for (int i = 0; i < Items.Length; i++)
+        {
+            if (Items[i] == null)
+                return i;
+        }
+        return -1;
+    }
 
     /// <summary>
     /// Change the amount in a stack of an inventory item
@@ -476,7 +560,7 @@ public class Inventory : MonoBehaviour {
 			string type = "I";
 
 			//Look through each item in the inventory for a match
-			for(int i = 0; i < Items.Count; i++)
+            for (int i = 0; i < Items.Length; i++)
 			{
 				if(Items[i] == item)
 					index=i;
@@ -511,7 +595,7 @@ public class Inventory : MonoBehaviour {
 	{
 		Item item = null;
 
-		if(type == "I" && Items.Count > i)
+        if (type == "I" && Items.Length > i)
 		{
 			item = Items[i];
 		}
@@ -530,36 +614,45 @@ public class Inventory : MonoBehaviour {
 	{
 		foreach(Item.ItemState item in state.Items)
 		{
-			AddToInventory(item.Name,item.Stack,item.Charges);
+			AddToInventory(item.Name,item.Stack,item.Charges, "I", item.Index);
 		}
 
 		foreach(Item.ItemState item in state.Equips)
 		{
-			AddToInventory(item.Name,item.Stack,item.Charges, "E");
+			AddToInventory(item.Name,item.Stack,item.Charges, "E", item.Index);
 		}
 	}
 
 	public InventoryState GetInvState()
 	{
 		InventoryState state = new InventoryState ();
-		foreach (Item item in Items) 
+        for (int i = 0; i < Items.Length; i++)
 		{
-			state.Items.Add(item.GetItemState());
+            if (Items[i] != null)
+            {
+                Item.ItemState iState = Items[i].GetItemState();
+                iState.Index = i;
+                state.Items.Add(iState);
+            }
 		}
 
 		for(int i = 0; i < Equipment.Length; i++)
 		{
-			if(Equipment[i] != null)
-				state.Equips.Add(Equipment[i].GetItemState());
+            if (Equipment[i] != null)
+            {
+                Item.ItemState iState = Items[i].GetItemState();
+                iState.Index = i;
+                state.Equips.Add(Equipment[i].GetItemState());
+            }
 		}
 		return state;
 	}
 
 	public void VerifyItems()
 	{
-		for(int i = Items.Count-1; i > -1; i--)
+        for (int i = Items.Length - 1; i > -1; i--)
 		{
-			if(Items[i].Stackable && Items[i].StackAmount <= 0)
+			if(Items[i] != null && Items[i].Stackable && Items[i].StackAmount <= 0)
 			{
 				this.RemoveFromInventory(i, "I");
 			}
@@ -586,11 +679,11 @@ public class Inventory : MonoBehaviour {
 	{
 		if(item.StackAmount == 0)
 		{
-			for(int i = Items.Count-1; i > -1; i--)
+            for (int i = Items.Length - 1; i > -1; i--)
 			{
 				if(Items[i] == item)
 				{
-					Items.RemoveAt(i);
+					Items[i] = null;
 					break;
 				}
 			}

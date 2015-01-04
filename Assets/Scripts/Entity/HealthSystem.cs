@@ -14,7 +14,7 @@ using System.Collections.Generic;
 /// <summary>
 /// This system keeps all the information for a living entity.
 /// </summary>
-[AddComponentMenu("Health System/Health Attributes")]
+[AddComponentMenu("Entity/Health System")]
 public class HealthSystem : MonoBehaviour {
 
 	#region Fields
@@ -275,7 +275,7 @@ public class HealthSystem : MonoBehaviour {
 
 	public void ChangeHunger(int hunger)
 	{
-        if (Network.isServer)
+        if (Network.isServer && networkView != null)
         {
             networkView.RPC("ChangeHungerRPC", RPCMode.Others, hunger);
             ChangeHungerRPC(hunger);

@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[AddComponentMenu("EffectsSystem/Sound Effect")]
 public class SoundEffect : MonoBehaviour {
 
 	// Use this for initialization

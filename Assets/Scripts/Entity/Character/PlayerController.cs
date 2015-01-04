@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[AddComponentMenu("Enetity/Character/Controller")]
 [RequireComponent(typeof(HUD), typeof(HealthSystem), typeof(NetworkView))]
 public class PlayerController : EntityController {
 
@@ -82,6 +83,8 @@ public class PlayerController : EntityController {
             cameraController.Set(CameraTarget.position);
             hud = GetComponent<HUD>();
             HUD.Instance = hud;
+            HUDN.Instance.Inventory = Inventory;
+            HUDN.Instance.Controller = this;
         }
             
 	}
@@ -119,16 +122,16 @@ public class PlayerController : EntityController {
 
             if (ItemDrop.ItemToPickUp != null)
             {
-                hud.HelperInput("Pickup " + ItemDrop.ItemToPickUp.item.Name, "F", 0.1f);
+                //hud.HelperInput("Pickup " + ItemDrop.ItemToPickUp.item.Name, "F", 0.1f);
 
                 if (Vector3.Distance(transform.position, ItemDrop.ItemToPickUp.transform.position) < 2)
                 {
-                    if (Input.GetButtonDown("Interact") && !hud.HUDFocus)
+                    if (Input.GetButtonDown("Interact"))
                     {
                         if (!FirstItem)
                         {
                             FirstItem = true;
-                            hud.HelperMessage("You just picked up your first item, Press (I) to open up the inventory and crafting screens. Pick up more items to find new crafting recipes.", 10, 3);
+                            //hud.HelperMessage("You just picked up your first item, Press (I) to open up the inventory and crafting screens. Pick up more items to find new crafting recipes.", 10, 3);
                         }
                         Inventory.AddToInventory(ItemDrop.ItemToPickUp.item.name, ItemDrop.ItemToPickUp.ItemStack, ItemDrop.ItemToPickUp.ItemCharges);
                         ItemManager.RemoveDropFromWorld(ItemDrop.ItemToPickUp.DropID);
@@ -140,29 +143,31 @@ public class PlayerController : EntityController {
                 }
             }
 
-            if (Input.GetButtonDown("Inventory") && !hud.ShowChat)
+            if (Input.GetButtonDown("Inventory"))
             {
-                hud.ToggleInventory();
+                HUDN.ToggleInventory();
+                //hud.ToggleInventory();
             }
-            if (Input.GetButtonDown("Start") && hud.ShowChat)
+            if (Input.GetButtonDown("Start"))
             {
-                hud.ToggleChat();
+                //hud.ToggleChat();
 
-            }
-            else if (Input.GetButtonDown("Start") && hud.ShowInventory)
-            {
-                hud.ToggleInventory();
             }
             else if (Input.GetButtonDown("Start"))
             {
-                hud.ToggleMenu();
+                HUDN.ToggleInventory();
+                //hud.ToggleInventory();
+            }
+            else if (Input.GetButtonDown("Start"))
+            {
+                //hud.ToggleMenu();
             }
 
-            if (Input.GetKeyDown(KeyCode.L))
-                hud.DebugToggle();
+            //if (Input.GetKeyDown(KeyCode.L))
+                //hud.DebugToggle();
 
-            if (Input.GetKeyDown(KeyCode.Tab))
-                hud.PlayerListToggle();
+            //if (Input.GetKeyDown(KeyCode.Tab))
+                //hud.PlayerListToggle();
         }
     }
 
@@ -177,12 +182,12 @@ public class PlayerController : EntityController {
 			if(!FirstMovement)
 			{
 				FirstMovement = true;
-				hud.HelperMessage ("Welcome to Instincts " + PlayerName + ". Use the WASD keys to move your character.", 10, 3);
+				//hud.HelperMessage ("Welcome to Instincts " + PlayerName + ". Use the WASD keys to move your character.", 10, 3);
 			}
 
 			UpdateInput ();
 			
-			if(!hud.HUDFocus && Inventory != null && !(Inventory.SelectedIndex < 0 || Inventory.SelectedIndex > 5) )
+			if(Inventory != null && !(Inventory.SelectedIndex < 0 || Inventory.SelectedIndex > 5) )
 			{
 				Item item = Inventory.Equipment[Inventory.SelectedIndex];
 				if(item != null)
@@ -442,7 +447,7 @@ public class PlayerController : EntityController {
 
             //TODO: Make a dead body here, hide the alive one.
 
-            hud.SetDead(true);
+            //hud.SetDead(true);
 
             UnsetEquipped();
 
@@ -468,7 +473,7 @@ public class PlayerController : EntityController {
         if (networkView.isMine)
         {
             cameraController.Set(position);
-            hud.SetDead(false);
+            //hud.SetDead(false);
         }
 
         if (Network.isServer)
@@ -507,15 +512,6 @@ public class PlayerController : EntityController {
     #region GUI
 
     //GUI
-	public Texture2D BloodScreen;
-	public Texture2D HungerIcon;
-	private float bloodOpacity = 0;
-	private float bloodStartTime = 0;
-	private float bloodStartValue = 0;
-	private float bloodEndTime = 0;
-	private float bloodEndValue = 0;
-	private int bloodHealth = 0;
-	private float hungerPercent;
 	public Texture2D Crosshair;
 	
 	private Rect KillsPlayerRect = new Rect(10,10,100,20);
@@ -525,61 +521,8 @@ public class PlayerController : EntityController {
 	{
 		if (networkView.isMine)
 		{
-			if(false)
-			{
-				GUI.Label(new Rect(10,10,200,30), "Rotation: " + transform.rotation.eulerAngles.z.ToString());
-				GUI.Label(new Rect(10,35,200,30), "Position: " + transform.position.ToString());
-				GUI.Label(new Rect(10,60,200,30), "Health: " + Health.Health + " / " + Health.HealthMax);
-                GUI.Label(new Rect(10, 85, 200, 30), "Hunger: " + Health.Hunger + " / " + Health.HungerMax);
-                GUI.Label(new Rect(10, 110, 200, 30), "Stamina: " + (int)Health.Stamina + " / " + (int)Health.StaminaMax);
-                GUI.Label(new Rect(10, 135, 200, 30), "Velocity: " + rigidbody2D.velocity.ToString());
-			}
-			Color guiColor = Color.white;
-
-			if(bloodOpacity > 0)
-			{
-				guiColor = Color.white;
-				guiColor.a = bloodOpacity;
-				GUI.color = guiColor;
-				GUI.DrawTexture(new Rect(0,0,Screen.width,Screen.height), BloodScreen);
-				GUI.color = Color.white;
-				
-			}
-			
-			if(Time.time < bloodEndTime)
-			{
-				float timePassed = Time.time - bloodStartTime;
-				float timePercent = timePassed / 0.2f;
-				float bloodDifference = bloodEndValue - bloodStartValue;
-				float newopacity = (bloodStartValue + bloodDifference*timePercent) / (float)Health.HealthMax;
-				bloodOpacity = 1f-newopacity;
-			}
-			else
-			{
-				bloodOpacity = 1f-(bloodHealth / (float)Health.HealthMax);
-			}
-			
-			if(Health.Health != bloodHealth)
-			{
-				bloodStartTime = Time.time;
-				bloodStartValue = bloodHealth;
-				bloodEndTime = Time.time + 0.2f;
-				bloodEndValue = Health.Health;
-				bloodHealth = Health.Health;
-			}
-			
-			hungerPercent = 1f - ((float)Health.Hunger / (float)Health.HungerMax);
-			guiColor = Color.white;
-			guiColor.a = hungerPercent;
-			GUI.color = guiColor;
-			float hungerSize = Screen.width*0.04f;
-			Rect hungerRect = new Rect(Screen.width-hungerSize,Screen.height-hungerSize,hungerSize,hungerSize);
-			GUI.DrawTexture(hungerRect, HungerIcon);
-			GUI.color = Color.white;
-			//GUI.Label(new Rect(Screen.width-hungerSize-100,Screen.height-20,100,20), HealthSystem.Hunger.ToString() + "/" + hungerSize.ToString() + "/" + hungerPercent.ToString());
-			
 			float crosshairSize = Screen.width *0.01f;
-			if(Crosshair != null && !hud.HUDFocus)
+			if(Crosshair != null && !HUDN.IsInventory())
 				GUI.DrawTexture(new Rect(Input.mousePosition.x-12,Screen.height-Input.mousePosition.y-12,24,24), Crosshair);
 			
 			//Draw Stats

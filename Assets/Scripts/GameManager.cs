@@ -121,8 +121,8 @@ public class GameManager : MonoBehaviour {
 		if (messages.Count > 120)
 			messages.RemoveAt (0);
 
-		if (HUD.Instance != null)
-			HUD.Instance.ChatUpdate ();
+		//if (HUD.Instance != null)
+			//HUD.Instance.ChatUpdate ();
 	}
 
 	[RPC]

@@ -161,6 +161,7 @@ public class Item : ScriptableObject {
 		public string Name;
 		public int Stack;
 		public int Charges;
+        public int Index = 0;
 	}
 }
 

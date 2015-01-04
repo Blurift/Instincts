@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-[AddComponentMenu("EffectSystems/EffectDetacher")]
+[AddComponentMenu("EffectsSystem/EffectDetacher")]
 public class EffectDetacher : MonoBehaviour {
 
     public List<GameObject> ChildrenToDetach;

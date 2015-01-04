@@ -73,11 +73,15 @@ MonoBehaviour:
   hungerMax: 500
   stamina: 0
   staminaMax: 100
-  HungerEnabled: 0
-  StaminaEnabled: 0
-  HealthRegenerates: 0
+  hungerEnabled: 0
+  staminaEnabled: 0
+  healthRegenerates: 1
   HitEffects: []
   HitDropEffects: []
+  DeathEffectPrefab: {fileID: 0}
+  DeathRemainsPrefab: {fileID: 0}
+  entityCategory: 0
+  hostiles: 
   RegenDelay: 1
 --- !u!212 &21200000
 SpriteRenderer:

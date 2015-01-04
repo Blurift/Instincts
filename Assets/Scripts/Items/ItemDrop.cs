@@ -62,7 +62,7 @@ public class ItemDrop : MonoBehaviour {
 
 
         //Debug.Log("ItemDrop: " + ready + " - " + !HUD.Instance.HUDFocus);
-        if (ready && !HUD.Instance.HUDFocus)
+        if (ready && !HUDN.IsInventory())
         {
             //Debug.Log("ItemDrop: Testing setup");
             Vector2 p = HUD.Instance.transform.position;

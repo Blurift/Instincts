@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-[AddComponentMenu("EffectSystem/ParticleLegacy")]
+[AddComponentMenu("EffectsSystem/ParticleLegacy")]
 public class EffectParticleLegacy : MonoBehaviour {
 
     private float startTime = 0;

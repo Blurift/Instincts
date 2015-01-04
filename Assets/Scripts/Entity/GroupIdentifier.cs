@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+[AddComponentMenu("Entity/GroupIdentifier")]
 public class GroupBehaviour : MonoBehaviour {
 
     /// <summary>

@@ -269,8 +269,8 @@ public class NetworkManager : MonoBehaviour {
 			if(state == null)
 			{
 				SpawnPlayer(id, GetSpawnLocation(), user, hair,hairStyle,top);
-				PlayerStates[player].GameObject.GetComponent<Inventory>().AddToInventory("WoodStick",1,-1,"E");
-				PlayerStates[player].GameObject.GetComponent<Inventory>().AddToInventory("Cloth",1);
+				PlayerStates[player].GameObject.GetComponent<Inventory>().AddToInventory("WoodStick",1,-1,"E",0);
+				PlayerStates[player].GameObject.GetComponent<Inventory>().AddToInventory("Cloth",1,-1);
 			}
 			else
 			{
@@ -404,7 +404,7 @@ public class NetworkManager : MonoBehaviour {
             p.PlayerRespawn(l);
 
 			//Give player default weapon.
-			PlayerStates[player].GameObject.GetComponent<Inventory>().AddToInventory("WoodStick",1,-1,"E");
+			PlayerStates[player].GameObject.GetComponent<Inventory>().AddToInventory("WoodStick",1,-1,"E",0);
 			PlayerStates[player].GameObject.GetComponent<Inventory>().AddToInventory("Cloth",1);
 
 			

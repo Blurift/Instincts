@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
+[AddComponentMenu("EffectsSystem/Explode Children")]
 public class ExplodeChildren : MonoBehaviour {
     private List<Child> pieces = new List<Child>();
     private float startTime;
