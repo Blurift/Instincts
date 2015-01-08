@@ -42,9 +42,11 @@ public class HUDN : MonoBehaviour {
     //Inventory
     private HUDInvSlot[] invSlots;
     private HUDInvSlot[] equipSlots;
+    public RectTransform[] equipPlaceHolders;
     public RectTransform InvPanel;
-    public RectTransform EquipPanel;
     public GameObject InvSlotPrefab;
+    public Sprite EquippedNormal;
+    public Sprite EquippedSelected;
 
     //OnScreen
     public GameObject Tooltip;
@@ -52,12 +54,33 @@ public class HUDN : MonoBehaviour {
     public Item DraggedItem;
     public bool DraggingItem = false;
 
+    //HelperText
+    public RectTransform HelperTextContainer;
+    public Text HelperTextContainerText;
+    private float helperTextOffsetCurrent = 0;
+    private float helperTextOffsetTarget = 0;
+    private float helperTextStart = 0;
+    private float helperTextDuration = 5;
+
+    //Effects
+    public Image BloodEffect;
+    public AnimationCurve BloodCurve;
+    private float bloodStart = 0;
+    private float bloodDuration = 0.5f;
+
     #endregion
+
+    void Awake()
+    {
+        if (Instance == null)
+            Instance = this;
+    }
+
+    #region Initialize
 
     // Use this for initialization
 	void Start () {
-        if (Instance == null)
-            Instance = this;
+        
 
         //Populate The Inventory List
         if(InvPanel != null)
@@ -86,6 +109,8 @@ public class HUDN : MonoBehaviour {
                 rt.offsetMax = new Vector2(-2, -2);
                 rt.offsetMin = new Vector2(2, 2);
 
+                rt.localRotation = InvPanel.localRotation;
+
                 x++;
                 if(x == 5)
                 {
@@ -104,59 +129,39 @@ public class HUDN : MonoBehaviour {
                 equipSlots[i].Slot = i;
                 equipSlots[i].SlotType = "E";
 
-                slot.transform.SetParent(EquipPanel);
+                slot.transform.SetParent(equipPlaceHolders[i]);
                 RectTransform rt = slot.GetComponent<RectTransform>();
 
-                rt.anchorMin = new Vector2(i * 0.1666f, 0);
-                rt.anchorMax = new Vector2(i * 0.1666f + 0.1666f, 1);
+                rt.anchorMin = new Vector2(0, 0);
+                rt.anchorMax = new Vector2(1, 1);
 
                 rt.offsetMax = new Vector2(-2, -2);
                 rt.offsetMin = new Vector2(2, 2);
             }
 
         }
+
+        HelperTextSetup();
 	}
-	
-	// Update is called once per frame
+
+    #endregion
+
+    // Update is called once per frame
 	void Update ()
     {
-        /*
-        #region Test
-        if (Input.GetKeyDown(KeyCode.I))
-            ToggleInventory();
 
-        if(Input.GetKeyDown(KeyCode.Q))
-            healthTarget += 0.1f;
-        if (Input.GetKeyDown(KeyCode.A))
-            healthTarget -= 0.1f;
-        if (Input.GetKeyDown(KeyCode.W))
-            staminaTarget += 0.1f;
-        if (Input.GetKeyDown(KeyCode.S))
-            staminaTarget -= 0.1f;
-        if (Input.GetKeyDown(KeyCode.E))
-            hungerTarget += 0.1f;
-        if (Input.GetKeyDown(KeyCode.D))
-            hungerTarget -= 0.1f;
-
-        if (healthTarget > 1) healthTarget = 1;
-        if (healthTarget < 0) healthTarget = 0;
-        if (staminaTarget > 1) staminaTarget = 1;
-        if (staminaTarget < 0) staminaTarget = 0;
-        if (hungerTarget > 1) hungerTarget = 1;
-        if (hungerTarget < 0) hungerTarget = 0;
-
-        #endregion
-        */
- 
         if(DraggingItem)
         {
             Vector3 mp = Input.mousePosition - CanvasTransform.localPosition;
             DraggedItemGameObject.GetComponent<RectTransform>().localPosition = mp;
         }
 
+        HelperTextUpdate();
+        HelperInputUpdate();
         SetVitals();
+        BloodUpdate();
         InvPopulate();
-        CraftingPopulate();
+        
 
         
 	}
@@ -176,6 +181,17 @@ public class HUDN : MonoBehaviour {
     {
         Instance.InventoryPanel.SetActive(!Instance.InventoryPanel.activeInHierarchy);
         Instance.CraftingPanel.SetActive(Instance.InventoryPanel.activeInHierarchy);
+        Instance.CraftingPopulate();
+    }
+
+    public static void ToggleMenu()
+    {
+        Instance.MenuPanel.SetActive(!Instance.MenuPanel.activeInHierarchy);
+    }
+
+    public void Quit()
+    {
+        NetworkManager.Disconnect();
     }
 
     public void ShowDraggedItem(Item item)
@@ -198,9 +214,14 @@ public class HUDN : MonoBehaviour {
 
     private void SetVitals()
     {
-        healthTarget = (float)Controller.Health.Health / (float)Controller.Health.HealthMax;
-        staminaTarget = (float)Controller.Health.Stamina / (float)Controller.Health.StaminaMax;
-        hungerTarget = (float)Controller.Health.Hunger / (float)Controller.Health.HungerMax;
+        if (Controller != null)
+        {
+            float ht = healthTarget;
+            healthTarget = (float)Controller.Health.Health / (float)Controller.Health.HealthMax;
+            if (healthTarget < ht) bloodStart = Time.time;
+            staminaTarget = (float)Controller.Health.Stamina / (float)Controller.Health.StaminaMax;
+            hungerTarget = (float)Controller.Health.Hunger / (float)Controller.Health.HungerMax;
+        }
         if (healthCurrent != healthTarget) healthCurrent = Mathf.Lerp(healthCurrent, healthTarget, Time.deltaTime * 2);
         if (staminaCurrent != staminaTarget) staminaCurrent = Mathf.Lerp(staminaCurrent, staminaTarget, Time.deltaTime * 2);
         if (hungerCurrent != hungerTarget) hungerCurrent = Mathf.Lerp(hungerCurrent, hungerTarget, Time.deltaTime * 2);
@@ -217,6 +238,22 @@ public class HUDN : MonoBehaviour {
         VitalsHunger.anchorMax = new Vector2(1, hungerCurrent);
         VitalsHunger.offsetMax = Vector2.zero;
         VitalsHunger.offsetMin = Vector2.zero;
+    }
+
+    private void BloodUpdate()
+    {
+        if (BloodEffect == null) return;
+
+        float time = Time.time - bloodStart;
+
+        if(time > bloodDuration)
+        {
+            BloodEffect.color = new Color(1, 1, 1, BloodCurve.Evaluate(time));
+        }
+        else
+        {
+            BloodEffect.color = new Color(1, 1, 1, 0);
+        }
     }
 
     #endregion
@@ -245,8 +282,11 @@ public class HUDN : MonoBehaviour {
                 craft.HUD = this;
                 craft.Item = craftItems[i];
                 craft.Button.onClick = craft.ButtonEvent;
-                craftGO.transform.parent = CraftingContent;
+                craftGO.transform.SetParent(CraftingContent);
+                craftGO.transform.localRotation = CraftingContent.transform.localRotation;
             }
+
+            CraftingText.text = "";
         }
     }
 
@@ -293,37 +333,74 @@ public class HUDN : MonoBehaviour {
             for (int i = 0; i < Inventory.Items.Length; i++)
             {
                 Item item = Inventory.Items[i];
-                if (item != null)
-                {
-                    invSlots[i].Item = item;
-                    invSlots[i].Image.sprite = Sprite.Create(item.Icon, new Rect(0, 0, item.Icon.width, item.Icon.height), Vector2.zero);
-                    invSlots[i].Image.gameObject.SetActive(true);
-                }
-                else
-                {
-                    invSlots[i].Item = null;
-                    invSlots[i].Image.sprite = null;
-                    invSlots[i].Image.gameObject.SetActive(false);
-                }
+                invSlots[i].Setup(item);
             }
 
             for (int i = 0; i < Inventory.Equipment.Length; i++)
             {
                 Item item = Inventory.Equipment[i];
-                if (item != null)
+                equipSlots[i].Setup(item);
+                if (i == Inventory.SelectedIndex)
                 {
-                    equipSlots[i].Item = item;
-                    equipSlots[i].Image.sprite = Sprite.Create(item.Icon, new Rect(0, 0, item.Icon.width, item.Icon.height), Vector2.zero);
-                    equipSlots[i].Image.gameObject.SetActive(true);
+                    equipSlots[i].Background.sprite = EquippedSelected;
+                    equipSlots[i].Background.color = new Color(1, 1, 1, 1);
                 }
                 else
                 {
-                    equipSlots[i].Item = null;
-                    equipSlots[i].Image.sprite = null;
-                    equipSlots[i].Image.gameObject.SetActive(false);
+                    equipSlots[i].Background.sprite = null;
+                    equipSlots[i].Background.color = new Color(0, 0, 0, 0);
                 }
             }
         }
     }
+    #endregion
+
+    #region Helper Text
+
+    private void HelperTextSetup()
+    {
+        helperTextOffsetTarget = -HelperTextContainer.rect.width;
+        helperTextOffsetCurrent = helperTextOffsetTarget;
+        HelperTextContainer.localPosition = new Vector3(helperTextOffsetCurrent, HelperTextContainer.localPosition.y, 0);
+    }
+
+    private void HelperTextUpdate()
+    {
+        //Debug.Log(helperTextOffsetTarget);
+        if (helperTextOffsetCurrent != helperTextOffsetTarget)
+        {
+            helperTextOffsetCurrent = Mathf.Lerp(helperTextOffsetCurrent, helperTextOffsetTarget, Time.deltaTime * 3);
+            HelperTextContainer.localPosition = new Vector3(helperTextOffsetCurrent, HelperTextContainer.localPosition.y, 0);
+        }
+
+        if (Time.time - helperTextStart > helperTextDuration)
+            helperTextOffsetTarget = -HelperTextContainer.rect.width;
+    }
+
+    public static void HelperText(string text)
+    {
+        Instance.helperTextStart = Time.time;
+        Instance.helperTextOffsetTarget = 0;
+        Instance.HelperTextContainerText.text = text;
+    }
+
+    public Text HelperInputText;
+    private float helperInputStart;
+    private float helperInputDuration;
+
+    private void HelperInputUpdate()
+    {
+        if (Time.time - helperInputStart > helperInputDuration)
+            HelperInputText.color = new Color(1, 1, 1, 0);
+    }
+
+    public static void HelperInput(string text,string key, float time)
+    {
+        Instance.HelperInputText.text = "Press (" + key + ") " + text;
+        Instance.helperInputStart = Time.time;
+        Instance.helperInputDuration = time;
+        Instance.HelperInputText.color = new Color(1, 1, 1, 1);
+    }
+
     #endregion
 }

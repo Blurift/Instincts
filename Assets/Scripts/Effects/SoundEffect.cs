@@ -10,6 +10,7 @@ public class SoundEffect : MonoBehaviour {
 		{
 			NetworkManager.RemoveNetworkBuffer(networkView.viewID);
 		}
+        audio.volume *= GameManager.SoundLevel;
 	}
 	
 	// Update is called once per frame

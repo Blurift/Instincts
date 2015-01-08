@@ -162,6 +162,11 @@ public class Item : ScriptableObject {
 		public int Stack;
 		public int Charges;
         public int Index = 0;
+
+        public override string ToString()
+        {
+            return "ItemState( " + Name + ", " + Stack + ", " + Charges + ", " + Index + ")";
+        }
 	}
 }
 

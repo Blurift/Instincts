@@ -2,7 +2,7 @@
 using System.Collections;
 
 [AddComponentMenu("Enetity/Character/Controller")]
-[RequireComponent(typeof(HUD), typeof(HealthSystem), typeof(NetworkView))]
+[RequireComponent(typeof(HealthSystem), typeof(NetworkView))]
 public class PlayerController : EntityController {
 
 	public string PlayerName = "Player";
@@ -44,7 +44,6 @@ public class PlayerController : EntityController {
 
     public SpriteRenderer Hair;
     public CameraController cameraController;
-    private HUD hud;
     public Inventory Inventory;
 
 	void Awake()
@@ -81,8 +80,7 @@ public class PlayerController : EntityController {
             cameraController = Camera.main.GetComponent<CameraController>();
             cameraController.Target = CameraTarget;
             cameraController.Set(CameraTarget.position);
-            hud = GetComponent<HUD>();
-            HUD.Instance = hud;
+
             HUDN.Instance.Inventory = Inventory;
             HUDN.Instance.Controller = this;
         }
@@ -122,7 +120,7 @@ public class PlayerController : EntityController {
 
             if (ItemDrop.ItemToPickUp != null)
             {
-                //hud.HelperInput("Pickup " + ItemDrop.ItemToPickUp.item.Name, "F", 0.1f);
+                HUDN.HelperInput("Pickup " + ItemDrop.ItemToPickUp.item.Name, "F", 0.1f);
 
                 if (Vector3.Distance(transform.position, ItemDrop.ItemToPickUp.transform.position) < 2)
                 {
@@ -131,7 +129,7 @@ public class PlayerController : EntityController {
                         if (!FirstItem)
                         {
                             FirstItem = true;
-                            //hud.HelperMessage("You just picked up your first item, Press (I) to open up the inventory and crafting screens. Pick up more items to find new crafting recipes.", 10, 3);
+                            HUDN.HelperText("You just picked up your first item, Press (I) to open up the inventory and crafting screens. Pick up more items to find new crafting recipes.");
                         }
                         Inventory.AddToInventory(ItemDrop.ItemToPickUp.item.name, ItemDrop.ItemToPickUp.ItemStack, ItemDrop.ItemToPickUp.ItemCharges);
                         ItemManager.RemoveDropFromWorld(ItemDrop.ItemToPickUp.DropID);
@@ -146,28 +144,16 @@ public class PlayerController : EntityController {
             if (Input.GetButtonDown("Inventory"))
             {
                 HUDN.ToggleInventory();
-                //hud.ToggleInventory();
             }
             if (Input.GetButtonDown("Start"))
             {
-                //hud.ToggleChat();
+                HUDN.ToggleMenu();
 
             }
             else if (Input.GetButtonDown("Start"))
             {
                 HUDN.ToggleInventory();
-                //hud.ToggleInventory();
             }
-            else if (Input.GetButtonDown("Start"))
-            {
-                //hud.ToggleMenu();
-            }
-
-            //if (Input.GetKeyDown(KeyCode.L))
-                //hud.DebugToggle();
-
-            //if (Input.GetKeyDown(KeyCode.Tab))
-                //hud.PlayerListToggle();
         }
     }
 
@@ -182,7 +168,7 @@ public class PlayerController : EntityController {
 			if(!FirstMovement)
 			{
 				FirstMovement = true;
-				//hud.HelperMessage ("Welcome to Instincts " + PlayerName + ". Use the WASD keys to move your character.", 10, 3);
+				HUDN.HelperText ("Welcome to Instincts " + PlayerName + ". Use the WASD keys to move your character.");
 			}
 
 			UpdateInput ();

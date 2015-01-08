@@ -30,9 +30,7 @@ GameObject:
   - 114: {fileID: 11400010}
   - 114: {fileID: 11400000}
   - 114: {fileID: 11400006}
-  - 114: {fileID: 11400008}
   - 95: {fileID: 9500004}
-  - 58: {fileID: 5800002}
   m_Layer: 10
   m_Name: player
   m_TagString: Player
@@ -494,17 +492,6 @@ CircleCollider2D:
   m_IsTrigger: 0
   m_Radius: .300000012
   m_Center: {x: 0, y: 0}
---- !u!58 &5800002
-CircleCollider2D:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 100002}
-  m_Enabled: 0
-  m_Material: {fileID: 0}
-  m_IsTrigger: 1
-  m_Radius: .300000012
-  m_Center: {x: 0, y: 0}
 --- !u!95 &9500004
 Animator:
   serializedVersion: 3
@@ -554,15 +541,17 @@ MonoBehaviour:
   hungerMax: 500
   stamina: 0
   staminaMax: 100
-  HungerEnabled: 1
-  StaminaEnabled: 1
-  HealthRegenerates: 1
+  hungerEnabled: 1
+  staminaEnabled: 1
+  healthRegenerates: 1
   HitEffects:
   - {fileID: 100000, guid: 3a18f21101ca2ee48833771407afe8cc, type: 2}
   HitDropEffects:
   - {fileID: 100000, guid: e2f82f9154ae1ad44b1e7955748abd98, type: 2}
   DeathEffectPrefab: {fileID: 0}
   DeathRemainsPrefab: {fileID: 0}
+  entityCategory: 0
+  hostiles: 
   RegenDelay: 1
 --- !u!114 &11400006
 MonoBehaviour:
@@ -575,26 +564,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ba27108b4c3d3c478126e9a287eab2a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &11400008
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 100002}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d0ea093c098c733479c03c89c8a478cb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Controller: {fileID: 0}
-  Inventory: {fileID: 11400000}
-  EquipmentRack: {fileID: 2800000, guid: 9b97cdba753a96a4c836412a51edd082, type: 3}
-  SelectedEquip: {fileID: 0}
-  IconDropItem: {fileID: 2800000, guid: e5e231387e42b404bb2be0c1f8232cd3, type: 3}
-  Filler: {fileID: 2800000, guid: 3edaa191f6e1e2b4481d95e741cce494, type: 3}
-  ChatWidthPercent: .25
-  InvSkin: {fileID: 11400000, guid: bcea0cf6634ef924eb96139ff829befc, type: 2}
-  EquipmentWidthPercent: .25
 --- !u!114 &11400010
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -628,8 +597,6 @@ MonoBehaviour:
   Hair: {fileID: 21200008}
   cameraController: {fileID: 0}
   Inventory: {fileID: 11400000}
-  BloodScreen: {fileID: 2800000, guid: 4312fc726ed840f46842b336a8e54bc2, type: 3}
-  HungerIcon: {fileID: 2800000, guid: 2d24564194fec4a41ba1fbb901214299, type: 3}
   Crosshair: {fileID: 2800000, guid: 499d3e4f6dfa331468695d19a0b30687, type: 3}
 --- !u!148 &14800000
 NetworkView:

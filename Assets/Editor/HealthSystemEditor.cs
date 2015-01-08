@@ -20,15 +20,12 @@ public class HealthSystemEditor : Editor {
 
     private SerializedObject m_object;
 
-    private SerializedProperty m_health;
     private SerializedProperty m_healthMax;
     private SerializedProperty m_healthRegen;
 
-    private SerializedProperty m_stamina;
     private SerializedProperty m_staminaMax;
     private SerializedProperty m_staminaOn;
 
-    private SerializedProperty m_hunger;
     private SerializedProperty m_hungerMax;
     private SerializedProperty m_hungerOn;
     
@@ -53,15 +50,12 @@ public class HealthSystemEditor : Editor {
     {
         m_object = new SerializedObject(target);
 
-        m_health = m_object.FindProperty("health");
         m_healthMax = m_object.FindProperty("healthMax");
         m_healthRegen = m_object.FindProperty("healthRegenerates");
 
-        m_stamina = m_object.FindProperty("stamina");
         m_staminaMax = m_object.FindProperty("staminaMax");
         m_staminaOn = m_object.FindProperty("staminaEnabled");
 
-        m_hunger = m_object.FindProperty("hunger");
         m_hungerMax = m_object.FindProperty("hungerMax");
         m_hungerOn = m_object.FindProperty("hungerEnabled");
 

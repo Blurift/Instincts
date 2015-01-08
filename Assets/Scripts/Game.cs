@@ -2,6 +2,6 @@
 
 public class Game {
     //Static info
-    public const string TypeName = "BluriftInstincts047";
-    public const string VERSION = "0.4.7";
+    public const string TypeName = "BluriftInstincts048";
+    public const string VERSION = "0.4.8";
 }

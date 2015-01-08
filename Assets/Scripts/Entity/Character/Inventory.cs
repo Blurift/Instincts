@@ -424,97 +424,126 @@ public class Inventory : MonoBehaviour {
 		}
 	}
 
-	public void AddToInventory(string name, int stack, int charges, string type, int index)
+    #region Add to Inventory
+
+    /// <summary>
+    /// Adds an item to the inventory.
+    /// </summary>
+    /// <param name="name">Name of the item to look up.</param>
+    /// <param name="stack">How large the stack of the item is, -1 to use default.</param>
+    /// <param name="charges">How many charges the current item has. -1 to use default.</param>
+    /// <param name="type">The type of slot to add the item to, "I" to use default.</param>
+    /// <param name="index">The index of where to add the item too, -1 to fine available.</param>
+    /// <returns></returns>
+	public bool AddToInventory(string name, int stack, int charges, string type, int index)
 	{
-		AddToInventoryRPC (name, stack, charges, type, index);
-		
 		if(Network.isServer && !networkView.isMine)
-			networkView.RPC("AddToInventoryRPC", networkView.owner, name,stack,charges, type);
+			networkView.RPC("AddToInventoryRPC", networkView.owner, name,stack,charges, type, index);
 		else if(Network.isClient)
-			networkView.RPC("AddToInventoryRPC", RPCMode.Server, name,stack,charges, type);
+			networkView.RPC("AddToInventoryRPC", RPCMode.Server, name,stack,charges, type, index);
+
+        return AddToInventoryRPC(name, stack, charges, type, index);
 	}
 
-	public void AddToInventory(string name, int stack, int charges)
+	public bool AddToInventory(string name, int stack, int charges)
 	{
-		AddToInventory (name, stack, charges, "I", -1);
+		return AddToInventory (name, stack, charges, "I", -1);
 	}
 
 	[RPC]
-	void AddToInventoryRPC(string name, int stack, int charges, string type, int index)
+	bool AddToInventoryRPC(string name, int stack, int charges, string type, int index)
 	{
 		ScriptableObject s = ItemManager.CreateItem (name);
 		Item item = (Item)s;
-		if(charges != -1)		item.BController.Charges = charges;
+        if (stack != -1) item.StackAmount = stack;
+		if (charges != -1)		item.BController.Charges = charges;
 
+        //If item to add to inventory is Equipment
 		if(type == "E")
 		{
-            if (Equipment[index] != null)
+            if (Equipment[index] == null)
             {
                 Equipment[index] = item;
-                return;
+                return true;
             }
-            /* Old
-			for(int i = 0; i < Equipment.Length; i ++)
-			{
-				if(Equipment[i] == null)
-				{
-					Equipment[i] = item;
-					return;
-				}
-			}*/
-
 		}
 
+        //It Item to add to inventory is for Inventory slots
         if (type == "I")
         {
-
-            if (!item.Stackable || index != -1)
+            //If item has a set index
+            if(index != -1)
             {
                 Items[index] = item;
-                return;
+                return true;
             }
 
-            int stackLeft = stack;
+            //Search for index,
+            index = FreeIndex();
 
-            for (int i = 0; i < Items.Length; i++)
+
+            //If item is not stackable
+            if (!item.Stackable && index > -1)
             {
-                Item itemC = Items[i];
-                if (itemC != null && itemC.Name == item.Name)
+                Items[index] = item;
+                return true;
+            }
+
+            //If item is stackable go through the inventory to see if their is any stacks to add too.
+            if (item.Stackable)
+            {
+
+                int stackLeft = stack;
+
+                for (int i = 0; i < Items.Length; i++)
                 {
-                    int stackSpace = itemC.StackMax - itemC.StackAmount;
-
-                    if (stackLeft <= stackSpace)
+                    Item itemC = Items[i];
+                    if (itemC != null && itemC.Name == item.Name)
                     {
-                        ChangeStack(i, itemC.StackAmount + stackLeft);
-                        //itemC.StackAmount += stackLeft;
+                        int stackSpace = itemC.StackMax - itemC.StackAmount;
 
-                        stackLeft = 0;
-                        Destroy(item);
-                        break;
-                    }
-                    else
-                    {
-                        ChangeStack(i, itemC.StackMax);
-                        stackLeft -= stackSpace;
+                        if (stackLeft <= stackSpace)
+                        {
+                            ChangeStack(i, itemC.StackAmount + stackLeft);
+
+                            stackLeft = 0;
+                            Destroy(item);
+                            return true;
+                        }
+                        else
+                        {
+                            ChangeStack(i, itemC.StackMax);
+                            stackLeft -= stackSpace;
+                        }
                     }
                 }
-            }
 
-            if (stackLeft > 0)
-            {
-                item.StackAmount = stackLeft;
-                Items[FreeIndex()] = item;
+                if(index > -1)
+                {
+                    item.StackAmount = stackLeft;
+                    Items[FreeIndex()] = item;
+                    return true;
+                }
             }
         }
+
+        //Check if this is the controller of the inventoryy and warn them their inventory is full.
+        if (networkView.isMine)
+            HUDN.HelperText("Your inventory is full, you can't pick up this item.");
+
+        return false;
 	}
 
 	[RPC]
-	public void AddToInventory(string name, int amount)
+	public bool AddToInventory(string name, int amount)
 	{
-		AddToInventory (name, amount, -1);
-		return;
+		return AddToInventory (name, amount, -1);
 	}
 
+    /// <summary>
+    /// Find a a place in the inventory that is not holding an item. 
+    /// </summary>
+    /// <returns>The index of a free slot, -1 if no available slot.</returns>
     public int FreeIndex()
     {
         for (int i = 0; i < Items.Length; i++)
@@ -524,6 +553,8 @@ public class Inventory : MonoBehaviour {
         }
         return -1;
     }
+
+    #endregion
 
     /// <summary>
     /// Change the amount in a stack of an inventory item
@@ -623,6 +654,10 @@ public class Inventory : MonoBehaviour {
 		}
 	}
 
+    /// <summary>
+    /// Get the state of the inventory it currently is.
+    /// </summary>
+    /// <returns></returns>
 	public InventoryState GetInvState()
 	{
 		InventoryState state = new InventoryState ();
@@ -640,9 +675,9 @@ public class Inventory : MonoBehaviour {
 		{
             if (Equipment[i] != null)
             {
-                Item.ItemState iState = Items[i].GetItemState();
+                Item.ItemState iState = Equipment[i].GetItemState();
                 iState.Index = i;
-                state.Equips.Add(Equipment[i].GetItemState());
+                state.Equips.Add(iState);
             }
 		}
 		return state;

@@ -13,9 +13,12 @@ public class AIWander : AIAction {
 
 	public override void Update ()
 	{
-			ParentAI.Speed = ParentAI.BaseSpeed;
-			ParentAI.Move(ParentAI.transform.position + GetRandomDirection());
-			ParentAI.Stun(1);
+        if (ParentAI.CurrentPath == null)
+        {
+            ParentAI.Speed = ParentAI.BaseSpeed;
+            ParentAI.Move(ParentAI.transform.position + GetRandomDirection());
+            ParentAI.Stun(1);
+        }
 	}
 
 	private Vector3 GetRandomDirection()

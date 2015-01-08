@@ -65,7 +65,7 @@ public class ItemDrop : MonoBehaviour {
         if (ready && !HUDN.IsInventory())
         {
             //Debug.Log("ItemDrop: Testing setup");
-            Vector2 p = HUD.Instance.transform.position;
+            Vector2 p = HUDN.Instance.Controller.transform.position;
             //Check distance to player;
             if (Vector2.Distance(gameObject.transform.position, p) < 2)
             {

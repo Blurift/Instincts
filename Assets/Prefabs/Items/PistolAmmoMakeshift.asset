@@ -11,7 +11,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5369fed2eb8460a4dacb0f61789f720b, type: 3}
   m_Name: PistolAmmoMakeshift
   m_EditorClassIdentifier: 
-  Name: PistolAmmoMakeshift
+  Name: Pistol Ammo Makeshift
   Description: Used to craft.
   Weight: .300000012
   Icon: {fileID: 2800000, guid: 5de530057a54791429a1073c4c0f325b, type: 3}

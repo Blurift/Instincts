@@ -14,7 +14,14 @@ public class GameManager : MonoBehaviour {
 
     public static Random Random = new Random();
 
-	void Start()
+    #region GlobalGame Variables
+
+    public static float MusicLevel = 1;
+    public static float SoundLevel = 1;
+
+    #endregion
+
+    void Start()
 	{
 		Instance = this;
 
@@ -31,34 +38,6 @@ public class GameManager : MonoBehaviour {
 		MousePosition = Camera.main.ScreenToWorldPoint (Input.mousePosition);
 		//if(Network.isServer)
 		//	messageOpacity = 1;
-	}
-
-	void OnGUI()
-	{
-		if(messageOpacity > 0 && Network.isServer && false)
-		{
-			Color gui = Color.white;
-			gui.a = messageOpacity;
-			GUI.color = gui;
-
-			int width = 250;
-			if(Network.isServer) width = 500;
-
-			int y = 0;
-
-			int start = messages.Count-21;
-			if(start < 0)
-				start = 0;
-
-			for(int i = start;i < messages.Count; i++)
-			{
-				GUI.Label(new Rect(14,14+(20*y),width,20), messages[i]);
-
-				y++;
-			}
-
-			GUI.color = Color.white;
-		}
 	}
 
 	public static string SavePath()
@@ -171,11 +150,6 @@ public class GameManager : MonoBehaviour {
 	//Message System
 	public static List<string> messages = new List<string> ();
 
-	//GUI
-	private float lastMessage = 0;
-	private float messageTime = 2.5f;
-	private float messageFadeTime = 2.5f;
 
-	private float messageOpacity = 0f;
 
 }

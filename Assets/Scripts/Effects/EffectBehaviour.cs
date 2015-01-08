@@ -37,6 +37,10 @@ public class EffectBehaviour : MonoBehaviour {
 
 		if(renderer != null)
 			renderer.sortingLayerName = SortLayer;
+
+        //Set Audio level
+        if (audio != null)
+            audio.volume *= GameManager.SoundLevel;
 	}
 	
 	// Update is called once per frame
