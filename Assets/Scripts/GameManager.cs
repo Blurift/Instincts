@@ -58,7 +58,7 @@ public class GameManager : MonoBehaviour {
 		return path;
 	}
 
-    private static string ServerPath()
+    public static string WorldPath()
     {
         string path = Application.persistentDataPath + "/Servers/";
 
@@ -68,9 +68,18 @@ public class GameManager : MonoBehaviour {
         return path;
     }
 
-	private static string ServerPathFormat(string server)
+    public static bool WorldPathExist(string world)
+    {
+        string path = WorldPath() + world;
+
+        if (!Directory.Exists(path))
+            return false;
+        return true;
+    }
+
+	public static string WorldPathFormat(string server)
 	{
-        string path = ServerPath() +server;
+        string path = WorldPath() +server;
 
         if (!Directory.Exists(path))
             Directory.CreateDirectory(path);
@@ -78,19 +87,44 @@ public class GameManager : MonoBehaviour {
 		return path;
 	}
 
-	public static string ServerPlayerPath(string serverName)
+	public static string WorldPlayerPath(string serverName)
 	{
-		return ServerPathFormat (serverName) + "/Players/";
+		return WorldPathFormat (serverName) + "/Players/";
 	}
 
-    public static string ServerStatePath(string serverName)
+    public static string WorldStatePath(string serverName)
     {
-        return ServerPathFormat(serverName) + "/States/";
+        return WorldPathFormat(serverName) + "/States/";
     }
 
     public static string[] Servers()
     {
-        return Directory.GetDirectories(ServerPath());
+        return Directory.GetDirectories(WorldPath());
+    }
+
+    public static bool WorldDelete(string world)
+    {
+        Directory.Delete(WorldPathFormat(world), true);
+        return true;
+    }
+
+    public static void DeleteDirectory(string target_dir)
+    {
+        string[] files = Directory.GetFiles(target_dir);
+        string[] dirs = Directory.GetDirectories(target_dir);
+
+        foreach (string file in files)
+        {
+            File.SetAttributes(file, FileAttributes.Normal);
+            File.Delete(file);
+        }
+
+        foreach (string dir in dirs)
+        {
+            DeleteDirectory(dir);
+        }
+
+        Directory.Delete(target_dir, false);
     }
 
 	[RPC]

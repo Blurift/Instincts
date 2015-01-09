@@ -20,11 +20,16 @@ namespace Blurift.UI
 
         private void Redraw()
         {
-            for(int i = ListPanel.childCount-1; i > 0; i--)
+            for(int i = ListPanel.childCount-1; i > -1; i--)
             {
                 GameObject child = ListPanel.GetChild(i).gameObject;
                 child.transform.SetParent(null);
                 Destroy(child);
+            }
+
+            if (values.Count > selectedIndex)
+            {
+                selectedIndex = -1;
             }
 
             for(int i = 0; i < values.Count; i++)
@@ -43,6 +48,8 @@ namespace Blurift.UI
 
                 obj.transform.SetParent(ListPanel);
             }
+
+            
         }
 
 
@@ -59,6 +66,7 @@ namespace Blurift.UI
             if (selectedIndex > -1 && selectedIndex < values.Count)
             {
                 values.RemoveAt(selectedIndex);
+                selectedIndex = -1;
                 Redraw();
             }
         }

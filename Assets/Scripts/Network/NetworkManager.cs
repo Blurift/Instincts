@@ -158,7 +158,7 @@ public class NetworkManager : MonoBehaviour {
 		//	Camera.main.gameObject.AddComponent (typeof(AudioListener));
 
 		MasterServer.dedicatedServer = settings.Dedicated;
-		Network.InitializeServer(settings.MaxPlayers, settings.MaxPlayers, settings.UseNAT);
+		Network.InitializeServer(settings.MaxPlayers, settings.Port, settings.UseNAT);
 
 		if(!settings.LAN)
 		{
@@ -168,7 +168,7 @@ public class NetworkManager : MonoBehaviour {
 		if(settings.Dedicated)
 			GameManager.WriteMessage ("Starting server with " + settings.MaxPlayers + " max players on port " + settings.Port);
 		else
-			GameManager.WriteMessage ("Starting server with " + (settings.MaxPlayers) + " max players on port " + settings.Port);
+			GameManager.WriteMessage ("Starting server with " + (settings.MaxPlayers+1) + " max players on port " + settings.Port);
 	}
 
 	public static void JoinServer(string user, string pass)
@@ -486,10 +486,9 @@ public class NetworkManager : MonoBehaviour {
 	}
 
 	//Player states
-
 	private string GetPlayerPath()
 	{
-		string path = GameManager.ServerPlayerPath(Settings.ServerName);
+		string path = GameManager.WorldPlayerPath(Settings.WorldName);
 
 		if(!Directory.Exists(path))
 			Directory.CreateDirectory(path);
@@ -559,6 +558,7 @@ public class NetworkManager : MonoBehaviour {
 public class ServerSettings
 {
 	public string ServerName;
+    public string WorldName;
 	public int Port;
 	public int MaxPlayers;
 	public bool Dedicated;
@@ -575,6 +575,7 @@ public class ServerSettings
 			ServerSettings val = new ServerSettings ();
 
 			val.ServerName = "Server";
+            val.WorldName = "World";
 			val.Port = 7868;
 			val.MaxPlayers = 8;
 			val.Dedicated = false;
